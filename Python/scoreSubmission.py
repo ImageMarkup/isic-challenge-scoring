@@ -58,7 +58,7 @@ def loadImage(imagePath, rsize=-1):
 
     if image.mode != 'L':
         raise Exception('Image %s is not single-channel (grayscale).' %
-                        os.path.basename(testPath))
+                        os.path.basename(imagePath))
 
     return np.array(image)
 
