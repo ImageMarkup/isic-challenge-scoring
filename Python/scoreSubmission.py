@@ -36,7 +36,7 @@ def extractZip(path, dest, flatten=True):
                             else:
                                 break
         else:
-            zf.extractall(output)
+            zf.extractall(dest)
 
 
 def matchInputFile(truthFile, testDir):
