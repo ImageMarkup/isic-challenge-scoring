@@ -15,6 +15,7 @@ RUN apt-get update && apt-get install -y \
     mesa-common-dev \
     python \
     python-pip \
+    python-pil \
     libpython-dev \
     liblapack-dev \
     gfortran
