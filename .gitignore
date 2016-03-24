@@ -1,0 +1,4 @@
+*.py[cod]
+.DS_Store
+.*.swp
+.*.swo
