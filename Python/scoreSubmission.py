@@ -26,7 +26,11 @@ def extractZip(path, dest, flatten=True):
     with zipfile.ZipFile(path) as zf:
         if flatten:
             for name in zf.namelist():
-                out = os.path.join(dest, os.path.basename(name))
+                outName = os.path.basename(name)
+                # Skip directories
+                if not outName:
+                    continue
+                out = os.path.join(dest, outName)
                 with open(out, 'wb') as ofh:
                     with zf.open(name) as ifh:
                         while True:
