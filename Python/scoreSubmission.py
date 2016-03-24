@@ -136,7 +136,7 @@ def scoreAll(args):
 
     # Iterate over each file and call scoring executable on the pair
     scores = []
-    for truthFile in os.listdir(truthDir):
+    for truthFile in sorted(os.listdir(truthDir)):
         # truthFile ~= 'ISIC_0000003_Segmentation.png'
         try:
             testPath = matchInputFile(truthFile, testDir)
