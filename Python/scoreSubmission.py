@@ -125,6 +125,12 @@ def scoreAll(args):
     testDir = os.path.join(testBaseDir, 'submission')
     extractZip(testZipPath, testDir)
 
+    # Unzip any zip files that were contained in the submission zip file
+    zipFiles = [f for f in os.listdir(testDir) if f.lower().endswith('.zip')]
+    for zipFile in zipFiles:
+        zipFile = os.path.join(testDir, zipFile)
+        extractZip(zipFile, testDir)
+
     # Iterate over each file and call scoring executable on the pair
     scores = []
     for truthFile in os.listdir(truthDir):
