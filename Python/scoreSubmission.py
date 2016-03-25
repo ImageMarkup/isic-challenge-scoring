@@ -44,6 +44,21 @@ def extractZip(path, dest, flatten=True):
             zf.extractall(dest)
 
 
+def unzipAll(directory, delete=True):
+    """
+    Unzip all zip files in directory and optionally delete them.
+    Return a list of the zip file filenames.
+    """
+    zipFiles = [f for f in os.listdir(directory)
+                if f.lower().endswith('.zip')]
+    for zipFile in zipFiles:
+        zipPath = os.path.join(directory, zipFile)
+        extractZip(zipPath, directory)
+        if delete:
+            os.remove(zipPath)
+    return zipFiles
+
+
 def matchInputFile(truthFile, testDir):
     # truthFile ~= 'ISIC_0000003_Segmentation.png'
     for testFile in os.listdir(testDir):
@@ -178,18 +193,17 @@ def scoreAll(args):
     truthBaseDir = os.path.dirname(truthZipPath)
     truthDir = os.path.join(truthBaseDir, 'groundtruth')
     extractZip(truthZipPath, truthDir)
+    truthZipSubFiles = unzipAll(truthDir, delete=True)
+    if not truthZipSubFiles:
+        raise Exception('Internal error: error reading ground truth file: %s'
+                        % os.path.basename(truthZipPath))
+    truthZipPath = truthZipSubFiles[0]
 
     testZipPath = args.submission
     testBaseDir = os.path.dirname(testZipPath)
     testDir = os.path.join(testBaseDir, 'submission')
     extractZip(testZipPath, testDir)
-
-    # Unzip any zip files that were contained in the submission zip file
-    testZipSubFiles = [f for f in os.listdir(testDir)
-                       if f.lower().endswith('.zip')]
-    for testZipSubFile in testZipSubFiles:
-        testZipSubPath = os.path.join(testDir, testZipSubFile)
-        extractZip(testZipSubPath, testDir)
+    unzipAll(testDir, delete=True)
 
     # Identify which phase this is, based on ground truth file name
     truthZipRe = re.match(r'^ISBI2016_ISIC_Part([0-9])_Test_GroundTruth\.zip$',
