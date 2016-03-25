@@ -196,7 +196,7 @@ def scoreAll(args):
                           os.path.basename(truthZipPath))
     if not truthZipRe:
         raise Exception('Internal error: could not parse ground truth file '
-                        'name:' % os.path.basename(truthZipPath))
+                        'name: %s' % os.path.basename(truthZipPath))
     phaseNum = int(truthZipRe.group(1))
     if phaseNum == 1:
         scores = scoreP1(truthDir, testDir)
@@ -205,7 +205,7 @@ def scoreAll(args):
     elif phaseNum == 3:
         scores = scoreP3(truthDir, testDir)
     else:
-        raise Exception('Internal error: unknown ground truth phase number:' %
+        raise Exception('Internal error: unknown ground truth phase number: %s' %
                         os.path.basename(truthZipPath))
 
     print(json.dumps(scores))
