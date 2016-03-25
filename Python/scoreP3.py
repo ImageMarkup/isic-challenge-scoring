@@ -3,6 +3,8 @@
 import csv
 import os
 
+import numpy as np
+from sklearn.metrics import average_precision_score
 
 
 def matchRowName(truthImageName, testValues):
@@ -11,11 +13,6 @@ def matchRowName(truthImageName, testValues):
     for testValue in testValues:
         if truthImageId in testValue['image']:
             return testValue
-
-
-def scoreP3Confidence(truthConfidence, testConfidence):
-    # TODO
-    return []
 
 
 def scoreP3(truthDir, testDir):
@@ -62,16 +59,24 @@ def scoreP3(truthDir, testDir):
 
             testValues.append(row)
 
-    scores = []
-    for truthValue in truthValues:
-        testValue = matchRowName(truthValue['image'], testValues)
+    sortedTestValues = [
+        matchRowName(truthValue['image'], testValues)
+        for truthValue in truthValues
+    ]
+    average_precision = average_precision_score(
+        np.array([truthValue['confidence']
+                  for truthValue in truthValues]),
+        np.array([testValue['confidence']
+                  for testValue in sortedTestValues]))
 
-        metrics = scoreP3Confidence(truthValue['confidence'],
-                                    testValue['confidence'])
-
-        scores.append({
-            'dataset': truthValue['image'],
-            'metrics': metrics
-        })
+    scores = [
+        {
+            'dataset': 'aggregate',
+            'metrics': {
+                'name': 'average_precision',
+                'value': average_precision
+            }
+        }
+    ]
 
     return scores
