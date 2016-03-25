@@ -40,8 +40,8 @@ def loadImage(imagePath, rsize=-1):
 
 def matchInputFile(truthFile, testDir):
     # truthFile ~= 'ISIC_0000003_Segmentation.png'
+    truthFileId = truthFile.split('_')[1]
     for testFile in os.listdir(testDir):
-        truthFileId = truthFile.split('_')[1]
         if truthFileId in testFile:
             testPath = os.path.join(testDir, testFile)
             return testPath
