@@ -6,6 +6,8 @@ import os
 import numpy as np
 from sklearn.metrics import average_precision_score
 
+from scoreCommon import computeCommonMetrics
+
 
 def matchRowName(truthImageName, testValues):
     # truthImageName ~= 'ISIC_0000003'
@@ -13,6 +15,9 @@ def matchRowName(truthImageName, testValues):
     for testValue in testValues:
         if truthImageId in testValue['image']:
             return testValue
+    # TODO: ensure there's not a 2nd copy
+
+    raise Exception('No matching submission image for: %s' % truthImageName)
 
 
 def scoreP3(truthDir, testDir):
@@ -26,57 +31,71 @@ def scoreP3(truthDir, testDir):
                         'submitted.')
     testFile = testFiles[0]
 
-    with open(truthFile) as truthFileObj:
-        truthReader = csv.DictReader(truthFileObj,
-                                     ffieldnames=['image', 'confidence'])
-        truthValues = list(truthReader)
-
+    # Load all data from the test CSV file
+    testRows = []
     with open(testFile) as testFileObj:
         testReader = csv.DictReader(testFileObj,
                                     fieldnames=['image', 'confidence'])
-        testValues = []
-        for rowNum, row in enumerate(testReader):
+        for rowNum, testRow in enumerate(testReader):
             # TODO: handle extra fields
-            if len(row.keys()) < 2:
+            if len(testRow.keys()) < 2:
                 raise Exception('Row %d has an incorrect number of fields. Two '
                                 'fields are expected: '
                                 '<image_id>, <malignant_confidence>' % rowNum)
 
-            if not row['image']:
+            if not testRow['image']:
                 raise Exception('Could not find an image ID in the first field '
                                 'of row %d.' % rowNum)
 
             try:
-                row['confidence'] = float(row['confidence'])
+                testRow['confidence'] = float(testRow['confidence'])
             except ValueError:
                 raise Exception('Could not parse the second field for "%s" '
                                 '(row %d) as a floating-point value.' %
-                                (row['image'], rowNum))
-            if not (0.0 <= row['confidence'] <= 1.0):
+                                (testRow['image'], rowNum))
+            if not (0.0 <= testRow['confidence'] <= 1.0):
                 raise Exception('The confidence value for "%s" (row %d) is '
                                 'outside the range [0.0, 1.0].' %
-                                (row['image'], rowNum))
+                                (testRow['image'], rowNum))
 
-            testValues.append(row)
+            testRows.append(testRow)
 
-    sortedTestValues = [
-        matchRowName(truthValue['image'], testValues)
-        for truthValue in truthValues
-    ]
-    average_precision = average_precision_score(
-        np.array([truthValue['confidence']
-                  for truthValue in truthValues]),
-        np.array([testValue['confidence']
-                  for testValue in sortedTestValues]))
+    # Load the ground truth CSV file, and merge it with the test results
+    combinedRows = []
+    with open(truthFile) as truthFileObj:
+        truthReader = csv.DictReader(truthFileObj,
+                                     ffieldnames=['image', 'confidence'])
+        for truthRow in truthReader:
+            # Find the matching test result
+            testRow = matchRowName(truthRow['image'], testRows)
 
+            combinedRows.append({
+                'image': truthRow['image'],
+                'truth_value': truthRow['confidence'],
+                'test_value': testRow['confidence'],
+            })
+
+    # Build the Numpy arrays for calculations
+    truthValues = np.array([value['truth_value'] for value in combinedRows])
+    testValues = np.array([value['test_value'] for value in combinedRows])
+
+    # Compute accuracy, sensitivity, and specificity
+    truthBinaryValues = truthValues > 0.5
+    testBinaryValues = testValues > 0.5
+    metrics = computeCommonMetrics(truthBinaryValues, testBinaryValues)
+
+    # Compute average precision
+    metrics.append({
+        'name': 'average_precision',
+        'value': average_precision_score(
+            y_true=truthValues, y_score=testValues)
+    })
+
+    # Only a single score can be computed for the entire dataset
     scores = [
         {
             'dataset': 'aggregate',
-            'metrics': {
-                'name': 'average_precision',
-                'value': average_precision
-            }
+            'metrics': metrics
         }
     ]
-
     return scores

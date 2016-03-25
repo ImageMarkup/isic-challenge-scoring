@@ -47,6 +47,7 @@ def matchInputFile(truthFile, testDir):
         if truthFileId in testFile:
             testPath = os.path.join(testDir, testFile)
             return testPath
+    # TODO: ensure there's not a 2nd copy
 
     raise Exception('No matching submission image for: %s' % truthFile)
 
