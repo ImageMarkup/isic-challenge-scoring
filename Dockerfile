@@ -1,10 +1,6 @@
 FROM ubuntu:14.04
 MAINTAINER Brian Helba <brian.helba@kitware.com>
 
-RUN mkdir /covalic
-
-COPY Python /covalic/Python
-
 # Install system prerequisites
 RUN apt-get update && apt-get install -y \
     build-essential \
@@ -20,5 +16,9 @@ RUN apt-get update && apt-get install -y \
     gfortran
 
 RUN pip install numpy scipy
+
+RUN mkdir /covalic
+
+COPY Python /covalic/Python
 
 ENTRYPOINT ["python", "/covalic/Python/scoreSubmission.py"]
