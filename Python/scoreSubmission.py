@@ -57,13 +57,32 @@ def loadImage(imagePath, rsize=-1):
     try:
         image = Image.open(imagePath)
     except:
-        raise Exception('Could not decode image: %s' % imagePath)
+        raise Exception('Could not decode image: %s' %
+                        os.path.basename(imagePath))
 
     if image.mode != 'L':
         raise Exception('Image %s is not single-channel (grayscale).' %
                         os.path.basename(imagePath))
 
-    return np.array(image)
+    image = np.array(image)
+
+    imageValues = set(np.unique(image))
+    if imageValues <= {0, 255}:
+        # Expected values
+        pass
+    elif len(imageValues) <= 2:
+        # Binary image with high value other than 255 can be corrected
+        highValue = (imageValues - {0}).pop()
+        image /= highValue
+        image *= 255
+        if set(np.unique(image)) > {0, 255}:
+            raise Exception('Image %s contains values other than 0 and 255.' %
+                            os.path.basename(imagePath))
+    else:
+        raise Exception('Image %s contains values other than 0 and 255.' %
+                        os.path.basename(imagePath))
+
+    return image
 
 
 def runScoringP1(truthPath, testPath):
@@ -76,7 +95,7 @@ def runScoringP1(truthPath, testPath):
                          truthImage.shape[0:2]))
 
     truthBinaryImage = (truthImage > 128)
-    testBinaryImage = (testImage > 128)  # TODO: make dynamic
+    testBinaryImage = (testImage > 128)
 
     truthBinaryNegativeImage = 1 - truthBinaryImage
     testBinaryNegativeImage = 1 - testBinaryImage
