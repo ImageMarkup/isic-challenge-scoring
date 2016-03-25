@@ -164,7 +164,7 @@ def scoreAll(args):
             datasetName = truthFile.rsplit('_', 1)[0]
             metrics = runScoringP1(truthPath, testPath)
         except Exception as e:
-            print(str(e), file=sys.stderr)
+            # print(str(e), file=sys.stderr)
             # TODO: Don't fail completely
             raise
 
@@ -185,4 +185,8 @@ if __name__ == '__main__':
                         help='path to the submission zip file')
     args = parser.parse_args()
 
-    scoreAll(args)
+    try:
+        scoreAll(args)
+    except Exception as e:
+        print(str(e), file=sys.stderr)
+        exit(1)
