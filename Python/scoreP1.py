@@ -5,6 +5,8 @@ import os
 from PIL import Image
 import numpy as np
 
+from scoreCommon import computeCommonMetrics, computeSimilarityMetrics
+
 
 def loadImage(imagePath, rsize=-1):
     try:
@@ -40,11 +42,12 @@ def loadImage(imagePath, rsize=-1):
 
 def matchInputFile(truthFile, testDir):
     # truthFile ~= 'ISIC_0000003_Segmentation.png'
+    truthFileId = truthFile.split('_')[1]
     for testFile in os.listdir(testDir):
-        truthFileId = truthFile.split('_')[1]
         if truthFileId in testFile:
             testPath = os.path.join(testDir, testFile)
             return testPath
+    # TODO: ensure there's not a 2nd copy
 
     raise Exception('No matching submission image for: %s' % truthFile)
 
@@ -61,44 +64,8 @@ def scoreP1Image(truthPath, testPath):
     truthBinaryImage = (truthImage > 128)
     testBinaryImage = (testImage > 128)
 
-    truthBinaryNegativeImage = 1 - truthBinaryImage
-    testBinaryNegativeImage = 1 - testBinaryImage
-
-    truthPixelSum = float(np.sum(truthBinaryImage))
-    testPixelSum = float(np.sum(testBinaryImage))
-
-    truePositive = float(np.sum(np.logical_and(truthBinaryImage,
-                                               testBinaryImage)))
-    trueNegative = float(np.sum(np.logical_and(truthBinaryNegativeImage,
-                                               testBinaryNegativeImage)))
-    falsePositive = float(np.sum(np.logical_and(truthBinaryNegativeImage,
-                                                testBinaryImage)))
-    falseNegative = float(np.sum(np.logical_and(truthBinaryImage,
-                                                testBinaryNegativeImage)))
-
-    metrics = [
-        {
-            'name': 'accuracy',
-            'value': (truePositive + trueNegative) /
-                     (truePositive + trueNegative + falsePositive + falseNegative)
-        },
-        {
-            'name': 'jaccard',
-            'value': (truePositive) / (truePositive + falseNegative + falsePositive)
-        },
-        {
-            'name': 'dice',
-            'value': (2 * truePositive) / (truthPixelSum + testPixelSum)
-        },
-        {
-            'name': 'sensitivity',
-            'value': (truePositive) / (truePositive + falseNegative)
-        },
-        {
-            'name': 'specificity',
-            'value': (trueNegative) / (trueNegative + falsePositive)
-        }
-    ]
+    metrics = computeCommonMetrics(truthBinaryImage, testBinaryImage)
+    metrics.extend(computeSimilarityMetrics(truthBinaryImage, testBinaryImage))
     return metrics
 
 
