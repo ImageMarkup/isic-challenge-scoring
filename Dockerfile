@@ -4,7 +4,6 @@ MAINTAINER Brian Helba <brian.helba@kitware.com>
 RUN mkdir /covalic
 
 COPY Python /covalic/Python
-COPY Data /covalic/Data
 
 # Install system prerequisites
 RUN apt-get update && apt-get install -y \

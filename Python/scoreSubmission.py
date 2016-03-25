@@ -1,10 +1,12 @@
 #!/usr/bin/env python
+# coding=utf-8
 
 from __future__ import print_function
 
 import argparse
 import json
 import os
+import re
 import sys
 import zipfile
 
@@ -85,7 +87,7 @@ def loadImage(imagePath, rsize=-1):
     return image
 
 
-def runScoringP1(truthPath, testPath):
+def scoreP1Image(truthPath, testPath):
     truthImage = loadImage(truthPath)
     testImage = loadImage(testPath)
 
@@ -138,21 +140,7 @@ def runScoringP1(truthPath, testPath):
     return metrics
 
 
-def scoreAll(args):
-    truthDir = '/covalic/Data/ISBI2016_ISIC_Part1_Test_GroundTruth'
-
-    # Unzip the input files into appropriate folders
-    testZipPath = args.submission
-    testBaseDir = os.path.dirname(testZipPath)
-    testDir = os.path.join(testBaseDir, 'submission')
-    extractZip(testZipPath, testDir)
-
-    # Unzip any zip files that were contained in the submission zip file
-    zipFiles = [f for f in os.listdir(testDir) if f.lower().endswith('.zip')]
-    for zipFile in zipFiles:
-        zipFile = os.path.join(testDir, zipFile)
-        extractZip(zipFile, testDir)
-
+def scoreP1(truthDir, testDir):
     # Iterate over each file and call scoring executable on the pair
     scores = []
     for truthFile in sorted(os.listdir(truthDir)):
@@ -162,7 +150,7 @@ def scoreAll(args):
             truthPath = os.path.join(truthDir, truthFile)
 
             datasetName = truthFile.rsplit('_', 1)[0]
-            metrics = runScoringP1(truthPath, testPath)
+            metrics = scoreP1Image(truthPath, testPath)
         except Exception as e:
             # print(str(e), file=sys.stderr)
             # TODO: Don't fail completely
@@ -173,14 +161,61 @@ def scoreAll(args):
             'metrics': metrics
         })
 
+    return scores
+
+
+def scoreP2(truthDir, testDir):
+    return []
+
+
+def scoreP3(truthDir, testDir):
+    return []
+
+
+def scoreAll(args):
+    # Unzip the input files into appropriate folders
+    truthZipPath = args.groundtruth
+    truthBaseDir = os.path.dirname(truthZipPath)
+    truthDir = os.path.join(truthBaseDir, 'groundtruth')
+    extractZip(truthZipPath, truthDir)
+
+    testZipPath = args.submission
+    testBaseDir = os.path.dirname(testZipPath)
+    testDir = os.path.join(testBaseDir, 'submission')
+    extractZip(testZipPath, testDir)
+
+    # Unzip any zip files that were contained in the submission zip file
+    testZipSubFiles = [f for f in os.listdir(testDir)
+                       if f.lower().endswith('.zip')]
+    for testZipSubFile in testZipSubFiles:
+        testZipSubPath = os.path.join(testDir, testZipSubFile)
+        extractZip(testZipSubPath, testDir)
+
+    # Identify which phase this is, based on ground truth file name
+    truthZipRe = re.match(r'^ISBI2016_ISIC_Part([0-9])_Test_GroundTruth\.zip$',
+                          os.path.basename(truthZipPath))
+    if not truthZipRe:
+        raise Exception('Internal error: could not parse ground truth file '
+                        'name:' % os.path.basename(truthZipPath))
+    phaseNum = int(truthZipRe.group(1))
+    if phaseNum == 1:
+        scores = scoreP1(truthDir, testDir)
+    elif phaseNum == 2:
+        scores = scoreP2(truthDir, testDir)
+    elif phaseNum == 3:
+        scores = scoreP3(truthDir, testDir)
+    else:
+        raise Exception('Internal error: unknown ground truth phase number:' %
+                        os.path.basename(truthZipPath))
+
     print(json.dumps(scores))
 
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(
         description='Submission scoring helper script')
-    # parser.add_argument('-g', '--groundtruth', required=True,
-    #                     help='path to the ground truth zip file')
+    parser.add_argument('-g', '--groundtruth', required=True,
+                        help='path to the ground truth zip file')
     parser.add_argument('-s', '--submission', required=True,
                         help='path to the submission zip file')
     args = parser.parse_args()
