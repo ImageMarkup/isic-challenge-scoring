@@ -15,7 +15,7 @@ RUN apt-get update && apt-get install -y \
     liblapack-dev \
     gfortran
 
-RUN pip install numpy scipy
+RUN pip install numpy scipy scikit-learn
 
 RUN mkdir /covalic
 
