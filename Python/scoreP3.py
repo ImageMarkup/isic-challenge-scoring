@@ -4,9 +4,8 @@ import csv
 import os
 
 import numpy as np
-from sklearn.metrics import average_precision_score
 
-from scoreCommon import computeCommonMetrics
+from scoreCommon import computeCommonMetrics, computeAveragePrecisionMetrics
 
 
 def matchRowName(truthImageName, testValues):
@@ -92,11 +91,7 @@ def scoreP3(truthDir, testDir):
     metrics = computeCommonMetrics(truthBinaryValues, testBinaryValues)
 
     # Compute average precision
-    metrics.append({
-        'name': 'average_precision',
-        'value': average_precision_score(
-            y_true=truthValues, y_score=testValues)
-    })
+    metrics.extend(computeAveragePrecisionMetrics(truthValues, testValues))
 
     # Only a single score can be computed for the entire dataset
     scores = [

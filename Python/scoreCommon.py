@@ -3,6 +3,7 @@
 import os
 
 import numpy as np
+from sklearn.metrics import average_precision_score
 
 
 def matchInputFile(truthFile, testDir):
@@ -88,6 +89,19 @@ def computeSimilarityMetrics(truthBinaryValues, testBinaryValues):
             'name': 'dice',
             'value': float(2 * truePositive) /
                      float(truthValuesSum + testValuesSum)
+        }
+    ]
+    return metrics
+
+def computeAveragePrecisionMetrics(truthValues, testValues):
+    """
+    Compute average precision.
+    """
+    metrics = [
+        {
+            'name': 'average_precision',
+            'value': average_precision_score(
+                y_true=truthValues, y_score=testValues)
         }
     ]
     return metrics
