@@ -12,12 +12,19 @@ from scoreCommon import computeCommonMetrics
 def matchRowName(truthImageName, testValues):
     # truthImageName ~= 'ISIC_0000003'
     truthImageId = truthImageName.split('_')[1]
-    for testValue in testValues:
-        if truthImageId in testValue['image']:
-            return testValue
-    # TODO: ensure there's not a 2nd copy
 
-    raise Exception('No matching submission image for: %s' % truthImageName)
+    testValueCandidates = [
+        testValue
+        for testValue in testValues
+        if truthImageId in testValue['image']
+    ]
+
+    if not testValueCandidates:
+        raise Exception('No matching submissions for: %s' % truthImageName)
+    elif len(testValueCandidates) > 1:
+        raise Exception('Multiple matching submissions for: %s' %
+                        truthImageName)
+    return testValueCandidates[0]
 
 
 def scoreP3(truthDir, testDir):

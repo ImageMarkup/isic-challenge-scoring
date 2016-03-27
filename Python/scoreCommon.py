@@ -1,6 +1,26 @@
 # coding=utf-8
 
+import os
+
 import numpy as np
+
+
+def matchInputFile(truthFile, testDir):
+    # truthFile ~= 'ISIC_0000003_Segmentation.png' (p1)
+    # truthFile ~= 'ISIC_0000003.json' (P2)
+    truthFileId = os.path.splitext(truthFile)[0].split('_')[1]
+
+    testPathCandidates = [
+        os.path.join(testDir, testFile)
+        for testFile in os.listdir(testDir)
+        if truthFileId in testFile
+    ]
+
+    if not testPathCandidates:
+        raise Exception('No matching submission for: %s' % truthFile)
+    elif len(testPathCandidates) > 1:
+        raise Exception('Multiple matching submissions for: %s' % truthFile)
+    return testPathCandidates[0]
 
 
 def _computeTFPN(truthBinaryValues, testBinaryValues):
