@@ -35,7 +35,7 @@ def scoreP3(truthDir, testDir):
     if len(testFiles) != 1:
         raise Exception('Multiple files submitted. Only 1 CSV file should be '
                         'submitted.')
-    testFile = testFiles[0]
+    testFile = os.path.join(testDir, testFiles[0])
 
     # Load all data from the test CSV file
     testRows = []
@@ -70,14 +70,14 @@ def scoreP3(truthDir, testDir):
     combinedRows = []
     with open(truthFile) as truthFileObj:
         truthReader = csv.DictReader(truthFileObj,
-                                     ffieldnames=['image', 'confidence'])
+                                     fieldnames=['image', 'confidence'])
         for truthRow in truthReader:
             # Find the matching test result
             testRow = matchRowName(truthRow['image'], testRows)
 
             combinedRows.append({
                 'image': truthRow['image'],
-                'truth_value': truthRow['confidence'],
+                'truth_value': float(truthRow['confidence']),
                 'test_value': testRow['confidence'],
             })
 
