@@ -14,7 +14,11 @@ _FEATURE_NAMES = ['globules', 'streaks']
 
 def loadFeatures(featuresPath):
     try:
-        features = json.load(featuresPath)
+        with open(featuresPath) as f:
+            features = json.load(f)
+    except IOError:
+        raise Exception('Internal error: error reading JSON file: %s'
+                        % os.path.basename(featuresPath))
     except ValueError:
         # TODO: is this the right error type?
         raise Exception('Could not parse file "%s" as JSON.' %
