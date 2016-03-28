@@ -1,6 +1,27 @@
 # coding=utf-8
 
+import os
+
 import numpy as np
+from sklearn.metrics import average_precision_score
+
+
+def matchInputFile(truthFile, testDir):
+    # truthFile ~= 'ISIC_0000003_Segmentation.png' (p1)
+    # truthFile ~= 'ISIC_0000003.json' (P2)
+    truthFileId = os.path.splitext(truthFile)[0].split('_')[1]
+
+    testPathCandidates = [
+        os.path.join(testDir, testFile)
+        for testFile in os.listdir(testDir)
+        if truthFileId in testFile
+    ]
+
+    if not testPathCandidates:
+        raise Exception('No matching submission for: %s' % truthFile)
+    elif len(testPathCandidates) > 1:
+        raise Exception('Multiple matching submissions for: %s' % truthFile)
+    return testPathCandidates[0]
 
 
 def _computeTFPN(truthBinaryValues, testBinaryValues):
@@ -68,6 +89,19 @@ def computeSimilarityMetrics(truthBinaryValues, testBinaryValues):
             'name': 'dice',
             'value': float(2 * truePositive) /
                      float(truthValuesSum + testValuesSum)
+        }
+    ]
+    return metrics
+
+def computeAveragePrecisionMetrics(truthValues, testValues):
+    """
+    Compute average precision.
+    """
+    metrics = [
+        {
+            'name': 'average_precision',
+            'value': average_precision_score(
+                y_true=truthValues, y_score=testValues)
         }
     ]
     return metrics

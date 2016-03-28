@@ -5,7 +5,8 @@ import os
 from PIL import Image
 import numpy as np
 
-from scoreCommon import computeCommonMetrics, computeSimilarityMetrics
+from scoreCommon import matchInputFile, \
+    computeCommonMetrics, computeSimilarityMetrics
 
 
 def loadImage(imagePath, rsize=-1):
@@ -37,19 +38,9 @@ def loadImage(imagePath, rsize=-1):
         raise Exception('Image %s contains values other than 0 and 255.' %
                         os.path.basename(imagePath))
 
+    # TODO: resize image?
+
     return image
-
-
-def matchInputFile(truthFile, testDir):
-    # truthFile ~= 'ISIC_0000003_Segmentation.png'
-    truthFileId = truthFile.split('_')[1]
-    for testFile in os.listdir(testDir):
-        if truthFileId in testFile:
-            testPath = os.path.join(testDir, testFile)
-            return testPath
-    # TODO: ensure there's not a 2nd copy
-
-    raise Exception('No matching submission image for: %s' % truthFile)
 
 
 def scoreP1Image(truthPath, testPath):
@@ -73,11 +64,11 @@ def scoreP1(truthDir, testDir):
     # Iterate over each file and call scoring executable on the pair
     scores = []
     for truthFile in sorted(os.listdir(truthDir)):
-        # truthFile ~= 'ISIC_0000003_Segmentation.png'
         try:
             testPath = matchInputFile(truthFile, testDir)
             truthPath = os.path.join(truthDir, truthFile)
 
+            # truthFile ~= 'ISIC_0000003_Segmentation.png'
             datasetName = truthFile.rsplit('_', 1)[0]
             metrics = scoreP1Image(truthPath, testPath)
         except Exception as e:
