@@ -70,7 +70,7 @@ def scoreP3(truthDir, testDir):
     combinedRows = []
     with open(truthFile) as truthFileObj:
         truthReader = csv.DictReader(truthFileObj,
-                                     ffieldnames=['image', 'confidence'])
+                                     fieldnames=['image', 'confidence'])
         for truthRow in truthReader:
             # Find the matching test result
             testRow = matchRowName(truthRow['image'], testRows)
