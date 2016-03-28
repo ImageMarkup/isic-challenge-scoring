@@ -51,9 +51,9 @@ def computeCommonMetrics(truthBinaryValues, testBinaryValues):
     metrics = [
         {
             'name': 'accuracy',
-            'value': float(truePositive + trueNegative) /
-                     float(truePositive + trueNegative +
-                           falsePositive + falseNegative)
+            'value': (float(truePositive + trueNegative) /
+                      float(truePositive + trueNegative +
+                           falsePositive + falseNegative))
         },
         {
             'name': 'sensitivity',
@@ -82,13 +82,13 @@ def computeSimilarityMetrics(truthBinaryValues, testBinaryValues):
     metrics = [
         {
             'name': 'jaccard',
-            'value': float(truePositive) /
-                     float(truePositive + falseNegative + falsePositive)
+            'value': (float(truePositive) /
+                      float(truePositive + falseNegative + falsePositive))
         },
         {
             'name': 'dice',
-            'value': float(2 * truePositive) /
-                     float(truthValuesSum + testValuesSum)
+            'value': (float(2 * truePositive) /
+                      float(truthValuesSum + testValuesSum))
         }
     ]
     return metrics
