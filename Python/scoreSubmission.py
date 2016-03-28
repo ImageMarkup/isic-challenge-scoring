@@ -110,5 +110,6 @@ if __name__ == '__main__':
     try:
         scoreAll(args)
     except Exception as e:
-        print(str(e), file=sys.stderr)
+        covalicErrorPrefix = 'covalic.error: '
+        print(covalicErrorPrefix + str(e), file=sys.stderr)
         exit(1)
