@@ -16,6 +16,11 @@ def loadImage(imagePath, rsize=-1):
         raise Exception('Could not decode image: %s' %
                         os.path.basename(imagePath))
 
+    if image.mode == '1':
+        # NumPy crashes if a 1-bit (black and white) image is directly
+        # coerced to an array
+        image = image.convert('L')
+
     if image.mode != 'L':
         raise Exception('Image %s is not single-channel (grayscale).' %
                         os.path.basename(imagePath))
