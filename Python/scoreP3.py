@@ -35,7 +35,7 @@ def scoreP3(truthDir, testDir):
     if len(testFiles) != 1:
         raise Exception('Multiple files submitted. Only 1 CSV file should be '
                         'submitted.')
-    testFile = testFiles[0]
+    testFile = os.path.join(testDir, testFiles[0])
 
     # Load all data from the test CSV file
     testRows = []
