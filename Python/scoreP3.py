@@ -78,7 +78,7 @@ def scoreP3(truthDir, testDir):
             combinedRows.append({
                 'image': truthRow['image'],
                 'truth_value': float(truthRow['confidence']),
-                'test_value': float(testRow['confidence']),
+                'test_value': testRow['confidence'],
             })
 
     # Build the Numpy arrays for calculations
