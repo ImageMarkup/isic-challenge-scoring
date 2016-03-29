@@ -55,7 +55,7 @@ def scoreP3(truthDir, testDir):
 
             try:
                 testRow['confidence'] = float(testRow['confidence'])
-            except ValueError:
+            except (ValueError, TypeError):
                 raise Exception('Could not parse the second field for "%s" '
                                 '(row %d) as a floating-point value.' %
                                 (testRow['image'], rowNum))
