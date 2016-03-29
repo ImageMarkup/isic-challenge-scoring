@@ -20,7 +20,6 @@ def loadFeatures(featuresPath):
         raise Exception('Internal error: error reading JSON file: %s'
                         % os.path.basename(featuresPath))
     except ValueError:
-        # TODO: is this the right error type?
         raise Exception('Could not parse file "%s" as JSON.' %
                         os.path.basename(featuresPath))
 
@@ -59,47 +58,74 @@ def loadFeatures(featuresPath):
     return features
 
 
-def scoreP2Features(truthPath, testPath):
-    truthFeatures = loadFeatures(truthPath)
-    testFeatures = loadFeatures(testPath)
-
-    scores = []
-    for featureName in _FEATURE_NAMES:
-        if len(testFeatures[featureName]) != len(truthFeatures[featureName]):
-            raise Exception('Array for feature "%s" in JSON file "%s" is length'
-                            ' %d (expected length %d).' %
-                            (featureName, os.path.basename(testPath),
-                             len(testFeatures[featureName]),
-                             len(truthFeatures[featureName])))
-
-        # Build the Numpy arrays for calculations
-        truthValues = np.array(truthFeatures[featureName])
-        testValues = np.array(testFeatures[featureName])
-
-        # Compute accuracy, sensitivity, and specificity
-        truthBinaryValues = truthValues > 0.5
-        testBinaryValues = testValues > 0.5
-        metrics = computeCommonMetrics(truthBinaryValues, testBinaryValues)
-
-        # Compute average precision
-        metrics.extend(computeAveragePrecisionMetrics(truthValues, testValues))
-
-        # truthPath ~= '/.../ISIC_0000003.json'
-        datasetName = os.path.splitext(os.path.basename(truthPath))[0]
-        scores.append({
-            'dataset': '%s_%s' % (datasetName, featureName),
-            'metrics': metrics
-        })
-
-    return scores
-
-
 def scoreP2(truthDir, testDir):
+
     scores = []
+    featureAllTruthValues = {}
+    featureAllTestValues = {}
     for truthFile in sorted(os.listdir(truthDir)):
         testPath = matchInputFile(truthFile, testDir)
         truthPath = os.path.join(truthDir, truthFile)
 
-        scores.extend(scoreP2Features(truthPath, testPath))
+        truthFeatures = loadFeatures(truthPath)
+        testFeatures = loadFeatures(testPath)
 
-    return scores
+        for featureName in _FEATURE_NAMES:
+            if len(testFeatures[featureName]) != \
+               len(truthFeatures[featureName]):
+                raise Exception('Array for feature "%s" in JSON file "%s" is '
+                                'length %d (expected length %d).' %
+                                (featureName, os.path.basename(testPath),
+                                 len(testFeatures[featureName]),
+                                 len(truthFeatures[featureName])))
+
+            # Build the Numpy arrays for calculations
+            truthValues = np.array(truthFeatures[featureName])
+            testValues = np.array(testFeatures[featureName])
+
+            # Compute accuracy, sensitivity, and specificity
+            truthBinaryValues = truthValues > 0.5
+            testBinaryValues = testValues > 0.5
+            metrics = computeCommonMetrics(truthBinaryValues, testBinaryValues)
+
+            # Insert null average precision to keep matrix the correct size
+            metrics.append({
+                'name': 'average_precision',
+                'value': None
+            })
+
+            # Store binary values for later use for average precision
+            featureAllTruthValues.setdefault(featureName, []).extend(
+                truthFeatures[featureName])
+            featureAllTestValues.setdefault(featureName, []).extend(
+                testFeatures[featureName])
+
+            # truthPath ~= '/.../ISIC_0000003.json'
+            datasetName = os.path.splitext(os.path.basename(truthPath))[0]
+            scores.append({
+                'dataset': '%s_%s' % (datasetName, featureName),
+                'metrics': metrics
+            })
+
+    # Compute metrics all images
+    aggregateScores = []
+    for featureName in _FEATURE_NAMES:
+        allTruthValues = np.array(featureAllTruthValues[featureName])
+        allTestValues = np.array(featureAllTestValues[featureName])
+
+        # Compute accuracy, sensitivity, and specificity over all images
+        allTruthBinaryValues = allTruthValues > 0.5
+        allTestBinaryValues = allTestValues > 0.5
+        aggregateMetrics = computeCommonMetrics(
+            allTruthBinaryValues, allTestBinaryValues)
+
+        # Compute average precision over all images
+        aggregateMetrics.extend(
+            computeAveragePrecisionMetrics(allTruthValues, allTestValues))
+
+        aggregateScores.append({
+            'dataset': 'aggregate_%s' % featureName,
+            'metrics': aggregateMetrics
+        })
+
+    return aggregateScores + scores
