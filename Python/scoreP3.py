@@ -5,7 +5,8 @@ import os
 
 import numpy as np
 
-from scoreCommon import computeCommonMetrics, computeAveragePrecisionMetrics
+from scoreCommon import ScoreException, \
+    computeCommonMetrics, computeAveragePrecisionMetrics
 
 
 def matchRowName(truthImageName, testValues):
@@ -19,9 +20,9 @@ def matchRowName(truthImageName, testValues):
     ]
 
     if not testValueCandidates:
-        raise Exception('No matching submissions for: %s' % truthImageName)
+        raise ScoreException('No matching submissions for: %s' % truthImageName)
     elif len(testValueCandidates) > 1:
-        raise Exception('Multiple matching submissions for: %s' %
+        raise ScoreException('Multiple matching submissions for: %s' %
                         truthImageName)
     return testValueCandidates[0]
 
@@ -33,8 +34,8 @@ def scoreP3(truthDir, testDir):
 
     testFiles = sorted(os.listdir(testDir))
     if len(testFiles) != 1:
-        raise Exception('Multiple files submitted. Only 1 CSV file should be '
-                        'submitted.')
+        raise ScoreException('Multiple files submitted. Only 1 CSV file should '
+                             'be submitted.')
     testFile = os.path.join(testDir, testFiles[0])
 
     # Load all data from the test CSV file
@@ -45,24 +46,25 @@ def scoreP3(truthDir, testDir):
         for rowNum, testRow in enumerate(testReader):
             # TODO: handle extra fields
             if len(testRow.keys()) < 2:
-                raise Exception('Row %d has an incorrect number of fields. Two '
-                                'fields are expected: '
-                                '<image_id>, <malignant_confidence>' % rowNum)
+                raise ScoreException('Row %d has an incorrect number of fields.'
+                                     ' Two fields are expected: '
+                                     '<image_id>, <malignant_confidence>' %
+                                     rowNum)
 
             if not testRow['image']:
-                raise Exception('Could not find an image ID in the first field '
-                                'of row %d.' % rowNum)
+                raise ScoreException('Could not find an image ID in the first '
+                                     'field of row %d.' % rowNum)
 
             try:
                 testRow['confidence'] = float(testRow['confidence'])
-            except ValueError:
-                raise Exception('Could not parse the second field for "%s" '
-                                '(row %d) as a floating-point value.' %
-                                (testRow['image'], rowNum))
+            except (ValueError, TypeError):
+                raise ScoreException('Could not parse the second field for "%s"'
+                                     ' (row %d) as a floating-point value.' %
+                                     (testRow['image'], rowNum))
             if not (0.0 <= testRow['confidence'] <= 1.0):
-                raise Exception('The confidence value for "%s" (row %d) is '
-                                'outside the range [0.0, 1.0].' %
-                                (testRow['image'], rowNum))
+                raise ScoreException('The confidence value for "%s" (row %d) is'
+                                     ' outside the range [0.0, 1.0].' %
+                                     (testRow['image'], rowNum))
 
             testRows.append(testRow)
 

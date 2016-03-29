@@ -6,6 +6,10 @@ import numpy as np
 from sklearn.metrics import average_precision_score
 
 
+class ScoreException(Exception):
+    pass
+
+
 def matchInputFile(truthFile, testDir):
     # truthFile ~= 'ISIC_0000003_Segmentation.png' (p1)
     # truthFile ~= 'ISIC_0000003.json' (P2)
@@ -18,9 +22,9 @@ def matchInputFile(truthFile, testDir):
     ]
 
     if not testPathCandidates:
-        raise Exception('No matching submission for: %s' % truthFile)
+        raise ScoreException('No matching submission for: %s' % truthFile)
     elif len(testPathCandidates) > 1:
-        raise Exception('Multiple matching submissions for: %s' % truthFile)
+        raise ScoreException('Multiple matching submissions for: %s' % truthFile)
     return testPathCandidates[0]
 
 

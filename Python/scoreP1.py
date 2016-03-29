@@ -5,7 +5,7 @@ import os
 from PIL import Image
 import numpy as np
 
-from scoreCommon import matchInputFile, \
+from scoreCommon import ScoreException, matchInputFile, \
     computeCommonMetrics, computeSimilarityMetrics
 
 
@@ -13,8 +13,8 @@ def loadImage(imagePath, rsize=-1):
     try:
         image = Image.open(imagePath)
     except:
-        raise Exception('Could not decode image: %s' %
-                        os.path.basename(imagePath))
+        raise ScoreException('Could not decode image: %s' %
+                             os.path.basename(imagePath))
 
     if image.mode == '1':
         # NumPy crashes if a 1-bit (black and white) image is directly
@@ -22,8 +22,8 @@ def loadImage(imagePath, rsize=-1):
         image = image.convert('L')
 
     if image.mode != 'L':
-        raise Exception('Image %s is not single-channel (grayscale).' %
-                        os.path.basename(imagePath))
+        raise ScoreException('Image %s is not single-channel (grayscale).' %
+                             os.path.basename(imagePath))
 
     image = np.array(image)
 
@@ -37,11 +37,11 @@ def loadImage(imagePath, rsize=-1):
         image /= highValue
         image *= 255
         if set(np.unique(image)) > {0, 255}:
-            raise Exception('Image %s contains values other than 0 and 255.' %
-                            os.path.basename(imagePath))
+            raise ScoreException('Image %s contains values other than 0 and '
+                                 '255.' % os.path.basename(imagePath))
     else:
-        raise Exception('Image %s contains values other than 0 and 255.' %
-                        os.path.basename(imagePath))
+        raise ScoreException('Image %s contains values other than 0 and 255.' %
+                             os.path.basename(imagePath))
 
     # TODO: resize image?
 
@@ -53,9 +53,9 @@ def scoreP1Image(truthPath, testPath):
     testImage = loadImage(testPath)
 
     if testImage.shape[0:2] != truthImage.shape[0:2]:
-        raise Exception('Image %s has dimensions %s; expected %s.' %
-                        (os.path.basename(testPath), testImage.shape[0:2],
-                         truthImage.shape[0:2]))
+        raise ScoreException('Image %s has dimensions %s; expected %s.' %
+                             (os.path.basename(testPath), testImage.shape[0:2],
+                              truthImage.shape[0:2]))
 
     truthBinaryImage = (truthImage > 128)
     testBinaryImage = (testImage > 128)
@@ -69,17 +69,12 @@ def scoreP1(truthDir, testDir):
     # Iterate over each file and call scoring executable on the pair
     scores = []
     for truthFile in sorted(os.listdir(truthDir)):
-        try:
-            testPath = matchInputFile(truthFile, testDir)
-            truthPath = os.path.join(truthDir, truthFile)
+        testPath = matchInputFile(truthFile, testDir)
+        truthPath = os.path.join(truthDir, truthFile)
 
-            # truthFile ~= 'ISIC_0000003_Segmentation.png'
-            datasetName = truthFile.rsplit('_', 1)[0]
-            metrics = scoreP1Image(truthPath, testPath)
-        except Exception as e:
-            # print(str(e), file=sys.stderr)
-            # TODO: Don't fail completely
-            raise
+        # truthFile ~= 'ISIC_0000003_Segmentation.png'
+        datasetName = truthFile.rsplit('_', 1)[0]
+        metrics = scoreP1Image(truthPath, testPath)
 
         scores.append({
             'dataset': datasetName,

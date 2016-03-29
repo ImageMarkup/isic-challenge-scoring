@@ -10,6 +10,7 @@ import re
 import sys
 import zipfile
 
+from scoreCommon import ScoreException
 from scoreP1 import scoreP1
 from scoreP2 import scoreP2
 from scoreP3 import scoreP3
@@ -76,8 +77,8 @@ def scoreAll(args):
             truthPath = truthSubFiles[0]
 
     if not truthPath:
-        raise Exception('Internal error: error reading ground truth file: %s'
-                        % os.path.basename(truthZipPath))
+        raise ScoreException('Internal error: error reading ground truth file:'
+                             ' %s' % os.path.basename(truthZipPath))
 
     testZipPath = args.submission
     testBaseDir = os.path.dirname(testZipPath)
@@ -89,8 +90,8 @@ def scoreAll(args):
     truthRe = re.match(r'^ISBI2016_ISIC_Part([0-9])_Test_GroundTruth\.(?:csv|zip)$',
                        os.path.basename(truthPath))
     if not truthRe:
-        raise Exception('Internal error: could not parse ground truth file '
-                        'name: %s' % os.path.basename(truthPath))
+        raise ScoreException('Internal error: could not parse ground truth file'
+                             ' name: %s' % os.path.basename(truthPath))
     phaseNum = int(truthRe.group(1))
     if phaseNum == 1:
         scores = scoreP1(truthDir, testDir)
@@ -99,8 +100,8 @@ def scoreAll(args):
     elif phaseNum == 3:
         scores = scoreP3(truthDir, testDir)
     else:
-        raise Exception('Internal error: unknown ground truth phase number: %s' %
-                        os.path.basename(truthPath))
+        raise ScoreException('Internal error: unknown ground truth phase '
+                             'number: %s' % os.path.basename(truthPath))
 
     print(json.dumps(scores))
 
@@ -116,7 +117,7 @@ if __name__ == '__main__':
 
     try:
         scoreAll(args)
-    except Exception as e:
+    except ScoreException as e:
         covalicErrorPrefix = 'covalic.error: '
         print(covalicErrorPrefix + str(e), file=sys.stderr)
         exit(1)
