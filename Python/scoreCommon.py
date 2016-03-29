@@ -59,15 +59,17 @@ def computeCommonMetrics(truthBinaryValues, testBinaryValues):
             'name': 'sensitivity',
             'value': ((float(truePositive) /
                        float(truePositive + falseNegative))
-                      if (truePositive + falseNegative) != 0
-                      else 0.0)
+                      # sensitivity can't be calculated if all are negative
+                      if np.any(truthBinaryValues)
+                      else None)
         },
         {
             'name': 'specificity',
             'value': ((float(trueNegative) /
                        float(trueNegative + falsePositive))
-                      if (trueNegative + falsePositive) != 0
-                      else 0.0)
+                      # specificity can't be calculated if all are positive
+                      if not np.all(truthBinaryValues)
+                      else None)
 
         }
     ]
@@ -97,6 +99,7 @@ def computeSimilarityMetrics(truthBinaryValues, testBinaryValues):
         }
     ]
     return metrics
+
 
 def computeAveragePrecisionMetrics(truthValues, testValues):
     """
