@@ -5,7 +5,7 @@ import os
 
 import numpy as np
 
-from scoreCommon import matchInputFile, \
+from scoreCommon import ScoreException, matchInputFile, \
     computeCommonMetrics, computeAveragePrecisionMetrics
 
 
@@ -17,26 +17,27 @@ def loadFeatures(featuresPath):
         with open(featuresPath) as featuresFileObj:
             features = json.load(featuresFileObj)
     except IOError:
-        raise Exception('Internal error: error reading JSON file: %s'
-                        % os.path.basename(featuresPath))
+        raise ScoreException('Internal error: error reading JSON file: %s' %
+                             os.path.basename(featuresPath))
     except ValueError:
-        raise Exception('Could not parse file "%s" as JSON.' %
-                        os.path.basename(featuresPath))
+        raise ScoreException('Could not parse file "%s" as JSON.' %
+                             os.path.basename(featuresPath))
 
     if not isinstance(features, dict):
-        raise Exception('JSON file %s does not contain an Object '
-                        '(key-value mapping) at the top-level.' %
-                        os.path.basename(featuresPath))
+        raise ScoreException('JSON file %s does not contain an Object '
+                             '(key-value mapping) at the top-level.' % 
+                             os.path.basename(featuresPath))
 
     for featureName in _FEATURE_NAMES:
         if featureName not in features:
-            raise Exception('JSON file "%s" does not contain an element for '
-                            'feature "%s".' %
-                            (os.path.basename(featuresPath), featureName))
+            raise ScoreException('JSON file "%s" does not contain an element '
+                                 'for feature "%s".' %
+                                 (os.path.basename(featuresPath), featureName))
 
         if not isinstance(features[featureName], list):
-            raise Exception('Feature "%s" in JSON file "%s" is not an Array.' %
-                            (featureName, os.path.basename(featuresPath)))
+            raise ScoreException('Feature "%s" in JSON file "%s" is not an '
+                                 'Array.' %
+                                 (featureName, os.path.basename(featuresPath)))
 
         try:
             features[featureName] = [
@@ -44,13 +45,13 @@ def loadFeatures(featuresPath):
                 for superpixelValue in features[featureName]
             ]
         except ValueError:
-            raise Exception('Array for feature "%s" in JSON file "%s" contains '
-                            'non-floating-point value(s).' %
-                            (featureName, os.path.basename(featuresPath)))
+            raise ScoreException('Array for feature "%s" in JSON file "%s" '
+                                 'contains non-floating-point value(s).' %
+                                 (featureName, os.path.basename(featuresPath)))
 
         for superpixelValue in features[featureName]:
             if not (0.0 <= superpixelValue <= 1.0):
-                raise Exception('Array for feature "%s" in JSON file "%s" '
+                raise ScoreException('Array for feature "%s" in JSON file "%s" '
                                 'contains a value outside the range '
                                 '[0.0, 1.0].' %
                                 (featureName, os.path.basename(featuresPath)))
@@ -73,11 +74,11 @@ def scoreP2(truthDir, testDir):
         for featureName in _FEATURE_NAMES:
             if len(testFeatures[featureName]) != \
                len(truthFeatures[featureName]):
-                raise Exception('Array for feature "%s" in JSON file "%s" is '
-                                'length %d (expected length %d).' %
-                                (featureName, os.path.basename(testPath),
-                                 len(testFeatures[featureName]),
-                                 len(truthFeatures[featureName])))
+                raise ScoreException('Array for feature "%s" in JSON file "%s" '
+                                     'is length %d (expected length %d).' %
+                                     (featureName, os.path.basename(testPath),
+                                      len(testFeatures[featureName]),
+                                      len(truthFeatures[featureName])))
 
             # Build the Numpy arrays for calculations
             truthValues = np.array(truthFeatures[featureName])
