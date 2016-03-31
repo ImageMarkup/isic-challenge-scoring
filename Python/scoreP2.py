@@ -14,7 +14,7 @@ _FEATURE_NAMES = ['globules', 'streaks']
 
 def loadFeatures(featuresPath):
     try:
-        with open(featuresPath) as featuresFileObj:
+        with open(featuresPath, 'rU') as featuresFileObj:
             features = json.load(featuresFileObj)
     except IOError:
         raise ScoreException('Internal error: error reading JSON file: %s' %
@@ -25,7 +25,7 @@ def loadFeatures(featuresPath):
 
     if not isinstance(features, dict):
         raise ScoreException('JSON file %s does not contain an Object '
-                             '(key-value mapping) at the top-level.' % 
+                             '(key-value mapping) at the top-level.' %
                              os.path.basename(featuresPath))
 
     for featureName in _FEATURE_NAMES:
