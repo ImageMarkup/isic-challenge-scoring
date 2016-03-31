@@ -11,7 +11,7 @@ from scoreCommon import ScoreException, matchInputFile, \
 
 def loadImage(imagePath, rsize=-1):
     try:
-        image = Image.open(imagePath)
+        image = Image.open(imagePath, 'rb')
     except:
         raise ScoreException('Could not decode image: %s' %
                              os.path.basename(imagePath))

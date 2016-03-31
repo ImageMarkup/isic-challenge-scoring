@@ -40,33 +40,37 @@ def scoreP3(truthDir, testDir):
 
     # Load all data from the test CSV file
     testRows = []
-    with open(testFile) as testFileObj:
-        testReader = csv.DictReader(testFileObj,
-                                    fieldnames=['image', 'confidence'])
-        for rowNum, testRow in enumerate(testReader):
-            # TODO: handle extra fields
-            if len(testRow.keys()) < 2:
-                raise ScoreException('Row %d has an incorrect number of fields.'
-                                     ' Two fields are expected: '
-                                     '<image_id>, <malignant_confidence>' %
-                                     rowNum)
+    with open(testFile, 'rU') as testFileObj:
+        try:
+            testReader = csv.DictReader(testFileObj,
+                                        fieldnames=['image', 'confidence'])
+            for rowNum, testRow in enumerate(testReader):
+                # TODO: handle extra fields
+                if len(testRow.keys()) < 2:
+                    raise ScoreException('Row %d has an incorrect number of'
+                                         'fields. Two fields are expected: '
+                                         '<image_id>, <malignant_confidence>' %
+                                         rowNum)
 
-            if not testRow['image']:
-                raise ScoreException('Could not find an image ID in the first '
-                                     'field of row %d.' % rowNum)
+                if not testRow['image']:
+                    raise ScoreException('Could not find an image ID in the '
+                                         'first field of row %d.' % rowNum)
 
-            try:
-                testRow['confidence'] = float(testRow['confidence'])
-            except (ValueError, TypeError):
-                raise ScoreException('Could not parse the second field for "%s"'
-                                     ' (row %d) as a floating-point value.' %
-                                     (testRow['image'], rowNum))
-            if not (0.0 <= testRow['confidence'] <= 1.0):
-                raise ScoreException('The confidence value for "%s" (row %d) is'
-                                     ' outside the range [0.0, 1.0].' %
-                                     (testRow['image'], rowNum))
+                try:
+                    testRow['confidence'] = float(testRow['confidence'])
+                except (ValueError, TypeError):
+                    raise ScoreException('Could not parse the second field for '
+                                         '"%s" (row %d) as a floating-point '
+                                         'value.' % (testRow['image'], rowNum))
+                if not (0.0 <= testRow['confidence'] <= 1.0):
+                    raise ScoreException('The confidence value for "%s" (row %d)'
+                                         ' is outside the range [0.0, 1.0].' %
+                                         (testRow['image'], rowNum))
 
-            testRows.append(testRow)
+                testRows.append(testRow)
+        except csv.Error as e:
+            raise ScoreException('CSV file parsing failed because: "%s"' %
+                                 str(e))
 
     # Load the ground truth CSV file, and merge it with the test results
     combinedRows = []
