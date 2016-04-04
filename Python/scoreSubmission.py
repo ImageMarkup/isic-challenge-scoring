@@ -29,6 +29,9 @@ def extractZip(path, dest, flatten=True):
     with zipfile.ZipFile(path) as zf:
         if flatten:
             for name in zf.namelist():
+                # Ignore Mac OS X metadata
+                if name.startswith('__MACOSX'):
+                    continue
                 outName = os.path.basename(name)
                 # Skip directories
                 if not outName:
