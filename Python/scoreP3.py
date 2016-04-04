@@ -27,9 +27,9 @@ def matchRowName(truthImageName, testValues):
     return testValueCandidates[0]
 
 
-def scoreP3(truthDir, testDir):
-    truthFile = os.path.join(truthDir,
-                             'ISBI2016_ISIC_Part3_Test_GroundTruth.csv')
+def scoreP3(truthDir, testDir, phaseNum='3'):
+    truthFile = os.path.join(
+        truthDir, 'ISBI2016_ISIC_Part%s_Test_GroundTruth.csv' % phaseNum)
     assert os.path.exists(truthFile)
 
     testFiles = sorted(os.listdir(testDir))

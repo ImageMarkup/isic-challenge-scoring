@@ -90,18 +90,20 @@ def scoreAll(args):
     unzipAll(testDir, delete=True)
 
     # Identify which phase this is, based on ground truth file name
-    truthRe = re.match(r'^ISBI2016_ISIC_Part([0-9])_Test_GroundTruth\.(?:csv|zip)$',
+    truthRe = re.match(r'^ISBI2016_ISIC_Part([0-9]B?)_Test_GroundTruth\.(?:csv|zip)$',
                        os.path.basename(truthPath))
     if not truthRe:
         raise ScoreException('Internal error: could not parse ground truth file'
                              ' name: %s' % os.path.basename(truthPath))
-    phaseNum = int(truthRe.group(1))
-    if phaseNum == 1:
+    phaseNum = truthRe.group(1)
+    if phaseNum == '1':
         scores = scoreP1(truthDir, testDir)
-    elif phaseNum == 2:
+    elif phaseNum == '2':
         scores = scoreP2(truthDir, testDir)
-    elif phaseNum == 3:
-        scores = scoreP3(truthDir, testDir)
+    elif phaseNum == '3':
+        scores = scoreP3(truthDir, testDir, '3')
+    elif phaseNum == '3B':
+        scores = scoreP3(truthDir, testDir, '3B')
     else:
         raise ScoreException('Internal error: unknown ground truth phase '
                              'number: %s' % os.path.basename(truthPath))
