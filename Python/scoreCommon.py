@@ -3,6 +3,7 @@
 import os
 
 import numpy as np
+from PIL import Image
 from sklearn.metrics import average_precision_score
 
 
@@ -26,6 +27,44 @@ def matchInputFile(truthFile, testDir):
     elif len(testPathCandidates) > 1:
         raise ScoreException('Multiple matching submissions for: %s' % truthFile)
     return testPathCandidates[0]
+
+
+def loadSegmentationImage(imagePath):
+    try:
+        image = Image.open(imagePath)
+    except Exception as e:
+        raise ScoreException('Could not decode image "%s" because: "%s"' %
+                             os.path.basename(imagePath), str(e))
+
+    if image.mode == '1':
+        # NumPy crashes if a 1-bit (black and white) image is directly
+        # coerced to an array
+        image = image.convert('L')
+
+    if image.mode != 'L':
+        raise ScoreException('Image %s is not single-channel (grayscale).' %
+                             os.path.basename(imagePath))
+
+    image = np.array(image)
+
+    imageValues = set(np.unique(image))
+    if imageValues <= {0, 255}:
+        # Expected values
+        pass
+    elif len(imageValues) <= 2:
+        # Binary image with high value other than 255 can be corrected
+        highValue = (imageValues - {0}).pop()
+        image /= highValue
+        image *= 255
+        if set(np.unique(image)) > {0, 255}:
+            raise ScoreException('Image %s contains values other than 0 and '
+                                 '255.' % os.path.basename(imagePath))
+    else:
+        raise ScoreException('Image %s contains values other than 0 and 255.' %
+                             os.path.basename(imagePath))
+
+    # TODO: resize image?
+    return image
 
 
 def _computeTFPN(truthBinaryValues, testBinaryValues):

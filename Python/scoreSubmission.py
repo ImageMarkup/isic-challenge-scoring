@@ -13,6 +13,7 @@ import zipfile
 from scoreCommon import ScoreException
 from scoreP1 import scoreP1
 from scoreP2 import scoreP2
+from scoreP2B import scoreP2B
 from scoreP3 import scoreP3
 
 
@@ -100,6 +101,8 @@ def scoreAll(args):
         scores = scoreP1(truthDir, testDir)
     elif phaseNum == '2':
         scores = scoreP2(truthDir, testDir)
+    elif phaseNum == '2B':
+        scores = scoreP2B(truthDir, testDir)
     elif phaseNum == '3':
         scores = scoreP3(truthDir, testDir, '3')
     elif phaseNum == '3B':
