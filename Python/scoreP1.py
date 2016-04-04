@@ -12,9 +12,9 @@ from scoreCommon import ScoreException, matchInputFile, \
 def loadImage(imagePath, rsize=-1):
     try:
         image = Image.open(imagePath)
-    except:
-        raise ScoreException('Could not decode image: %s' %
-                             os.path.basename(imagePath))
+    except Exception as e:
+        raise ScoreException('Could not decode image "%s" because: "%s"' %
+                             os.path.basename(imagePath), str(e))
 
     if image.mode == '1':
         # NumPy crashes if a 1-bit (black and white) image is directly
