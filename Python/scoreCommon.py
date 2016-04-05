@@ -132,13 +132,17 @@ def computeSimilarityMetrics(truthBinaryValues, testBinaryValues):
     metrics = [
         {
             'name': 'jaccard',
-            'value': (float(truePositive) /
-                      float(truePositive + falseNegative + falsePositive))
+            'value': ((float(truePositive) /
+                       float(truePositive + falseNegative + falsePositive))
+                      if (truePositive + falseNegative + falsePositive) != 0
+                      else None)
         },
         {
             'name': 'dice',
-            'value': (float(2 * truePositive) /
-                      float(truthValuesSum + testValuesSum))
+            'value': ((float(2 * truePositive) /
+                       float(truthValuesSum + testValuesSum))
+                      if (truthValuesSum + testValuesSum) != 0
+                      else None)
         }
     ]
     return metrics
