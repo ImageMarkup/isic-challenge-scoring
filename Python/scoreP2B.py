@@ -51,8 +51,8 @@ def scoreP2B(truthDir, testDir):
         testPath = matchFeatureInputFile(truthFile, testDir)
         truthPath = os.path.join(truthDir, truthFile)
 
-        # truthFile ~= 'ISIC_0000003_Segmentation.png'
-        datasetName = truthFile.rsplit('_', 1)[0]
+        # truthFile ~= 'ISIC_0000003_globules.png'
+        datasetName = os.path.splitext(truthFile)[0]
         metrics = scoreP2BImage(truthPath, testPath)
 
         scores.append({
