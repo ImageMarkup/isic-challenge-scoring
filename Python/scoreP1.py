@@ -5,12 +5,15 @@ import os
 
 
 from scoreCommon import ScoreException, matchInputFile, loadSegmentationImage, \
-    computeCommonMetrics, computeSimilarityMetrics
+    convertToNumPyArray, computeCommonMetrics, computeSimilarityMetrics
 
 
 def scoreP1Image(truthPath, testPath):
     truthImage = loadSegmentationImage(truthPath)
     testImage = loadSegmentationImage(testPath)
+
+    truthImage = convertToNumPyArray(truthImage)
+    testImage = convertToNumPyArray(testImage)
 
     if testImage.shape[0:2] != truthImage.shape[0:2]:
         raise ScoreException('Image %s has dimensions %s; expected %s.' %

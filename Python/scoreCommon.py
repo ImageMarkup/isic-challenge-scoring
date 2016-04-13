@@ -45,6 +45,16 @@ def loadSegmentationImage(imagePath):
         raise ScoreException('Image %s is not single-channel (grayscale).' %
                              os.path.basename(imagePath))
 
+    return image
+
+
+def resizeImage(image, width, height):
+    """Resize image to (width, height) using nearest neighbor interpolation."""
+    return image.resize((width, height), Image.NEAREST)
+
+
+def convertToNumPyArray(image):
+    """Convert PIL Image to NumPy array."""
     image = np.array(image)
 
     imageValues = set(np.unique(image))
@@ -63,7 +73,6 @@ def loadSegmentationImage(imagePath):
         raise ScoreException('Image %s contains values other than 0 and 255.' %
                              os.path.basename(imagePath))
 
-    # TODO: resize image?
     return image
 
 
