@@ -55,7 +55,7 @@ def resizeImage(image, width, height):
     return image.resize((width, height), Image.NEAREST)
 
 
-def convertToNumPyArray(image):
+def convertToNumPyArray(image, imagePath):
     """Convert PIL Image to NumPy array."""
     image = np.array(image)
 

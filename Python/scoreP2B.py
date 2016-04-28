@@ -78,8 +78,8 @@ def scoreP2B(truthDir, testDir):
             testImage = resizeImage(testImage, width, height)
 
             # Convert images
-            truthImage = convertToNumPyArray(truthImage)
-            testImage = convertToNumPyArray(testImage)
+            truthImage = convertToNumPyArray(truthImage, truthPath)
+            testImage = convertToNumPyArray(testImage, testPath)
 
             # Add images to concatenated arrays
             truthArray[index * width * height : (index+1) * width * height] = truthImage.flatten()

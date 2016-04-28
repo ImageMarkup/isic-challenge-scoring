@@ -12,8 +12,8 @@ def scoreP1Image(truthPath, testPath):
     truthImage = loadSegmentationImage(truthPath)
     testImage = loadSegmentationImage(testPath)
 
-    truthImage = convertToNumPyArray(truthImage)
-    testImage = convertToNumPyArray(testImage)
+    truthImage = convertToNumPyArray(truthImage, truthPath)
+    testImage = convertToNumPyArray(testImage, testPath)
 
     if testImage.shape[0:2] != truthImage.shape[0:2]:
         raise ScoreException('Image %s has dimensions %s; expected %s.' %
