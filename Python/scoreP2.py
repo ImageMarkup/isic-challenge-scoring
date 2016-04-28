@@ -123,6 +123,9 @@ def scoreP2(truthDir, testDir):
         # Compute average precision over all images
         aggregateMetrics.extend(
             computeAveragePrecisionMetrics(allTruthValues, allTestValues))
+            
+        # Compute AUC
+        aggregateMetrics.extend(computeAUCMetrics(allTruthValues, allTestValues))
 
         aggregateScores.append({
             'dataset': 'aggregate_%s' % featureName,
