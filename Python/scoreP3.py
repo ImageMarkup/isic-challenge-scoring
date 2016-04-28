@@ -106,6 +106,9 @@ def scoreP3(truthDir, testDir, phaseNum='3'):
     # Compute specificity at 95% sensitivity
     metrics.extend(computeSPECMetrics(truthValues, testValues, 0.95))
     
+    # Compute specificity at 98% sensitivity
+    metrics.extend(computeSPECMetrics(truthValues, testValues, 0.98))
+    
     # Compute specificity at 99% sensitivity
     metrics.extend(computeSPECMetrics(truthValues, testValues, 0.99))
 
