@@ -5,6 +5,7 @@ import os
 import numpy as np
 from PIL import Image
 from sklearn.metrics import average_precision_score
+from sklearn.metrics import roc_auc_score
 
 
 class ScoreException(Exception):
@@ -165,6 +166,19 @@ def computeAveragePrecisionMetrics(truthValues, testValues):
         {
             'name': 'average_precision',
             'value': average_precision_score(
+                y_true=truthValues, y_score=testValues)
+        }
+    ]
+    return metrics
+    
+def computeAUCMetrics(truthValues, testValues):
+    """
+    Compute average precision.
+    """
+    metrics = [
+        {
+            'name': 'area_under_roc',
+            'value': roc_auc_score(
                 y_true=truthValues, y_score=testValues)
         }
     ]
