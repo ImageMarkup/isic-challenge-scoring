@@ -199,8 +199,8 @@ def computeSPECMetrics(truthValues, testValues, tpr_in):
     
     # Search for the point along the curve where tpr_in occurs.
     for i in range(len(tpr)):
-        if (tpr[i] > tpr_in):
-            eval_index = i-1
+        if (tpr[i] >= tpr_in):
+            eval_index = i
             break
         
     # Store the specificity at that location.
@@ -210,7 +210,7 @@ def computeSPECMetrics(truthValues, testValues, tpr_in):
     # Report the value
     metrics = [
         {
-            'name': 'area_under_roc',
+            'name': 'spec_at_sens',
             'value': eval_spec
         }
     ]
