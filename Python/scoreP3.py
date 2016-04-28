@@ -103,6 +103,9 @@ def scoreP3(truthDir, testDir, phaseNum='3'):
     # Compute AUC
     metrics.extend(computeAUCMetrics(truthValues, testValues))
     
+    # Compute specificity at 95% sensitivity
+    metrics.extend(computeSPECMetrics(truthValues, testValues, 0.95))
+    
     # Compute specificity at 99% sensitivity
     metrics.extend(computeSPECMetrics(truthValues, testValues, 0.99))
 
