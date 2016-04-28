@@ -6,7 +6,8 @@ import os
 import numpy as np
 
 from scoreCommon import ScoreException, \
-    computeCommonMetrics, computeAveragePrecisionMetrics
+    computeCommonMetrics, computeAveragePrecisionMetrics, \
+    computeAUCMetrics, computeSPECMetrics
 
 
 def matchRowName(truthImageName, testValues):
@@ -101,6 +102,9 @@ def scoreP3(truthDir, testDir, phaseNum='3'):
     
     # Compute AUC
     metrics.extend(computeAUCMetrics(truthValues, testValues))
+    
+    # Compute specificity at 99% sensitivity
+    metrics.extend(computeSPECMetrics(truthValues, testValues, 0.99))
 
     # Only a single score can be computed for the entire dataset
     scores = [
