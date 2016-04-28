@@ -98,6 +98,9 @@ def scoreP3(truthDir, testDir, phaseNum='3'):
 
     # Compute average precision
     metrics.extend(computeAveragePrecisionMetrics(truthValues, testValues))
+    
+    # Compute AUC
+    metrics.extend(computeAUCMetrics(truthValues, testValues))
 
     # Only a single score can be computed for the entire dataset
     scores = [
