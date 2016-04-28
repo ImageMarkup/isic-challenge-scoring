@@ -210,7 +210,7 @@ def computeSPECMetrics(truthValues, testValues, tpr_in):
     # Report the value
     metrics = [
         {
-            'name': 'spec_at_sens',
+            'name': 'spec_at_sens_'+str(tpr_in),
             'value': eval_spec
         }
     ]
