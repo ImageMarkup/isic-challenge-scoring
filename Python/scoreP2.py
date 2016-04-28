@@ -6,7 +6,7 @@ import os
 import numpy as np
 
 from scoreCommon import ScoreException, matchInputFile, \
-    computeCommonMetrics, computeAveragePrecisionMetrics
+    computeCommonMetrics, computeAveragePrecisionMetrics, computeAUCMetrics
 
 
 _FEATURE_NAMES = ['globules', 'streaks']
