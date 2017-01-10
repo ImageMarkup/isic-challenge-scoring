@@ -19,8 +19,6 @@
 
 import os
 
-
-
 from scoreCommon import ScoreException, matchInputFile, loadSegmentationImage, \
     convertToNumPyArray, computeCommonMetrics, computeSimilarityMetrics
 
@@ -52,12 +50,12 @@ def scoreP1(truthDir, testDir):
         testPath = matchInputFile(truthFile, testDir)
         truthPath = os.path.join(truthDir, truthFile)
 
-        # truthFile ~= 'ISIC_0000003_Segmentation.png'
-        datasetName = truthFile.rsplit('_', 1)[0]
+        # truthFile ~= 'ISIC_0000003_segmentation.png'
+        imageName = truthFile.rsplit('_', 1)[0]
         metrics = scoreP1Image(truthPath, testPath)
 
         scores.append({
-            'dataset': datasetName,
+            'dataset': imageName,
             'metrics': metrics
         })
 

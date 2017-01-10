@@ -188,7 +188,8 @@ def computeAveragePrecisionMetrics(truthValues, testValues):
         }
     ]
     return metrics
-    
+
+
 def computeAUCMetrics(truthValues, testValues):
     """
     Compute AUC measure.
@@ -202,28 +203,29 @@ def computeAUCMetrics(truthValues, testValues):
     ]
     return metrics
 
+
 def computeSPECMetrics(truthValues, testValues, tpr_in):
     """
     Compute specificity at specified sensitivity.
     """
-    
+
     # Use sklearn to grab the ROC curve
     fpr, tpr, thr = roc_curve(y_true=truthValues, y_score=testValues)
-    
+
     # Values used to store the index at which tpr_in occurs.
     eval_index = -1
     eval_spec = 0.0
-    
+
     # Search for the point along the curve where tpr_in occurs.
     for i in range(len(tpr)):
         if (tpr[i] >= tpr_in):
             eval_index = i
             break
-        
+
     # Store the specificity at that location.
     if (eval_index >= 0):
         eval_spec = 1.0 - fpr[eval_index]
-        
+
     # Report the value
     metrics = [
         {
