@@ -82,11 +82,8 @@ def unzipAll(directory, delete=True):
 
 
 def scoreAll(args):
-    # Unzip the input files into appropriate folders
-    truthZipPath = args.groundtruth
-    truthBaseDir = os.path.dirname(truthZipPath)
-    truthDir = os.path.join(truthBaseDir, 'groundtruth')
-    extractZip(truthZipPath, truthDir)
+    # Unzip zip files contained in the input folders
+    truthDir = args.groundtruth
     truthZipSubFiles = unzipAll(truthDir, delete=True)
     truthPath = None
     if truthZipSubFiles:
@@ -97,13 +94,10 @@ def scoreAll(args):
             truthPath = truthSubFiles[0]
 
     if not truthPath:
-        raise ScoreException('Internal error: error reading ground truth file:'
-                             ' %s' % os.path.basename(truthZipPath))
+        raise ScoreException('Internal error: error reading ground truth folder:'
+                             ' %s' % truthDir)
 
-    testZipPath = args.submission
-    testBaseDir = os.path.dirname(testZipPath)
-    testDir = os.path.join(testBaseDir, 'submission')
-    extractZip(testZipPath, testDir)
+    testDir = args.submission
     unzipAll(testDir, delete=True)
 
     # Identify which phase this is, based on ground truth file name
@@ -134,9 +128,9 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(
         description='Submission scoring helper script')
     parser.add_argument('-g', '--groundtruth', required=True,
-                        help='path to the ground truth zip file')
+                        help='path to the ground truth folder')
     parser.add_argument('-s', '--submission', required=True,
-                        help='path to the submission zip file')
+                        help='path to the submission folder')
     args = parser.parse_args()
 
     try:
