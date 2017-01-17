@@ -208,7 +208,6 @@ def computeSPECMetrics(truthValues, testValues, tpr_in):
     """
     Compute specificity at specified sensitivity.
     """
-
     # Use sklearn to grab the ROC curve
     fpr, tpr, thr = roc_curve(y_true=truthValues, y_score=testValues)
 
@@ -218,12 +217,12 @@ def computeSPECMetrics(truthValues, testValues, tpr_in):
 
     # Search for the point along the curve where tpr_in occurs.
     for i in range(len(tpr)):
-        if (tpr[i] >= tpr_in):
+        if tpr[i] >= tpr_in:
             eval_index = i
             break
 
     # Store the specificity at that location.
-    if (eval_index >= 0):
+    if eval_index >= 0:
         eval_spec = 1.0 - fpr[eval_index]
 
     # Report the value

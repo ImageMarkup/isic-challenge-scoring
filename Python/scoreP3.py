@@ -105,41 +105,78 @@ def scoreP3(truthDir, testDir):
 
             combinedRows.append({
                 'image_id': truthRow['image_id'],
-                'truth_value_mel': float(truthRow['melanoma']),
-                'test_value_mel': testRow['melanoma'],
-                'truth_value_sebk': float(truthRow['seborrheic_keratosis']),
-                'test_value_sebk': testRow['seborrheic_keratosis'],
+                'truth_value_melanoma': float(truthRow['melanoma']),
+                'test_value_melanoma': testRow['melanoma'],
+                'truth_value_seborrheic_keratosis':
+                    float(truthRow['seborrheic_keratosis']),
+                'test_value_seborrheic_keratosis':
+                    testRow['seborrheic_keratosis'],
             })
 
-    # Build the Numpy arrays for calculations
-    truthValues = np.array([value['truth_value_mel'] for value in combinedRows])
-    testValues = np.array([value['test_value_mel'] for value in combinedRows])
+        metricsByCategory = {}
+    for category in ['melanoma', 'seborrheic_keratosis']:
+        metricsByCategory[category] = []
 
-    # Compute accuracy, sensitivity, and specificity
-    truthBinaryValues = truthValues > 0.5
-    testBinaryValues = testValues > 0.5
-    metrics = computeCommonMetrics(truthBinaryValues, testBinaryValues)
+        # Build the Numpy arrays for calculations
+        truthValues = np.array(
+            [value['truth_value_%s' % category] for value in combinedRows])
+        testValues = np.array(
+            [value['test_value_%s' % category] for value in combinedRows])
 
-    # Compute average precision
-    metrics.extend(computeAveragePrecisionMetrics(truthValues, testValues))
+        # Compute accuracy, sensitivity, and specificity
+        truthBinaryValues = truthValues > 0.5
+        testBinaryValues = testValues > 0.5
+        metricsByCategory[category].extend(
+            computeCommonMetrics(truthBinaryValues, testBinaryValues))
 
-    # Compute AUC
-    metrics.extend(computeAUCMetrics(truthValues, testValues))
+        # Compute average precision
+        metricsByCategory[category].extend(
+            computeAveragePrecisionMetrics(truthValues, testValues))
 
-    # Compute specificity at 95% sensitivity
-    metrics.extend(computeSPECMetrics(truthValues, testValues, 0.95))
+        # Compute specificity at 82% sensitivity
+        metricsByCategory[category].extend(
+            computeSPECMetrics(truthValues, testValues, 0.82))
 
-    # Compute specificity at 98% sensitivity
-    metrics.extend(computeSPECMetrics(truthValues, testValues, 0.98))
+        # Compute specificity at 89% sensitivity
+        metricsByCategory[category].extend(
+            computeSPECMetrics(truthValues, testValues, 0.89))
 
-    # Compute specificity at 99% sensitivity
-    metrics.extend(computeSPECMetrics(truthValues, testValues, 0.99))
+        # Compute specificity at 95% sensitivity
+        metricsByCategory[category].extend(
+            computeSPECMetrics(truthValues, testValues, 0.95))
+
+        # Compute AUC
+        metricsByCategory[category].extend(
+            computeAUCMetrics(truthValues, testValues))
+
+    # Compute mean metrics for combined melanoma and seborrheic_keratosis
+    metricsByCategory['mean'] = []
+    for metricMelanoma, metricSeborrheicKeratosis in zip(
+            metricsByCategory['melanoma'],
+            metricsByCategory['seborrheic_keratosis']):
+
+        assert metricMelanoma['name'] == metricSeborrheicKeratosis['name']
+        metricsByCategory['mean'].append({
+            'name': metricMelanoma['name'],
+            'value': (metricMelanoma['value'] +
+                      metricSeborrheicKeratosis['value']) / 2.0
+        })
+
+    # Combine all metrics into a single list
+    allMetrics = [
+        {
+            'name': '%s_%s' % (metric['name'], category),
+            'value': metric['value']
+        }
+        for category in ['melanoma', 'seborrheic_keratosis', 'mean']
+        for metric in metricsByCategory[category]
+    ]
 
     # Only a single score can be computed for the entire dataset
     scores = [
         {
             'dataset': 'aggregate',
-            'metrics': metrics
+            'metrics': allMetrics
         }
     ]
     return scores
