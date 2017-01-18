@@ -19,6 +19,7 @@
 
 import csv
 import os
+import re
 
 import numpy as np
 
@@ -46,8 +47,11 @@ def matchRowName(truthImageName, testValues):
 
 
 def scoreP3(truthDir, testDir):
-    truthFile = os.path.join(truthDir, 'ISIC-2017_Test_Part3_GroundTruth.csv')
-    assert os.path.exists(truthFile)
+    truthFile = next(
+        os.path.join(truthDir, f)
+        for f in os.listdir(truthDir)
+        if re.match(r'ISIC-2017_Test_(?:Test|Validation)_GroundTruth\.csv', f)
+    )
 
     testFiles = sorted(os.listdir(testDir))
     if len(testFiles) != 1:

@@ -100,7 +100,7 @@ def scoreAll(args):
     unzipAll(testDir, delete=True)
 
     # Identify which phase this is, based on ground truth file name
-    truthRe = re.match(r'^ISIC-2017_Test_Part([0-9])_GroundTruth\.(?:csv|zip)$',
+    truthRe = re.match(r'^ISIC-2017_(?:Test|Validation)_Part([0-9])_GroundTruth\.(?:csv|zip)$',
                        os.path.basename(truthPath))
     if not truthRe:
         raise ScoreException('Internal error: could not parse ground truth file'
