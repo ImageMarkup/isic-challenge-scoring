@@ -74,7 +74,10 @@ def scoreP3(truthDir, testDir):
                                          '<image_id>, <melanoma>, '
                                          '<seborrheic_keratosis>' % rowNum)
 
-                if not testRow['image_id']:
+                if re.match(r'ISIC_[0-9]{7}', testRow['image_id']):
+                    if rowNum == 0:
+                        # Allow the first row to be a header
+                        continue
                     raise ScoreException('Could not find an image ID in the '
                                          'first field of row %d.' % rowNum)
 
