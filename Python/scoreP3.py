@@ -35,7 +35,7 @@ def matchRowName(truthImageName, testValues):
     testValueCandidates = [
         testValue
         for testValue in testValues
-        if truthImageId in testValue['image']
+        if truthImageId in testValue['image_id']
     ]
 
     if not testValueCandidates:
@@ -86,13 +86,13 @@ def scoreP3(truthDir, testDir):
                     raise ScoreException('Could not parse one of the second or '
                                          'third fields for "%s" (row %d) as '
                                          'floating-point values.' %
-                                         (testRow['image'], rowNum))
+                                         (testRow['image_id'], rowNum))
                 if not ((0.0 <= testRow['melanoma'] <= 1.0) and
                         (0.0 <= testRow['seborrheic_keratosis'] <= 1.0)):
                     raise ScoreException('One of the confidence values for '
                                          '"%s" (row %d) is outside the range '
                                          '[0.0, 1.0].' %
-                                         (testRow['image'], rowNum))
+                                         (testRow['image_id'], rowNum))
 
                 testRows.append(testRow)
         except csv.Error as e:
