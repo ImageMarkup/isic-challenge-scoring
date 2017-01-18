@@ -50,7 +50,7 @@ def scoreP3(truthDir, testDir):
     truthFile = next(
         os.path.join(truthDir, f)
         for f in os.listdir(truthDir)
-        if re.match(r'ISIC-2017_Test_(?:Test|Validation)_GroundTruth\.csv', f)
+        if re.match(r'ISIC-2017_(?:Test|Validation)_GroundTruth\.csv', f)
     )
 
     testFiles = sorted(os.listdir(testDir))
@@ -74,7 +74,7 @@ def scoreP3(truthDir, testDir):
                                          '<image_id>, <melanoma>, '
                                          '<seborrheic_keratosis>' % rowNum)
 
-                if re.match(r'ISIC_[0-9]{7}', testRow['image_id']):
+                if not re.match(r'ISIC_[0-9]{7}', testRow['image_id']):
                     if rowNum == 0:
                         # Allow the first row to be a header
                         continue
