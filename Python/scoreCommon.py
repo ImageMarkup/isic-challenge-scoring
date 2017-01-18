@@ -204,32 +204,28 @@ def computeAUCMetrics(truthValues, testValues):
     return metrics
 
 
-def computeSPECMetrics(truthValues, testValues, tpr_in):
+def computeSPECMetrics(truthValues, testValues, sensitivityThreshold):
     """
     Compute specificity at specified sensitivity.
     """
     # Use sklearn to grab the ROC curve
-    fpr, tpr, thr = roc_curve(y_true=truthValues, y_score=testValues)
+    falsePositiveRates, truePositiveRates, thresholds = roc_curve(
+        y_true=truthValues, y_score=testValues)
 
-    # Values used to store the index at which tpr_in occurs.
-    eval_index = -1
-    eval_spec = 0.0
-
-    # Search for the point along the curve where tpr_in occurs.
-    for i in range(len(tpr)):
-        if tpr[i] >= tpr_in:
-            eval_index = i
+    # Search for the point along the curve where sensitivityThreshold occurs.
+    for position, truePositiveRate in enumerate(truePositiveRates):
+        if truePositiveRate >= sensitivityThreshold:
+            falsePositiveRate = falsePositiveRates[position]
+            trueNegativeRate = 1.0 - falsePositiveRate
             break
-
-    # Store the specificity at that location.
-    if eval_index >= 0:
-        eval_spec = 1.0 - fpr[eval_index]
+    else:
+        trueNegativeRate = 0.0
 
     # Report the value
     metrics = [
         {
-            'name': 'spec_at_sens_'+str(tpr_in),
-            'value': eval_spec
+            'name': 'spec_at_sens_%s ' % sensitivityThreshold,
+            'value': trueNegativeRate  # this is specificity
         }
     ]
     return metrics
