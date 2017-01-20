@@ -224,8 +224,11 @@ def computeSPECMetrics(truthValues, testValues, sensitivityThreshold):
     # Report the value
     metrics = [
         {
-            'name': 'spec_at_sens_%s ' % sensitivityThreshold,
-            'value': trueNegativeRate  # this is specificity
+            # Metric names may not contain periods, in order for Covalic to
+            # store title / description mappings for them
+            'name': 'spec_at_sens_%s' %
+                ('%g' % sensitivityThreshold * 100).replace('.', '_'),
+            'value': trueNegativeRate  # This is specificity
         }
     ]
     return metrics
