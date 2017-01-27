@@ -121,8 +121,8 @@ def scoreP2(truthDir, testDir):
             featureAllTestValues.setdefault(featureName, []).extend(
                 testFeatures[featureName])
 
-            # truthPath ~= '/.../ISIC_0000003.json'
-            imageName = os.path.splitext(os.path.basename(truthPath))[0]
+            # truthPath ~= 'ISIC_0000003_features.json'
+            imageName = truthFile.rsplit('_', 1)[0]
             scores.append({
                 'dataset': '%s_%s' % (imageName, featureName),
                 'metrics': metrics
