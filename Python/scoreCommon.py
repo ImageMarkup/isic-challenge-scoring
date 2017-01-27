@@ -227,7 +227,7 @@ def computeSPECMetrics(truthValues, testValues, sensitivityThreshold):
             # Metric names may not contain periods, in order for Covalic to
             # store title / description mappings for them
             'name': 'spec_at_sens_%s' %
-                ('%g' % sensitivityThreshold * 100).replace('.', '_'),
+                ('%g' % (sensitivityThreshold * 100)).replace('.', '_'),
             'value': trueNegativeRate  # This is specificity
         }
     ]
