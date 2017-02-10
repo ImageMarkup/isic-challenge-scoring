@@ -49,6 +49,7 @@ def matchInputFile(truthFile, testDir):
 
 
 def loadSegmentationImage(imagePath):
+    """Load a segmentation image as a NumPy array, given a file path."""
     try:
         image = Image.open(imagePath)
     except Exception as e:
@@ -64,18 +65,13 @@ def loadSegmentationImage(imagePath):
         raise ScoreException('Image %s is not single-channel (grayscale).' %
                              os.path.basename(imagePath))
 
+    image = np.array(image)
+
     return image
 
 
-def resizeImage(image, width, height):
-    """Resize image to (width, height) using nearest neighbor interpolation."""
-    return image.resize((width, height), Image.NEAREST)
-
-
-def convertToNumPyArray(image, imagePath):
-    """Convert PIL Image to NumPy array."""
-    image = np.array(image)
-
+def assertBinaryImage(image, imageName):
+    """Ensure a NumPy array image is binary, correcting if possible."""
     imageValues = set(np.unique(image))
     if imageValues <= {0, 255}:
         # Expected values
@@ -87,10 +83,10 @@ def convertToNumPyArray(image, imagePath):
         image *= 255
         if set(np.unique(image)) > {0, 255}:
             raise ScoreException('Image %s contains values other than 0 and '
-                                 '255.' % os.path.basename(imagePath))
+                                 '255.' % imageName)
     else:
         raise ScoreException('Image %s contains values other than 0 and 255.' %
-                             os.path.basename(imagePath))
+                             imageName)
 
     return image
 

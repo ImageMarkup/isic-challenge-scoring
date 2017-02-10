@@ -19,16 +19,16 @@
 
 import os
 
+import numpy as np
+
 from scoreCommon import ScoreException, matchInputFile, loadSegmentationImage, \
-    convertToNumPyArray, computeCommonMetrics, computeSimilarityMetrics
+    assertBinaryImage, computeCommonMetrics, computeSimilarityMetrics
 
 
 def scoreP1Image(truthPath, testPath):
     truthImage = loadSegmentationImage(truthPath)
+    truthImage = assertBinaryImage(truthImage, os.path.basename(truthPath))
     testImage = loadSegmentationImage(testPath)
-
-    truthImage = convertToNumPyArray(truthImage, truthPath)
-    testImage = convertToNumPyArray(testImage, testPath)
 
     if testImage.shape[0:2] != truthImage.shape[0:2]:
         raise ScoreException('Image %s has dimensions %s; expected %s.' %
