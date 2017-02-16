@@ -41,8 +41,8 @@ def matchRowName(truthImageName, testValues):
     if not testValueCandidates:
         raise ScoreException('No matching submissions for: %s' % truthImageName)
     elif len(testValueCandidates) > 1:
-        raise ScoreException('Multiple matching submissions for: %s' %
-                        truthImageName)
+        raise ScoreException(
+            'Multiple matching submissions for: %s' % truthImageName)
     return testValueCandidates[0]
 
 
