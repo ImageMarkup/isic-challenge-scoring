@@ -29,7 +29,6 @@ import zipfile
 from scoreCommon import ScoreException
 from scoreP1 import scoreP1
 from scoreP2 import scoreP2
-from scoreP2B import scoreP2B
 from scoreP3 import scoreP3
 
 
@@ -101,7 +100,7 @@ def scoreAll(args):
     unzipAll(testDir, delete=True)
 
     # Identify which phase this is, based on ground truth file name
-    truthRe = re.match(r'^ISBI2016_ISIC_Part([0-9]B?)_Test_GroundTruth\.(?:csv|zip)$',
+    truthRe = re.match(r'^ISIC-2017_(?:Test|Validation)_Part([0-9])_GroundTruth\.(?:csv|zip)$',
                        os.path.basename(truthPath))
     if not truthRe:
         raise ScoreException('Internal error: could not parse ground truth file'
@@ -111,12 +110,8 @@ def scoreAll(args):
         scores = scoreP1(truthDir, testDir)
     elif phaseNum == '2':
         scores = scoreP2(truthDir, testDir)
-    elif phaseNum == '2B':
-        scores = scoreP2B(truthDir, testDir)
     elif phaseNum == '3':
-        scores = scoreP3(truthDir, testDir, '3')
-    elif phaseNum == '3B':
-        scores = scoreP3(truthDir, testDir, '3B')
+        scores = scoreP3(truthDir, testDir)
     else:
         raise ScoreException('Internal error: unknown ground truth phase '
                              'number: %s' % os.path.basename(truthPath))

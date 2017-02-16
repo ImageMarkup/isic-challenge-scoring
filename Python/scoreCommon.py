@@ -49,6 +49,7 @@ def matchInputFile(truthFile, testDir):
 
 
 def loadSegmentationImage(imagePath):
+    """Load a segmentation image as a NumPy array, given a file path."""
     try:
         image = Image.open(imagePath)
     except Exception as e:
@@ -64,18 +65,13 @@ def loadSegmentationImage(imagePath):
         raise ScoreException('Image %s is not single-channel (grayscale).' %
                              os.path.basename(imagePath))
 
+    image = np.array(image)
+
     return image
 
 
-def resizeImage(image, width, height):
-    """Resize image to (width, height) using nearest neighbor interpolation."""
-    return image.resize((width, height), Image.NEAREST)
-
-
-def convertToNumPyArray(image, imagePath):
-    """Convert PIL Image to NumPy array."""
-    image = np.array(image)
-
+def assertBinaryImage(image, imageName):
+    """Ensure a NumPy array image is binary, correcting if possible."""
     imageValues = set(np.unique(image))
     if imageValues <= {0, 255}:
         # Expected values
@@ -87,10 +83,10 @@ def convertToNumPyArray(image, imagePath):
         image *= 255
         if set(np.unique(image)) > {0, 255}:
             raise ScoreException('Image %s contains values other than 0 and '
-                                 '255.' % os.path.basename(imagePath))
+                                 '255.' % imageName)
     else:
         raise ScoreException('Image %s contains values other than 0 and 255.' %
-                             os.path.basename(imagePath))
+                             imageName)
 
     return image
 
@@ -188,7 +184,8 @@ def computeAveragePrecisionMetrics(truthValues, testValues):
         }
     ]
     return metrics
-    
+
+
 def computeAUCMetrics(truthValues, testValues):
     """
     Compute AUC measure.
@@ -202,33 +199,32 @@ def computeAUCMetrics(truthValues, testValues):
     ]
     return metrics
 
-def computeSPECMetrics(truthValues, testValues, tpr_in):
+
+def computeSPECMetrics(truthValues, testValues, sensitivityThreshold):
     """
     Compute specificity at specified sensitivity.
     """
-    
     # Use sklearn to grab the ROC curve
-    fpr, tpr, thr = roc_curve(y_true=truthValues, y_score=testValues)
-    
-    # Values used to store the index at which tpr_in occurs.
-    eval_index = -1
-    eval_spec = 0.0
-    
-    # Search for the point along the curve where tpr_in occurs.
-    for i in range(len(tpr)):
-        if (tpr[i] >= tpr_in):
-            eval_index = i
+    falsePositiveRates, truePositiveRates, thresholds = roc_curve(
+        y_true=truthValues, y_score=testValues)
+
+    # Search for the point along the curve where sensitivityThreshold occurs.
+    for position, truePositiveRate in enumerate(truePositiveRates):
+        if truePositiveRate >= sensitivityThreshold:
+            falsePositiveRate = falsePositiveRates[position]
+            trueNegativeRate = 1.0 - falsePositiveRate
             break
-        
-    # Store the specificity at that location.
-    if (eval_index >= 0):
-        eval_spec = 1.0 - fpr[eval_index]
-        
+    else:
+        trueNegativeRate = 0.0
+
     # Report the value
     metrics = [
         {
-            'name': 'spec_at_sens_'+str(tpr_in),
-            'value': eval_spec
+            # Metric names may not contain periods, in order for Covalic to
+            # store title / description mappings for them
+            'name': 'spec_at_sens_%s' %
+                ('%g' % (sensitivityThreshold * 100)).replace('.', '_'),
+            'value': trueNegativeRate  # This is specificity
         }
     ]
     return metrics

@@ -26,7 +26,8 @@ from scoreCommon import ScoreException, matchInputFile, \
     computeCommonMetrics, computeAveragePrecisionMetrics, computeAUCMetrics
 
 
-_FEATURE_NAMES = ['globules', 'streaks']
+_FEATURE_NAMES = ['pigment_network', 'negative_network',
+                  'milia_like_cyst', 'streaks']
 
 
 def loadFeatures(featuresPath):
@@ -77,7 +78,6 @@ def loadFeatures(featuresPath):
 
 
 def scoreP2(truthDir, testDir):
-
     scores = []
     featureAllTruthValues = {}
     featureAllTestValues = {}
@@ -106,11 +106,14 @@ def scoreP2(truthDir, testDir):
             testBinaryValues = testValues > 0.5
             metrics = computeCommonMetrics(truthBinaryValues, testBinaryValues)
 
-            # Insert null average precision to keep matrix the correct size
-            metrics.append({
+            # Insert null individual values to keep matrix the correct size
+            metrics.extend([{
                 'name': 'average_precision',
                 'value': None
-            })
+            }, {
+                'name': 'area_under_roc',
+                'value': None
+            }])
 
             # Store binary values for later use for average precision
             featureAllTruthValues.setdefault(featureName, []).extend(
@@ -118,10 +121,10 @@ def scoreP2(truthDir, testDir):
             featureAllTestValues.setdefault(featureName, []).extend(
                 testFeatures[featureName])
 
-            # truthPath ~= '/.../ISIC_0000003.json'
-            datasetName = os.path.splitext(os.path.basename(truthPath))[0]
+            # truthPath ~= 'ISIC_0000003_features.json'
+            imageName = truthFile.rsplit('_', 1)[0]
             scores.append({
-                'dataset': '%s_%s' % (datasetName, featureName),
+                'dataset': '%s_%s' % (imageName, featureName),
                 'metrics': metrics
             })
 
@@ -140,7 +143,7 @@ def scoreP2(truthDir, testDir):
         # Compute average precision over all images
         aggregateMetrics.extend(
             computeAveragePrecisionMetrics(allTruthValues, allTestValues))
-            
+
         # Compute AUC
         aggregateMetrics.extend(computeAUCMetrics(allTruthValues, allTestValues))
 

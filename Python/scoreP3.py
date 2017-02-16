@@ -19,6 +19,7 @@
 
 import csv
 import os
+import re
 
 import numpy as np
 
@@ -34,7 +35,7 @@ def matchRowName(truthImageName, testValues):
     testValueCandidates = [
         testValue
         for testValue in testValues
-        if truthImageId in testValue['image']
+        if truthImageId in testValue['image_id']
     ]
 
     if not testValueCandidates:
@@ -45,10 +46,12 @@ def matchRowName(truthImageName, testValues):
     return testValueCandidates[0]
 
 
-def scoreP3(truthDir, testDir, phaseNum='3'):
-    truthFile = os.path.join(
-        truthDir, 'ISBI2016_ISIC_Part%s_Test_GroundTruth.csv' % phaseNum)
-    assert os.path.exists(truthFile)
+def scoreP3(truthDir, testDir):
+    truthFile = next(
+        os.path.join(truthDir, f)
+        for f in os.listdir(truthDir)
+        if re.match(r'ISIC-2017_(?:Test|Validation)_Part3_GroundTruth\.csv', f)
+    )
 
     testFiles = sorted(os.listdir(testDir))
     if len(testFiles) != 1:
@@ -60,30 +63,39 @@ def scoreP3(truthDir, testDir, phaseNum='3'):
     testRows = []
     with open(testFile, 'rU') as testFileObj:
         try:
-            testReader = csv.DictReader(testFileObj,
-                                        fieldnames=['image', 'confidence'])
+            testReader = csv.DictReader(
+                testFileObj,
+                fieldnames=['image_id', 'melanoma', 'seborrheic_keratosis'])
             for rowNum, testRow in enumerate(testReader):
                 # TODO: handle extra fields
-                if len(testRow.keys()) < 2:
+                if len(testRow.keys()) < 3:
                     raise ScoreException('Row %d has an incorrect number of'
-                                         'fields. Two fields are expected: '
-                                         '<image_id>, <malignant_confidence>' %
-                                         rowNum)
+                                         'fields. Three fields are expected: '
+                                         '<image_id>, <melanoma>, '
+                                         '<seborrheic_keratosis>' % rowNum)
 
-                if not testRow['image']:
+                if not re.match(r'ISIC_[0-9]{7}', testRow['image_id']):
+                    if rowNum == 0:
+                        # Allow the first row to be a header
+                        continue
                     raise ScoreException('Could not find an image ID in the '
                                          'first field of row %d.' % rowNum)
 
                 try:
-                    testRow['confidence'] = float(testRow['confidence'])
+                    testRow['melanoma'] = float(testRow['melanoma'])
+                    testRow['seborrheic_keratosis'] = \
+                        float(testRow['seborrheic_keratosis'])
                 except (ValueError, TypeError):
-                    raise ScoreException('Could not parse the second field for '
-                                         '"%s" (row %d) as a floating-point '
-                                         'value.' % (testRow['image'], rowNum))
-                if not (0.0 <= testRow['confidence'] <= 1.0):
-                    raise ScoreException('The confidence value for "%s" (row %d)'
-                                         ' is outside the range [0.0, 1.0].' %
-                                         (testRow['image'], rowNum))
+                    raise ScoreException('Could not parse one of the second or '
+                                         'third fields for "%s" (row %d) as '
+                                         'floating-point values.' %
+                                         (testRow['image_id'], rowNum))
+                if not ((0.0 <= testRow['melanoma'] <= 1.0) and
+                        (0.0 <= testRow['seborrheic_keratosis'] <= 1.0)):
+                    raise ScoreException('One of the confidence values for '
+                                         '"%s" (row %d) is outside the range '
+                                         '[0.0, 1.0].' %
+                                         (testRow['image_id'], rowNum))
 
                 testRows.append(testRow)
         except csv.Error as e:
@@ -93,47 +105,85 @@ def scoreP3(truthDir, testDir, phaseNum='3'):
     # Load the ground truth CSV file, and merge it with the test results
     combinedRows = []
     with open(truthFile) as truthFileObj:
-        truthReader = csv.DictReader(truthFileObj,
-                                     fieldnames=['image', 'confidence'])
+        truthReader = csv.DictReader(truthFileObj)
         for truthRow in truthReader:
             # Find the matching test result
-            testRow = matchRowName(truthRow['image'], testRows)
+            testRow = matchRowName(truthRow['image_id'], testRows)
 
             combinedRows.append({
-                'image': truthRow['image'],
-                'truth_value': float(truthRow['confidence']),
-                'test_value': testRow['confidence'],
+                'image_id': truthRow['image_id'],
+                'truth_value_melanoma': float(truthRow['melanoma']),
+                'test_value_melanoma': testRow['melanoma'],
+                'truth_value_seborrheic_keratosis':
+                    float(truthRow['seborrheic_keratosis']),
+                'test_value_seborrheic_keratosis':
+                    testRow['seborrheic_keratosis'],
             })
 
-    # Build the Numpy arrays for calculations
-    truthValues = np.array([value['truth_value'] for value in combinedRows])
-    testValues = np.array([value['test_value'] for value in combinedRows])
+        metricsByCategory = {}
+    for category in ['melanoma', 'seborrheic_keratosis']:
+        metricsByCategory[category] = []
 
-    # Compute accuracy, sensitivity, and specificity
-    truthBinaryValues = truthValues > 0.5
-    testBinaryValues = testValues > 0.5
-    metrics = computeCommonMetrics(truthBinaryValues, testBinaryValues)
+        # Build the Numpy arrays for calculations
+        truthValues = np.array(
+            [value['truth_value_%s' % category] for value in combinedRows])
+        testValues = np.array(
+            [value['test_value_%s' % category] for value in combinedRows])
 
-    # Compute average precision
-    metrics.extend(computeAveragePrecisionMetrics(truthValues, testValues))
-    
-    # Compute AUC
-    metrics.extend(computeAUCMetrics(truthValues, testValues))
-    
-    # Compute specificity at 95% sensitivity
-    metrics.extend(computeSPECMetrics(truthValues, testValues, 0.95))
-    
-    # Compute specificity at 98% sensitivity
-    metrics.extend(computeSPECMetrics(truthValues, testValues, 0.98))
-    
-    # Compute specificity at 99% sensitivity
-    metrics.extend(computeSPECMetrics(truthValues, testValues, 0.99))
+        # Compute accuracy, sensitivity, and specificity
+        truthBinaryValues = truthValues > 0.5
+        testBinaryValues = testValues > 0.5
+        metricsByCategory[category].extend(
+            computeCommonMetrics(truthBinaryValues, testBinaryValues))
+
+        # Compute average precision
+        metricsByCategory[category].extend(
+            computeAveragePrecisionMetrics(truthValues, testValues))
+
+        # Compute specificity at 82% sensitivity
+        metricsByCategory[category].extend(
+            computeSPECMetrics(truthValues, testValues, 0.82))
+
+        # Compute specificity at 89% sensitivity
+        metricsByCategory[category].extend(
+            computeSPECMetrics(truthValues, testValues, 0.89))
+
+        # Compute specificity at 95% sensitivity
+        metricsByCategory[category].extend(
+            computeSPECMetrics(truthValues, testValues, 0.95))
+
+        # Compute AUC
+        metricsByCategory[category].extend(
+            computeAUCMetrics(truthValues, testValues))
+
+    # Compute mean metrics for combined melanoma and seborrheic_keratosis
+    metricsByCategory['mean'] = []
+    for metricMelanoma, metricSeborrheicKeratosis in zip(
+            metricsByCategory['melanoma'],
+            metricsByCategory['seborrheic_keratosis']):
+
+        assert metricMelanoma['name'] == metricSeborrheicKeratosis['name']
+        metricsByCategory['mean'].append({
+            'name': metricMelanoma['name'],
+            'value': (metricMelanoma['value'] +
+                      metricSeborrheicKeratosis['value']) / 2.0
+        })
+
+    # Combine all metrics into a single list
+    allMetrics = [
+        {
+            'name': '%s_%s' % (metric['name'], category),
+            'value': metric['value']
+        }
+        for category in ['melanoma', 'seborrheic_keratosis', 'mean']
+        for metric in metricsByCategory[category]
+    ]
 
     # Only a single score can be computed for the entire dataset
     scores = [
         {
             'dataset': 'aggregate',
-            'metrics': metrics
+            'metrics': allMetrics
         }
     ]
     return scores
