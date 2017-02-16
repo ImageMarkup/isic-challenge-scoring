@@ -50,7 +50,8 @@ def scoreP3(truthDir, testDir):
     truthFile = next(
         os.path.join(truthDir, f)
         for f in os.listdir(truthDir)
-        if re.match(r'ISIC-2017_(?:Test|Validation)_Part3_GroundTruth\.csv', f)
+        if re.match(
+            r'ISIC-2017_(?:Test_v2|Validation)_Part3_GroundTruth\.csv', f)
     )
 
     testFiles = sorted(os.listdir(testDir))
