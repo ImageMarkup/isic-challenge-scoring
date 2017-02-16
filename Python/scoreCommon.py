@@ -44,7 +44,8 @@ def matchInputFile(truthFile, testDir):
     if not testPathCandidates:
         raise ScoreException('No matching submission for: %s' % truthFile)
     elif len(testPathCandidates) > 1:
-        raise ScoreException('Multiple matching submissions for: %s' % truthFile)
+        raise ScoreException(
+            'Multiple matching submissions for: %s' % truthFile)
     return testPathCandidates[0]
 
 
@@ -62,7 +63,7 @@ def loadSegmentationImage(imagePath):
         image = image.convert('L')
 
     if image.mode != 'L':
-        raise ScoreException('Image %s is not single-channel (grayscale).' %
+        raise ScoreException('Image %s is not single-channel (greyscale).' %
                              os.path.basename(imagePath))
 
     image = np.array(image)
@@ -82,11 +83,11 @@ def assertBinaryImage(image, imageName):
         image /= highValue
         image *= 255
         if set(np.unique(image)) > {0, 255}:
-            raise ScoreException('Image %s contains values other than 0 and '
-                                 '255.' % imageName)
+            raise ScoreException(
+                'Image %s contains values other than 0 and 255.' % imageName)
     else:
-        raise ScoreException('Image %s contains values other than 0 and 255.' %
-                             imageName)
+        raise ScoreException(
+            'Image %s contains values other than 0 and 255.' % imageName)
 
     return image
 
@@ -120,7 +121,7 @@ def computeCommonMetrics(truthBinaryValues, testBinaryValues):
             'name': 'accuracy',
             'value': (float(truePositive + trueNegative) /
                       float(truePositive + trueNegative +
-                           falsePositive + falseNegative))
+                            falsePositive + falseNegative))
         },
         {
             'name': 'sensitivity',
@@ -223,7 +224,7 @@ def computeSPECMetrics(truthValues, testValues, sensitivityThreshold):
             # Metric names may not contain periods, in order for Covalic to
             # store title / description mappings for them
             'name': 'spec_at_sens_%s' %
-                ('%g' % (sensitivityThreshold * 100)).replace('.', '_'),
+                    ('%g' % (sensitivityThreshold * 100)).replace('.', '_'),
             'value': trueNegativeRate  # This is specificity
         }
     ]

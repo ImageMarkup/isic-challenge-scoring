@@ -19,8 +19,6 @@
 
 import os
 
-import numpy as np
-
 from scoreCommon import ScoreException, matchInputFile, loadSegmentationImage, \
     assertBinaryImage, computeCommonMetrics, computeSimilarityMetrics
 

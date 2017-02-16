@@ -63,16 +63,17 @@ def loadFeatures(featuresPath):
                 for superpixelValue in features[featureName]
             ]
         except ValueError:
-            raise ScoreException('Array for feature "%s" in JSON file "%s" '
-                                 'contains non-floating-point value(s).' %
-                                 (featureName, os.path.basename(featuresPath)))
+            raise ScoreException(
+                'Array for feature "%s" in JSON file "%s" contains '
+                'non-floating-point value(s).' %
+                (featureName, os.path.basename(featuresPath)))
 
         for superpixelValue in features[featureName]:
             if not (0.0 <= superpixelValue <= 1.0):
-                raise ScoreException('Array for feature "%s" in JSON file "%s" '
-                                'contains a value outside the range '
-                                '[0.0, 1.0].' %
-                                (featureName, os.path.basename(featuresPath)))
+                raise ScoreException(
+                    'Array for feature "%s" in JSON file "%s" contains a value '
+                    'outside the range [0.0, 1.0].' %
+                    (featureName, os.path.basename(featuresPath)))
 
     return features
 
@@ -145,7 +146,8 @@ def scoreP2(truthDir, testDir):
             computeAveragePrecisionMetrics(allTruthValues, allTestValues))
 
         # Compute AUC
-        aggregateMetrics.extend(computeAUCMetrics(allTruthValues, allTestValues))
+        aggregateMetrics.extend(
+            computeAUCMetrics(allTruthValues, allTestValues))
 
         aggregateScores.append({
             'dataset': 'aggregate_%s' % featureName,

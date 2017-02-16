@@ -68,7 +68,7 @@ def extractZip(path, dest, flatten=True):
 def unzipAll(directory, delete=True):
     """
     Unzip all zip files in directory and optionally delete them.
-    Return a list of the zip file filenames.
+    Return a list of the zip file names.
     """
     zipFiles = [f for f in os.listdir(directory)
                 if f.lower().endswith('.zip')]
@@ -93,18 +93,20 @@ def scoreAll(args):
             truthPath = truthSubFiles[0]
 
     if not truthPath:
-        raise ScoreException('Internal error: error reading ground truth folder:'
-                             ' %s' % truthDir)
+        raise ScoreException(
+            'Internal error: error reading ground truth folder: %s' % truthDir)
 
     testDir = args.submission
     unzipAll(testDir, delete=True)
 
     # Identify which phase this is, based on ground truth file name
-    truthRe = re.match(r'^ISIC-2017_(?:Test|Validation)_Part([0-9])_GroundTruth\.(?:csv|zip)$',
-                       os.path.basename(truthPath))
+    truthRe = re.match(
+        r'^ISIC-2017_(?:Test|Validation)_Part([0-9])_GroundTruth\.(?:csv|zip)$',
+        os.path.basename(truthPath))
     if not truthRe:
-        raise ScoreException('Internal error: could not parse ground truth file'
-                             ' name: %s' % os.path.basename(truthPath))
+        raise ScoreException(
+            'Internal error: could not parse ground truth file name: %s' %
+            os.path.basename(truthPath))
     phaseNum = truthRe.group(1)
     if phaseNum == '1':
         scores = scoreP1(truthDir, testDir)
@@ -113,8 +115,9 @@ def scoreAll(args):
     elif phaseNum == '3':
         scores = scoreP3(truthDir, testDir)
     else:
-        raise ScoreException('Internal error: unknown ground truth phase '
-                             'number: %s' % os.path.basename(truthPath))
+        raise ScoreException(
+            'Internal error: unknown ground truth phase number: %s' %
+            os.path.basename(truthPath))
 
     print(json.dumps(scores))
 
