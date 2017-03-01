@@ -42,27 +42,31 @@ def extractZip(path, dest, flatten=True):
         if not os.path.exists(dest):
             raise
 
-    with zipfile.ZipFile(path) as zf:
-        if flatten:
-            for name in zf.namelist():
-                # Ignore Mac OS X metadata
-                if name.startswith('__MACOSX'):
-                    continue
-                outName = os.path.basename(name)
-                # Skip directories
-                if not outName:
-                    continue
-                out = os.path.join(dest, outName)
-                with open(out, 'wb') as ofh:
-                    with zf.open(name) as ifh:
-                        while True:
-                            buf = ifh.read(65536)
-                            if buf:
-                                ofh.write(buf)
-                            else:
-                                break
-        else:
-            zf.extractall(dest)
+    try:
+        with zipfile.ZipFile(path) as zf:
+            if flatten:
+                for name in zf.namelist():
+                    # Ignore Mac OS X metadata
+                    if name.startswith('__MACOSX'):
+                        continue
+                    outName = os.path.basename(name)
+                    # Skip directories
+                    if not outName:
+                        continue
+                    out = os.path.join(dest, outName)
+                    with open(out, 'wb') as ofh:
+                        with zf.open(name) as ifh:
+                            while True:
+                                buf = ifh.read(65536)
+                                if buf:
+                                    ofh.write(buf)
+                                else:
+                                    break
+            else:
+                zf.extractall(dest)
+    except zipfile.BadZipfile as e:
+        raise ScoreException('Could not read ZIP file "%s": %s' %
+                             (os.path.basename(path), str(e)))
 
 
 def unzipAll(directory, delete=True):
