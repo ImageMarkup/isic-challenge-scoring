@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
 ###############################################################################
@@ -19,8 +18,9 @@
 
 import os
 
-from scoreCommon import ScoreException, matchInputFile, loadSegmentationImage, \
-    assertBinaryImage, computeCommonMetrics, computeSimilarityMetrics
+from .scoreCommon import ScoreException, matchInputFile, \
+    loadSegmentationImage, assertBinaryImage, computeCommonMetrics, \
+    computeSimilarityMetrics
 
 
 def scoreP1Image(truthPath, testPath):

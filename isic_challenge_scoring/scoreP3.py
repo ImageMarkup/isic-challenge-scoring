@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
 ###############################################################################
@@ -23,7 +22,7 @@ import re
 
 import numpy as np
 
-from scoreCommon import ScoreException, \
+from .scoreCommon import ScoreException, \
     computeCommonMetrics, computeAveragePrecisionMetrics, \
     computeAUCMetrics, computeSPECMetrics
 

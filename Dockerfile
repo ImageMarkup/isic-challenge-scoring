@@ -20,5 +20,5 @@ RUN apt-get update && \
       python3
 WORKDIR /covalic
 COPY --from=venv_builder /covalic .
-COPY Python ./Python
-ENTRYPOINT ["/covalic/venv/bin/python", "/covalic/Python/scoreSubmission.py"]
+COPY isic_challenge_scoring ./isic_challenge_scoring
+ENTRYPOINT ["./venv/bin/python", "-m", "isic_challenge_scoring"]

@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
 ###############################################################################
@@ -17,17 +16,15 @@
 #  limitations under the License.
 ###############################################################################
 
-import argparse
 import json
 import os
 import re
-import sys
 import zipfile
 
-from scoreCommon import ScoreException
-from scoreP1 import scoreP1
-from scoreP2 import scoreP2
-from scoreP3 import scoreP3
+from .scoreCommon import ScoreException
+from .scoreP1 import scoreP1
+from .scoreP2 import scoreP2
+from .scoreP3 import scoreP3
 
 
 def extractZip(path, dest, flatten=True):
@@ -82,9 +79,8 @@ def unzipAll(directory, delete=True):
     return zipFiles
 
 
-def scoreAll(args):
+def scoreAll(truthDir, testDir):
     # Unzip zip files contained in the input folders
-    truthDir = args.groundtruth
     truthZipSubFiles = unzipAll(truthDir, delete=True)
     truthPath = None
     if truthZipSubFiles:
@@ -98,7 +94,6 @@ def scoreAll(args):
         raise ScoreException(
             'Internal error: error reading ground truth folder: %s' % truthDir)
 
-    testDir = args.submission
     unzipAll(testDir, delete=True)
 
     # Identify which phase this is, based on ground truth file name
@@ -123,20 +118,3 @@ def scoreAll(args):
             os.path.basename(truthPath))
 
     print(json.dumps(scores))
-
-
-if __name__ == '__main__':
-    parser = argparse.ArgumentParser(
-        description='Submission scoring helper script')
-    parser.add_argument('-g', '--groundtruth', required=True,
-                        help='path to the ground truth folder')
-    parser.add_argument('-s', '--submission', required=True,
-                        help='path to the submission folder')
-    args = parser.parse_args()
-
-    try:
-        scoreAll(args)
-    except ScoreException as e:
-        covalicErrorPrefix = 'covalic.error: '
-        print(covalicErrorPrefix + str(e), file=sys.stderr)
-        exit(1)

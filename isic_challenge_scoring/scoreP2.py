@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
 ###############################################################################
@@ -22,7 +21,7 @@ import os
 
 import numpy as np
 
-from scoreCommon import ScoreException, matchInputFile, \
+from .scoreCommon import ScoreException, matchInputFile, \
     computeCommonMetrics, computeAveragePrecisionMetrics, computeAUCMetrics
 
 
