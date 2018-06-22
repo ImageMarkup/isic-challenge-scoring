@@ -18,103 +18,101 @@
 
 import json
 import os
+import pathlib
 import re
+import shutil
+import tempfile
 import zipfile
 
 from .scoreCommon import ScoreException
-from .scoreP1 import scoreP1
-from .scoreP2 import scoreP2
-from .scoreP3 import scoreP3
+from .task1 import scoreP1
+from .task2 import scoreP2
+from .task3 import scoreP3
 
 
-def extractZip(path, dest, flatten=True):
+def extractZip(zipPath, outputPath, flatten=True):
     """
     Extract a zip file, optionally flattening it into a single directory.
     """
     try:
-        os.makedirs(dest)
-    except OSError:
-        if not os.path.exists(dest):
-            raise
-
-    try:
-        with zipfile.ZipFile(path) as zf:
+        with zipfile.ZipFile(zipPath) as zf:
             if flatten:
-                for name in zf.namelist():
-                    # Ignore Mac OS X metadata
-                    if name.startswith('__MACOSX'):
+                for memberInfo in zf.infolist():
+                    memberName = memberInfo.filename
+                    if memberName.startswith('__MACOSX'):
+                        # Ignore Mac OS X metadata
                         continue
-                    outName = os.path.basename(name)
-                    # Skip directories
-                    if not outName:
+
+                    memberBaseName = os.path.basename(memberName)
+                    if not memberBaseName:
+                        # Skip directories
                         continue
-                    out = os.path.join(dest, outName)
-                    with open(out, 'wb') as ofh:
-                        with zf.open(name) as ifh:
-                            while True:
-                                buf = ifh.read(65536)
-                                if buf:
-                                    ofh.write(buf)
-                                else:
-                                    break
+
+                    memberOutputPath = outputPath / memberBaseName
+
+                    with zf.open(memberInfo) as inputStream, \
+                            memberOutputPath.open('wb') as outputStream:
+                        shutil.copyfileobj(inputStream, outputStream)
             else:
-                zf.extractall(dest)
+                zf.extractall(outputPath)
     except zipfile.BadZipfile as e:
-        raise ScoreException('Could not read ZIP file "%s": %s' %
-                             (os.path.basename(path), str(e)))
+        raise ScoreException(f'Could not read ZIP file "{zipPath.name}": {str(e)}.')
 
 
-def unzipAll(directory, delete=True):
+def unzipAll(inputPath):
     """
-    Unzip all zip files in directory and optionally delete them.
-    Return a list of the zip file names.
+    Extract / copy all files in directory.
+    Return a path to the extracted content.
     """
-    zipFiles = [f for f in os.listdir(directory)
-                if f.lower().endswith('.zip')]
-    for zipFile in zipFiles:
-        zipPath = os.path.join(directory, zipFile)
-        extractZip(zipPath, directory)
-        if delete:
-            os.remove(zipPath)
-    return zipFiles
-
-
-def scoreAll(truthDir, testDir):
-    # Unzip zip files contained in the input folders
-    truthZipSubFiles = unzipAll(truthDir, delete=True)
-    truthPath = None
-    if truthZipSubFiles:
-        truthPath = truthZipSubFiles[0]
-    else:
-        truthSubFiles = os.listdir(truthDir)
-        if truthSubFiles:
-            truthPath = truthSubFiles[0]
-
-    if not truthPath:
+    inputFiles = list(inputPath.iterdir())
+    if len(inputFiles) > 1:
         raise ScoreException(
-            'Internal error: error reading ground truth folder: %s' % truthDir)
+            'Multiple files submitted. Exactly one ZIP or CSV file should be submitted.')
+    elif len(inputFiles) < 1:
+        raise ScoreException(
+            'No files submitted. Exactly one ZIP or CSV file should be submitted.')
 
-    unzipAll(testDir, delete=True)
+    inputFile = inputFiles[0]
+    if not inputFile.is_file():
+        # Covalic should not allow this to happen
+        raise ScoreException('Internal error: non-regular file submitted.')
+
+    outputTempDir = tempfile.TemporaryDirectory()
+    outputPath = pathlib.Path(outputTempDir.name)
+
+    if inputFile.suffix.lower() == '.zip':
+        extractZip(inputFile, outputPath)
+    else:
+        shutil.copy(inputFile, outputPath)
+
+    return outputPath, outputTempDir
+
+
+def scoreAll(truthInputPath, predictionInputPath):
+    # Unzip zip files contained in the input folders
+    truthPath, truthTempDir = unzipAll(truthInputPath)
+
+    predictionPath, predictionTempDir = unzipAll(predictionInputPath)
 
     # Identify which phase this is, based on ground truth file name
     truthRe = re.match(
-        r'^ISIC-2017_(?:Test_v2|Validation)_'
-        r'Part([0-9])_GroundTruth\.(?:csv|zip)$',
-        os.path.basename(truthPath))
+        r'^ISIC2018_Task([0-9])_(?:Validation|Test)_GroundTruth\.zip$',
+        next(truthInputPath.iterdir()).name)
     if not truthRe:
         raise ScoreException(
-            'Internal error: could not parse ground truth file name: %s' %
-            os.path.basename(truthPath))
+            f'Internal error: could not parse ground truth file name: {truthInputPath.name}.')
     phaseNum = truthRe.group(1)
     if phaseNum == '1':
-        scores = scoreP1(truthDir, testDir)
+        scores = scoreP1(truthPath, predictionPath)
     elif phaseNum == '2':
-        scores = scoreP2(truthDir, testDir)
+        scores = scoreP2(truthPath, predictionPath)
     elif phaseNum == '3':
-        scores = scoreP3(truthDir, testDir)
+        scores = scoreP3(truthPath, predictionPath)
     else:
         raise ScoreException(
-            'Internal error: unknown ground truth phase number: %s' %
-            os.path.basename(truthPath))
+            f'Internal error: unknown ground truth phase number: {truthInputPath.name}.')
 
     print(json.dumps(scores))
+
+    truthTempDir.cleanup()
+    predictionTempDir.cleanup()

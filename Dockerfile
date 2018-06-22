@@ -9,6 +9,7 @@ WORKDIR /covalic
 RUN python3 -m venv ./venv && \
     ./venv/bin/pip --no-cache-dir install \
       numpy \
+      pandas \
       pillow \
       scipy \
       scikit-learn

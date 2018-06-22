@@ -17,6 +17,7 @@
 ###############################################################################
 
 import argparse
+import pathlib
 import sys
 
 from . import scoreAll
@@ -27,13 +28,23 @@ def main():
     parser = argparse.ArgumentParser(
         description='Submission scoring helper script')
     parser.add_argument('-g', '--groundtruth', required=True,
-                        help='path to the ground truth folder')
+                        help='path to the ground truth directory')
     parser.add_argument('-s', '--submission', required=True,
-                        help='path to the submission folder')
+                        help='path to the submission directory')
     args = parser.parse_args()
 
     try:
-        scoreAll(truthDir=args.groundtruth, testDir=args.submission)
+        truthInputPath = pathlib.Path(args.groundtruth)
+        if not truthInputPath.is_dir():
+            raise ScoreException(
+                'Internal error: "--groundtruth" argument must reference a directory')
+
+        predictionInputPath = pathlib.Path(args.submission)
+        if not predictionInputPath.is_dir():
+            raise ScoreException(
+                'Internal error: "--submission" argument must reference a directory')
+
+        scoreAll(truthInputPath, predictionInputPath)
     except ScoreException as e:
         covalicErrorPrefix = 'covalic.error: '
         print(covalicErrorPrefix + str(e), file=sys.stderr)
