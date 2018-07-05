@@ -1,4 +1,8 @@
 *.py[cod]
+*.egg-info
 .DS_Store
 .*.swp
 .*.swo
+.pytest_cache
+.eggs/
+__pycache__
