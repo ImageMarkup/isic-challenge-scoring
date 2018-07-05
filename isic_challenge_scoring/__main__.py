@@ -48,7 +48,7 @@ def main():
     except ScoreException as e:
         covalicErrorPrefix = 'covalic.error: '
         print(covalicErrorPrefix + str(e), file=sys.stderr)
-        exit(1)
+        sys.exit(1)
 
 
 main()
