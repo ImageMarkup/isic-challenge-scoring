@@ -97,7 +97,7 @@ def balancedMulticlassAccuracy(truthLabels: pd.Series, predictionLabels: pd.Seri
     #     columns=LABELS.map(lambda label: f'predicted_{label}')
     # )
 
-    truePositiveCounts = confusionMatrix.diagonal()
+    truePositiveCounts = pd.Series(confusionMatrix.diagonal(), index=CATEGORIES)
 
     # These are equal to rows of the confusion matrix
     trueLabelFrequencies = getFrequencies(truthLabels)
