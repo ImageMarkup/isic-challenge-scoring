@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
 ###############################################################################
@@ -17,7 +16,7 @@
 #  limitations under the License.
 ###############################################################################
 
-import os
+import pathlib
 
 import numpy as np
 from PIL import Image
@@ -30,32 +29,12 @@ class ScoreException(Exception):
     pass
 
 
-def matchInputFile(truthFile, testDir):
-    # truthFile ~= 'ISIC_0000003_Segmentation.png' (p1)
-    # truthFile ~= 'ISIC_0000003.json' (P2)
-    truthFileId = os.path.splitext(truthFile)[0].split('_')[1]
-
-    testPathCandidates = [
-        os.path.join(testDir, testFile)
-        for testFile in os.listdir(testDir)
-        if truthFileId in testFile
-    ]
-
-    if not testPathCandidates:
-        raise ScoreException('No matching submission for: %s' % truthFile)
-    elif len(testPathCandidates) > 1:
-        raise ScoreException(
-            'Multiple matching submissions for: %s' % truthFile)
-    return testPathCandidates[0]
-
-
-def loadSegmentationImage(imagePath):
+def loadSegmentationImage(imagePath: pathlib.Path) -> np.ndarray:
     """Load a segmentation image as a NumPy array, given a file path."""
     try:
-        image = Image.open(imagePath)
+        image = Image.open(str(imagePath))
     except Exception as e:
-        raise ScoreException('Could not decode image "%s" because: "%s"' %
-                             (os.path.basename(imagePath), str(e)))
+        raise ScoreException(f'Could not decode image "{imagePath.name}" because: "{str(e)}"')
 
     if image.mode == '1':
         # NumPy crashes if a 1-bit (black and white) image is directly
@@ -63,8 +42,7 @@ def loadSegmentationImage(imagePath):
         image = image.convert('L')
 
     if image.mode != 'L':
-        raise ScoreException('Image %s is not single-channel (greyscale).' %
-                             os.path.basename(imagePath))
+        raise ScoreException(f'Image {imagePath.name} is not single-channel (greyscale).')
 
     image = np.array(image)
 
@@ -92,7 +70,7 @@ def assertBinaryImage(image, imageName):
     return image
 
 
-def _computeTFPN(truthBinaryValues, testBinaryValues):
+def computeTFPN(truthBinaryValues, testBinaryValues):
     truthBinaryNegativeValues = 1 - truthBinaryValues
     testBinaryNegativeValues = 1 - testBinaryValues
 
@@ -112,7 +90,7 @@ def computeCommonMetrics(truthBinaryValues, testBinaryValues):
     """
     Computes accuracy, sensitivity, and specificity.
     """
-    truePositive, trueNegative, falsePositive, falseNegative = _computeTFPN(
+    truePositive, trueNegative, falsePositive, falseNegative = computeTFPN(
         truthBinaryValues, testBinaryValues
     )
 
@@ -148,7 +126,7 @@ def computeSimilarityMetrics(truthBinaryValues, testBinaryValues):
     """
     Computes Jaccard index and Dice coefficient.
     """
-    truePositive, trueNegative, falsePositive, falseNegative = _computeTFPN(
+    truePositive, trueNegative, falsePositive, falseNegative = computeTFPN(
         truthBinaryValues, testBinaryValues
     )
     truthValuesSum = np.sum(truthBinaryValues, dtype=np.int)

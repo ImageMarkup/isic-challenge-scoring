@@ -1,8 +1,10 @@
 language: python
-python: 3.5
+python: 3.6
 
 install:
+  - pip install .
   - pip install flake8
 
 script:
-  - flake8 ./Python/
+  - flake8 ./isic_challenge_scoring/
+  - python setup.py test
