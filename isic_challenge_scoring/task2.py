@@ -33,9 +33,9 @@ def matchInputFile(truthFile: pathlib.Path, predictionPath: pathlib.Path) -> pat
     ]
 
     if not predictionFileCandidates:
-        raise ScoreException(f'No matching submission for: {truthFile}')
+        raise ScoreException(f'No matching submission for: {truthFile.name}')
     elif len(predictionFileCandidates) > 1:
-        raise ScoreException(f'Multiple matching submissions for: {truthFile}')
+        raise ScoreException(f'Multiple matching submissions for: {truthFile.name}')
     return predictionFileCandidates[0]
 
 
