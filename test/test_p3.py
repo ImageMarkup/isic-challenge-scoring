@@ -33,7 +33,7 @@ def test_parseCsv_missingColumns():
     with pytest.raises(ScoreException) as excInfo:
         task3.parseCsv(predictionFileStream)
 
-    assert 'Missing columns in CSV: [\'NV\', \'VASC\']' == str(excInfo.value)
+    assert 'Missing columns in CSV: [\'NV\', \'VASC\'].' == str(excInfo.value)
 
 
 def test_parseCsv_extraColumns():
@@ -45,7 +45,7 @@ def test_parseCsv_extraColumns():
     with pytest.raises(ScoreException) as excInfo:
         task3.parseCsv(predictionFileStream)
 
-    assert 'Extra columns in CSV: [\'BAZ\', \'FOO\']' == str(excInfo.value)
+    assert 'Extra columns in CSV: [\'BAZ\', \'FOO\'].' == str(excInfo.value)
 
 
 def test_parseCsv_misnamedColumns():
@@ -57,7 +57,7 @@ def test_parseCsv_misnamedColumns():
     with pytest.raises(ScoreException) as excInfo:
         task3.parseCsv(predictionFileStream)
 
-    assert 'Missing columns in CSV: [\'DF\', \'NV\']' == str(excInfo.value)
+    assert 'Missing columns in CSV: [\'DF\', \'NV\'].' == str(excInfo.value)
 
 
 def test_parseCsv_reorderedColumns():
@@ -82,7 +82,7 @@ def test_parseCsv_missingIndex():
     with pytest.raises(ScoreException) as excInfo:
         task3.parseCsv(predictionFileStream)
 
-    assert 'Missing column in CSV: "image"' == str(excInfo.value)
+    assert 'Missing column in CSV: "image".' == str(excInfo.value)
 
 
 def test_toLabels():
