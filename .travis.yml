@@ -2,9 +2,9 @@ language: python
 python: 3.6
 
 install:
-  - pip install numpy pandas pillow scipy scikit-learn
-  - pip install flake8 pytest
+  - pip install .
+  - pip install flake8
 
 script:
   - flake8 ./isic_challenge_scoring/
-  - pytest
+  - python setup.py test

@@ -6,20 +6,16 @@ RUN apt-get update && \
       python3-venv \
       python3-pip
 WORKDIR /covalic
+COPY ./setup.* /isic_challenge_scoring/
+COPY ./isic_challenge_scoring /isic_challenge_scoring/isic_challenge_scoring
 RUN python3 -m venv ./venv && \
-    ./venv/bin/pip --no-cache-dir install \
-      numpy \
-      pandas \
-      pillow \
-      scipy \
-      scikit-learn
+    ./venv/bin/pip --no-cache-dir install /isic_challenge_scoring
 
-# Mininal-size run container
+# Minimal-size run container
 FROM ubuntu:18.04
 RUN apt-get update && \
     apt-get install -y \
       python3
 WORKDIR /covalic
 COPY --from=venv_builder /covalic .
-COPY isic_challenge_scoring ./isic_challenge_scoring
 ENTRYPOINT ["./venv/bin/python", "-m", "isic_challenge_scoring"]
