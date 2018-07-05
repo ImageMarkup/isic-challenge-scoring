@@ -85,6 +85,66 @@ def test_parseCsv_missingIndex():
     assert 'Missing column in CSV: "image".' == str(excInfo.value)
 
 
+def test_validateRows_missingImages():
+    truthProbabilities = pd.DataFrame([
+        [1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+        [0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0]
+    ], index=['ISIC_0000123', 'ISIC_0000124'], columns=task3.CATEGORIES)
+    predictionProbabilities = pd.DataFrame([
+        [1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+        [0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0]
+    ], index=['ISIC_0000123', 'ISIC_0000124'], columns=task3.CATEGORIES)
+    task3.validateRows(truthProbabilities, predictionProbabilities)
+
+    truthProbabilities = pd.DataFrame([
+        [1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+        [0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0]
+    ], index=['ISIC_0000123', 'ISIC_0000124'], columns=task3.CATEGORIES)
+    predictionProbabilities = pd.DataFrame([
+        [1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
+    ], index=['ISIC_0000123'], columns=task3.CATEGORIES)
+    with pytest.raises(ScoreException) as excInfo:
+        task3.validateRows(truthProbabilities, predictionProbabilities)
+    assert 'Missing images in CSV: [\'ISIC_0000124\'].' == str(excInfo.value)
+
+    truthProbabilities = pd.DataFrame([
+        [1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+        [0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0]
+    ], index=['ISIC_0000123', 'ISIC_0000124'], columns=task3.CATEGORIES)
+    predictionProbabilities = pd.DataFrame([
+        [1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
+    ], index=['ISIC_0000120'], columns=task3.CATEGORIES)
+    with pytest.raises(ScoreException) as excInfo:
+        task3.validateRows(truthProbabilities, predictionProbabilities)
+    assert 'Missing images in CSV: [\'ISIC_0000123\', \'ISIC_0000124\'].' == str(excInfo.value)
+
+    truthProbabilities = pd.DataFrame([
+        [1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+        [0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0]
+    ], index=['ISIC_0000123', 'ISIC_0000124'], columns=task3.CATEGORIES)
+    predictionProbabilities = pd.DataFrame([
+        [1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+        [0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0]
+    ], index=['ISIC_0000123', 'ISIC_0000125'], columns=task3.CATEGORIES)
+    with pytest.raises(ScoreException) as excInfo:
+        task3.validateRows(truthProbabilities, predictionProbabilities)
+    assert 'Missing images in CSV: [\'ISIC_0000124\'].' == str(excInfo.value)
+
+
+def test_validateRows_extraImages():
+    truthProbabilities = pd.DataFrame([
+        [1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
+    ], index=['ISIC_0000123'], columns=task3.CATEGORIES)
+    predictionProbabilities = pd.DataFrame([
+        [1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+        [0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+        [0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0]
+    ], index=['ISIC_0000123', 'ISIC_0000126', 'ISIC_0000127'], columns=task3.CATEGORIES)
+    with pytest.raises(ScoreException) as excInfo:
+        task3.validateRows(truthProbabilities, predictionProbabilities)
+    assert 'Extra images in CSV: [\'ISIC_0000126\', \'ISIC_0000127\'].' == str(excInfo.value)
+
+
 def test_toLabels():
     probabilities = pd.DataFrame([
         # NV

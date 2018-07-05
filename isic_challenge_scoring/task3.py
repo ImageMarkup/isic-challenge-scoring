@@ -58,6 +58,20 @@ def parseCsv(csvFileStream):
     return probabilities
 
 
+def validateRows(truthProbabilities: pd.DataFrame, predictionProbabilities: pd.DataFrame):
+    """
+    Fail when predictionProbabilities is missing rows or has extra rows compared to
+    truthProbabilities.
+    """
+    missingImages = truthProbabilities.index.difference(predictionProbabilities.index)
+    if not missingImages.empty:
+        raise ScoreException(f'Missing images in CSV: {missingImages.tolist()}.')
+
+    extraImages = predictionProbabilities.index.difference(truthProbabilities.index)
+    if not extraImages.empty:
+        raise ScoreException(f'Extra images in CSV: {extraImages.tolist()}.')
+
+
 def toLabels(probabilities: pd.DataFrame) -> pd.Series:
     labels = probabilities.idxmax(axis='columns')
 
@@ -109,8 +123,8 @@ def balancedMulticlassAccuracy(truthLabels: pd.Series, predictionLabels: pd.Seri
 def computeMetrics(truthFileStream, predictionFileStream) -> list:
     truthProbabilities = parseCsv(truthFileStream)
     predictionProbabilities = parseCsv(predictionFileStream)
-    # TODO: fail when predictionProbabilities contains missing / extra rows compared to
-    # truthProbabilities
+
+    validateRows(truthProbabilities, predictionProbabilities)
 
     truthLabels = toLabels(truthProbabilities)
     predictionLabels = toLabels(predictionProbabilities)
