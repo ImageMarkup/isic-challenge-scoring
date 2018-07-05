@@ -126,3 +126,20 @@ def test_getFrequencies():
     }))
     # Ensure the ordering is correct (although Python3.6 dicts are ordered)
     assert labelFrequencies.index.equals(task3.CATEGORIES)
+
+
+@pytest.mark.parametrize('truthLabels, predictionLabels, balancedAccuracy', [
+    (['MEL'], ['MEL'], 1.0),
+    (['NV'], ['NV'], 1.0),
+    (['NV'], ['MEL'], 0.0),
+    (['MEL', 'MEL'], ['MEL', 'MEL'], 1.0),
+    (['MEL', 'NV'], ['MEL', 'NV'], 1.0),
+    (['MEL', 'NV'], ['MEL', 'MEL'], 0.5),
+    (['MEL', 'NV', 'MEL'], ['MEL', 'MEL', 'MEL'], 0.5),
+    (['MEL', 'NV', 'MEL', 'MEL'], ['MEL', 'MEL', 'MEL', 'MEL'], 0.5),
+    (['MEL', 'NV', 'MEL', 'MEL'], ['MEL', 'MEL', 'MEL', 'NV'], 1/3),
+    (['MEL', 'NV', 'MEL', 'MEL'], ['NV', 'MEL', 'NV', 'NV'], 0.0),
+])
+def test_balancedMulticlassAccuracy(truthLabels, predictionLabels, balancedAccuracy):
+    assert balancedAccuracy == pytest.approx(task3.balancedMulticlassAccuracy(
+        pd.Series(truthLabels), pd.Series(predictionLabels)))
