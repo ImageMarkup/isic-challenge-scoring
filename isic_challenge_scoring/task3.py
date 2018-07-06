@@ -63,8 +63,15 @@ def parseCsv(csvFileStream):
             f'CSV contains non-floating-point value(s) in columns: {nonFloatColumns.tolist()}.')
     # TODO: identify specific failed rows
 
+    outOfRangeRows = probabilities[probabilities.applymap(
+        lambda x: x < 0.0 or x > 1.0
+    ).any(axis='columns')].index
+    if not outOfRangeRows.empty:
+        raise ScoreException(
+            f'Values in CSV are outside the interval [0.0, 1.0] for images: '
+            f'{outOfRangeRows.tolist()}.')
+
     # TODO: fail on extra columns in data rows
-    # TODO: fail when data values are outside the interval [0.0, 1.0]
 
     return probabilities
 
