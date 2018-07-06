@@ -19,6 +19,7 @@
 import pathlib
 import re
 
+import numpy as np
 import pandas as pd
 import sklearn.metrics
 
@@ -50,10 +51,27 @@ def parseCsv(csvFileStream):
     # sort by the order in CATEGORIES
     probabilities = probabilities.reindex(CATEGORIES, axis='columns')
 
-    # TODO: fail on missing columns in data rows
+    missingRows = probabilities[probabilities.isnull().any(axis='columns')].index
+    if not missingRows.empty:
+        raise ScoreException(f'Missing value(s) in CSV for images: {missingRows.tolist()}.')
+
+    nonFloatColumns = probabilities.dtypes[probabilities.dtypes.apply(
+        lambda x: x != np.float64
+    )].index
+    if not nonFloatColumns.empty:
+        raise ScoreException(
+            f'CSV contains non-floating-point value(s) in columns: {nonFloatColumns.tolist()}.')
+    # TODO: identify specific failed rows
+
+    outOfRangeRows = probabilities[probabilities.applymap(
+        lambda x: x < 0.0 or x > 1.0
+    ).any(axis='columns')].index
+    if not outOfRangeRows.empty:
+        raise ScoreException(
+            f'Values in CSV are outside the interval [0.0, 1.0] for images: '
+            f'{outOfRangeRows.tolist()}.')
+
     # TODO: fail on extra columns in data rows
-    # TODO: fail when data values are non-float
-    # TODO: fail when data values are outside the interval [0.0, 1.0]
 
     return probabilities
 
