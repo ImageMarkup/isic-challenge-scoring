@@ -100,6 +100,21 @@ def test_parseCsv_missingValues():
         == str(excInfo.value)
 
 
+def test_parseCsv_nonFloatColumns():
+    predictionFileStream = io.StringIO(
+        'image,MEL,NV,BCC,AKIEC,BKL,DF,VASC\n'
+        'ISIC_0000123,1.0,0.0,0.0,0.0,0.0,0.0,0.0\n'
+        'ISIC_0000124,0.0,1.0,0.0,0.0,0.0,0.0,\'BAD\'\n'
+        'ISIC_0000125,0.0,0.0,True,0.0,0.0,0.0,0.0\n'
+    )
+
+    with pytest.raises(ScoreException) as excInfo:
+        task3.parseCsv(predictionFileStream)
+
+    assert 'CSV contains non-floating-point value(s) in columns: [\'BCC\', \'VASC\'].' \
+        == str(excInfo.value)
+
+
 def test_validateRows_missingImages():
     truthProbabilities = pd.DataFrame([
         [1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
