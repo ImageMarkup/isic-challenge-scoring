@@ -85,6 +85,21 @@ def test_parseCsv_missingIndex():
     assert 'Missing column in CSV: "image".' == str(excInfo.value)
 
 
+def test_parseCsv_missingValues():
+    predictionFileStream = io.StringIO(
+        'image,MEL,NV,BCC,AKIEC,BKL,DF,VASC\n'
+        'ISIC_0000123,1.0,0.0,0.0,0.0,0.0,0.0,0.0\n'
+        'ISIC_0000124,0.0,,0.0,0.0,0.0,0.0,0.0\n'
+        'ISIC_0000125,0.0,0.0,1.0,0.0,0.0,0.0\n'
+    )
+
+    with pytest.raises(ScoreException) as excInfo:
+        task3.parseCsv(predictionFileStream)
+
+    assert 'Missing value(s) in CSV for images: [\'ISIC_0000124\', \'ISIC_0000125\'].' \
+        == str(excInfo.value)
+
+
 def test_validateRows_missingImages():
     truthProbabilities = pd.DataFrame([
         [1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
