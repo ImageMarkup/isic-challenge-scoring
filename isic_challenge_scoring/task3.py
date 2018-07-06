@@ -27,6 +27,7 @@ from .scoreCommon import ScoreException
 
 
 CATEGORIES = pd.Index(['MEL', 'NV', 'BCC', 'AKIEC', 'BKL', 'DF', 'VASC'])
+EXCLUDE_LABELS = ['ISIC_0035068']
 
 
 def parseCsv(csvFileStream):
@@ -74,6 +75,11 @@ def parseCsv(csvFileStream):
     # TODO: fail on extra columns in data rows
 
     return probabilities
+
+
+def excludeRows(probabilities: pd.DataFrame, labels: list):
+    """Exclude rows with specified labels, in-place."""
+    probabilities.drop(index=labels, inplace=True, errors='ignore')
 
 
 def validateRows(truthProbabilities: pd.DataFrame, predictionProbabilities: pd.DataFrame):
@@ -141,6 +147,9 @@ def balancedMulticlassAccuracy(truthLabels: pd.Series, predictionLabels: pd.Seri
 def computeMetrics(truthFileStream, predictionFileStream) -> list:
     truthProbabilities = parseCsv(truthFileStream)
     predictionProbabilities = parseCsv(predictionFileStream)
+
+    excludeRows(truthProbabilities, EXCLUDE_LABELS)
+    excludeRows(predictionProbabilities, EXCLUDE_LABELS)
 
     validateRows(truthProbabilities, predictionProbabilities)
 

@@ -130,6 +130,20 @@ def test_parseCsv_outOfRangeValues():
         '[\'ISIC_0000123\', \'ISIC_0000125\'].' == str(excInfo.value)
 
 
+def test_excludeRows():
+    probabilities = pd.DataFrame([
+        [1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+        [0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+        [0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0]
+    ], index=['ISIC_0000123', 'ISIC_0000124', 'ISIC_0000125'], columns=task3.CATEGORIES)
+
+    assert probabilities.shape == (3, 7)
+    task3.excludeRows(probabilities, ['ISIC_0000123', 'ISIC_0000125'])
+    assert probabilities.shape == (1, 7)
+    task3.excludeRows(probabilities, ['ISIC_0000123'])
+    assert probabilities.shape == (1, 7)
+
+
 def test_validateRows_missingImages():
     truthProbabilities = pd.DataFrame([
         [1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
