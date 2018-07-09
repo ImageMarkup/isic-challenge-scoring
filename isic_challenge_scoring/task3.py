@@ -96,6 +96,11 @@ def validateRows(truthProbabilities: pd.DataFrame, predictionProbabilities: pd.D
         raise ScoreException(f'Extra images in CSV: {extraImages.tolist()}.')
 
 
+def sortRows(probabilities: pd.DataFrame):
+    """Sort rows by labels, in-place."""
+    probabilities.sort_index(axis='rows', inplace=True)
+
+
 def toLabels(probabilities: pd.DataFrame) -> pd.Series:
     labels = probabilities.idxmax(axis='columns')
 
@@ -152,6 +157,9 @@ def computeMetrics(truthFileStream, predictionFileStream) -> list:
     excludeRows(predictionProbabilities, EXCLUDE_LABELS)
 
     validateRows(truthProbabilities, predictionProbabilities)
+
+    sortRows(truthProbabilities)
+    sortRows(predictionProbabilities)
 
     truthLabels = toLabels(truthProbabilities)
     predictionLabels = toLabels(predictionProbabilities)

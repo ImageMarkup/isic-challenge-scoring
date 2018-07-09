@@ -204,6 +204,22 @@ def test_validateRows_extraImages():
     assert 'Extra images in CSV: [\'ISIC_0000126\', \'ISIC_0000127\'].' == str(excInfo.value)
 
 
+def test_sortRows():
+    predictionProbabilities = pd.DataFrame([
+        [0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+        [0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0],
+        [1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
+    ], index=['ISIC_0000124', 'ISIC_0000125', 'ISIC_0000123'], columns=task3.CATEGORIES)
+
+    task3.sortRows(predictionProbabilities)
+
+    assert predictionProbabilities.equals(pd.DataFrame([
+        [1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+        [0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+        [0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0]
+    ], index=['ISIC_0000123', 'ISIC_0000124', 'ISIC_0000125'], columns=task3.CATEGORIES))
+
+
 def test_toLabels():
     probabilities = pd.DataFrame([
         # NV
