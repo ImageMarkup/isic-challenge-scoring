@@ -18,12 +18,19 @@
 
 import pathlib
 import re
+import warnings
 
 import numpy as np
-import pandas as pd
-import sklearn.metrics
+with warnings.catch_warnings():
+    # See https://stackoverflow.com/a/40846742
+    warnings.filterwarnings(
+        'ignore',
+        r'^numpy\.dtype size changed, may indicate binary incompatibility\.',
+        RuntimeWarning)
+    import pandas as pd
+import sklearn.metrics  # noqa: E402
 
-from .scoreCommon import ScoreException
+from .scoreCommon import ScoreException  # noqa: E402
 
 
 CATEGORIES = pd.Index(['MEL', 'NV', 'BCC', 'AKIEC', 'BKL', 'DF', 'VASC'])

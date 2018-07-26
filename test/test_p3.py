@@ -1,10 +1,17 @@
 import io
+import warnings
 
-import pandas as pd
-import pytest
+with warnings.catch_warnings():
+    # See https://stackoverflow.com/a/40846742
+    warnings.filterwarnings(
+        'ignore',
+        r'^numpy\.dtype size changed, may indicate binary incompatibility\.',
+        RuntimeWarning)
+    import pandas as pd
+import pytest  # noqa: E402
 
-from isic_challenge_scoring import task3
-from isic_challenge_scoring.scoreCommon import ScoreException
+from isic_challenge_scoring import task3  # noqa: E402
+from isic_challenge_scoring.scoreCommon import ScoreException  # noqa: E402
 
 
 def test_parseCsv():
