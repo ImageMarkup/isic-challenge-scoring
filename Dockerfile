@@ -9,6 +9,7 @@ WORKDIR /covalic
 COPY ./setup.* /isic_challenge_scoring/
 COPY ./isic_challenge_scoring /isic_challenge_scoring/isic_challenge_scoring
 RUN python3 -m venv ./venv && \
+    ./venv/bin/pip --no-cache-dir install --upgrade pip setuptools && \
     ./venv/bin/pip --no-cache-dir install /isic_challenge_scoring
 
 # Minimal-size run container
