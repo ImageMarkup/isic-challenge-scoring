@@ -88,6 +88,21 @@ def unzipAll(inputPath):
     return outputPath, outputTempDir
 
 
+def ensureAbstract(predictionPath):
+    abstractFileCount = sum(
+        abstractFile.suffix.lower() == '.pdf'
+        for abstractFile in predictionPath.iterdir()
+    )
+    if abstractFileCount > 1:
+        raise ScoreException(
+            'Multiple PDFs submitted. Exactly one PDF file, containing the descriptive abstract, '
+            'must included in the submission.')
+    elif abstractFileCount < 1:
+        raise ScoreException(
+            'No PDF submitted. Exactly one PDF file, containing the descriptive abstract, '
+            'must included in the submission.')
+
+
 def scoreAll(truthInputPath, predictionInputPath):
     # Unzip zip files contained in the input folders
     truthPath, truthTempDir = unzipAll(truthInputPath)
@@ -101,6 +116,10 @@ def scoreAll(truthInputPath, predictionInputPath):
     if not truthRe:
         raise ScoreException(
             f'Internal error: could not parse ground truth file name: {truthInputPath.name}.')
+
+    phaseType = truthRe.group('phaseType')
+    if phaseType == 'Test':
+        ensureAbstract(predictionPath)
 
     taskNum = truthRe.group('taskNum')
     if taskNum == '1':
