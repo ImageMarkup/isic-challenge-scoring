@@ -185,9 +185,17 @@ def scoreP3(truthPath: pathlib.Path, predictionPath: pathlib.Path) -> list:
     else:
         raise ScoreException('Internal error, truth file could not be found.')
 
-    predictionFiles = sorted(predictionPath.iterdir())
-    if len(predictionFiles) != 1:
-        raise ScoreException('Multiple files submitted. Only 1 CSV file should be submitted.')
+    predictionFiles = list(
+        predictionFile
+        for predictionFile in predictionPath.iterdir()
+        if predictionFile.suffix.lower() == '.csv'
+    )
+    if len(predictionFiles) > 1:
+        raise ScoreException(
+            'Multiple prediction files submitted. Exactly 1 CSV file should be submitted.')
+    elif len(predictionFiles) < 1:
+        raise ScoreException(
+            'No prediction files submitted. Exactly 1 CSV file should be submitted.')
     predictionFile = predictionFiles[0]
 
     with truthFile.open('rb') as truthFileStream, predictionFile.open('rb') as predictionFileStream:
