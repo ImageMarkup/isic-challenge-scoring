@@ -96,17 +96,18 @@ def scoreAll(truthInputPath, predictionInputPath):
 
     # Identify which phase this is, based on ground truth file name
     truthRe = re.match(
-        r'^ISIC2018_Task([0-9])_(?:Validation|Test)_GroundTruth\.zip$',
+        r'^ISIC2018_Task(?P<taskNum>[0-9])_(?P<phaseType>Validation|Test)_GroundTruth\.zip$',
         next(truthInputPath.iterdir()).name)
     if not truthRe:
         raise ScoreException(
             f'Internal error: could not parse ground truth file name: {truthInputPath.name}.')
-    phaseNum = truthRe.group(1)
-    if phaseNum == '1':
+
+    taskNum = truthRe.group('taskNum')
+    if taskNum == '1':
         scores = scoreP1(truthPath, predictionPath)
-    elif phaseNum == '2':
+    elif taskNum == '2':
         scores = scoreP2(truthPath, predictionPath)
-    elif phaseNum == '3':
+    elif taskNum == '3':
         scores = scoreP3(truthPath, predictionPath)
     else:
         raise ScoreException(
