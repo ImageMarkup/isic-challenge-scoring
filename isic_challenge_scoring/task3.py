@@ -18,12 +18,19 @@
 
 import pathlib
 import re
+import warnings
 
 import numpy as np
-import pandas as pd
-import sklearn.metrics
+with warnings.catch_warnings():
+    # See https://stackoverflow.com/a/40846742
+    warnings.filterwarnings(
+        'ignore',
+        r'^numpy\.dtype size changed, may indicate binary incompatibility\.',
+        RuntimeWarning)
+    import pandas as pd
+import sklearn.metrics  # noqa: E402
 
-from .scoreCommon import ScoreException
+from .scoreCommon import ScoreException  # noqa: E402
 
 
 CATEGORIES = pd.Index(['MEL', 'NV', 'BCC', 'AKIEC', 'BKL', 'DF', 'VASC'])
@@ -185,9 +192,17 @@ def scoreP3(truthPath: pathlib.Path, predictionPath: pathlib.Path) -> list:
     else:
         raise ScoreException('Internal error, truth file could not be found.')
 
-    predictionFiles = sorted(predictionPath.iterdir())
-    if len(predictionFiles) != 1:
-        raise ScoreException('Multiple files submitted. Only 1 CSV file should be submitted.')
+    predictionFiles = list(
+        predictionFile
+        for predictionFile in predictionPath.iterdir()
+        if predictionFile.suffix.lower() == '.csv'
+    )
+    if len(predictionFiles) > 1:
+        raise ScoreException(
+            'Multiple prediction files submitted. Exactly 1 CSV file should be submitted.')
+    elif len(predictionFiles) < 1:
+        raise ScoreException(
+            'No prediction files submitted. Exactly 1 CSV file should be submitted.')
     predictionFile = predictionFiles[0]
 
     with truthFile.open('rb') as truthFileStream, predictionFile.open('rb') as predictionFileStream:
