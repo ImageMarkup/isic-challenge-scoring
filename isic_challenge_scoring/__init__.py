@@ -67,10 +67,10 @@ def unzipAll(inputPath):
     inputFiles = list(inputPath.iterdir())
     if len(inputFiles) > 1:
         raise ScoreException(
-            'Multiple files submitted. Exactly one ZIP or CSV file should be submitted.')
+            'Multiple files submitted. Exactly one ZIP file should be submitted.')
     elif len(inputFiles) < 1:
         raise ScoreException(
-            'No files submitted. Exactly one ZIP or CSV file should be submitted.')
+            'No files submitted. Exactly one ZIP file should be submitted.')
 
     inputFile = inputFiles[0]
     if not inputFile.is_file():
