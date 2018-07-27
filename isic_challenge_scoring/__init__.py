@@ -88,18 +88,18 @@ def unzipAll(inputPath):
     return outputPath, outputTempDir
 
 
-def ensureAbstract(predictionPath):
-    abstractFileCount = sum(
-        abstractFile.suffix.lower() == '.pdf'
-        for abstractFile in predictionPath.iterdir()
+def ensureManuscript(predictionPath):
+    manuscriptFileCount = sum(
+        manuscriptFile.suffix.lower() == '.pdf'
+        for manuscriptFile in predictionPath.iterdir()
     )
-    if abstractFileCount > 1:
+    if manuscriptFileCount > 1:
         raise ScoreException(
-            'Multiple PDFs submitted. Exactly one PDF file, containing the descriptive abstract, '
+            'Multiple PDFs submitted. Exactly one PDF file, containing the descriptive manuscript, '
             'must included in the submission.')
-    elif abstractFileCount < 1:
+    elif manuscriptFileCount < 1:
         raise ScoreException(
-            'No PDF submitted. Exactly one PDF file, containing the descriptive abstract, '
+            'No PDF submitted. Exactly one PDF file, containing the descriptive manuscript, '
             'must included in the submission.')
 
 
@@ -119,7 +119,7 @@ def scoreAll(truthInputPath, predictionInputPath):
 
     phaseType = truthRe.group('phaseType')
     if phaseType == 'Test':
-        ensureAbstract(predictionPath)
+        ensureManuscript(predictionPath)
 
     taskNum = truthRe.group('taskNum')
     if taskNum == '1':
