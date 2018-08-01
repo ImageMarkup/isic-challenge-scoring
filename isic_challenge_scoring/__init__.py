@@ -59,12 +59,24 @@ def extractZip(zipPath, outputPath, flatten=True):
         raise ScoreException(f'Could not read ZIP file "{zipPath.name}": {str(e)}.')
 
 
-def unzipAll(inputPath):
+def isAbstractDirectory(path: pathlib.Path) -> bool:
     """
-    Extract / copy all files in directory.
+    Check whether a path is a directory named 'Abstract'.
+    """
+    return path.is_dir() and path.name == 'Abstract'
+
+
+def unzipAll(inputPath, allowAbstractDirectory=False):
+    """
+    Extract / copy all files in directory. Validate that the path contains
+    exactly one file. Optionally allow an 'Abstract' directory to exist.
     Return a path to the extracted content.
     """
-    inputFiles = list(inputPath.iterdir())
+    inputFiles = [
+        inputFile
+        for inputFile in inputPath.iterdir()
+        if not allowAbstractDirectory or not isAbstractDirectory(inputFile)
+    ]
     if len(inputFiles) > 1:
         raise ScoreException(
             'Multiple files submitted. Exactly one ZIP file should be submitted.')
@@ -107,7 +119,7 @@ def scoreAll(truthInputPath, predictionInputPath):
     # Unzip zip files contained in the input folders
     truthPath, truthTempDir = unzipAll(truthInputPath)
 
-    predictionPath, predictionTempDir = unzipAll(predictionInputPath)
+    predictionPath, predictionTempDir = unzipAll(predictionInputPath, allowAbstractDirectory=True)
 
     # Identify which phase this is, based on ground truth file name
     truthRe = re.match(
