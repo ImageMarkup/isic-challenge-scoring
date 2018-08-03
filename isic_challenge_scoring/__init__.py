@@ -59,24 +59,16 @@ def extractZip(zipPath, outputPath, flatten=True):
         raise ScoreException(f'Could not read ZIP file "{zipPath.name}": {str(e)}.')
 
 
-def isAbstractDirectory(path: pathlib.Path) -> bool:
-    """
-    Check whether a path is a directory named 'Abstract'.
-    """
-    return path.is_dir() and path.name == 'Abstract'
-
-
 def unzipAll(inputPath, allowAbstractDirectory=False):
     """
     Extract / copy all files in directory. Validate that the path contains
-    exactly one file. Optionally allow an 'Abstract' directory to exist.
+    exactly one file. Optionally allow an 'Abstract' directory to exist that
+    contains exactly one manuscript file.
     Return a path to the extracted content.
     """
-    inputFiles = [
-        inputFile
-        for inputFile in inputPath.iterdir()
-        if not allowAbstractDirectory or not isAbstractDirectory(inputFile)
-    ]
+    inputFiles = [f for f in inputPath.iterdir() if f.is_file()]
+    inputDirs = [f for f in inputPath.iterdir() if f.is_dir()]
+
     if len(inputFiles) > 1:
         raise ScoreException(
             'Multiple files submitted. Exactly one ZIP file should be submitted.')
@@ -85,9 +77,28 @@ def unzipAll(inputPath, allowAbstractDirectory=False):
             'No files submitted. Exactly one ZIP file should be submitted.')
 
     inputFile = inputFiles[0]
-    if not inputFile.is_file():
-        # Covalic should not allow this to happen
-        raise ScoreException('Internal error: non-regular file submitted.')
+
+    manuscriptFile = None
+
+    if allowAbstractDirectory:
+        if len(inputDirs) > 1:
+            raise ScoreException('Internal error: multiple directories found.')
+        elif len(inputDirs) == 1:
+            inputDir = inputDirs[0]
+            if inputDir.name != 'Abstract':
+                raise ScoreException(
+                    f'Internal error: unexpected directory found: {inputDir.name}.')
+
+            manuscriptFiles = list(inputDir.iterdir())
+            if not manuscriptFiles:
+                raise ScoreException('Empty manuscript directory found.')
+            elif len(manuscriptFiles) > 1:
+                raise ScoreException('Multiple files found in manuscript directory.')
+
+            manuscriptFile = manuscriptFiles[0]
+    elif inputDirs:
+        # Expect only files
+        raise ScoreException('Internal error: unexpected directory found.')
 
     outputTempDir = tempfile.TemporaryDirectory()
     outputPath = pathlib.Path(outputTempDir.name)
@@ -96,6 +107,9 @@ def unzipAll(inputPath, allowAbstractDirectory=False):
         extractZip(inputFile, outputPath)
     else:
         shutil.copy(inputFile, outputPath)
+
+    if manuscriptFile is not None:
+        shutil.copy(manuscriptFile, outputPath)
 
     return outputPath, outputTempDir
 
