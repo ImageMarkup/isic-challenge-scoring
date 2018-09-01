@@ -18,6 +18,8 @@
 
 import pathlib
 
+import numpy as np
+
 from .scoreCommon import ScoreException, loadSegmentationImage, assertBinaryImage, computeTFPN
 
 
@@ -38,7 +40,8 @@ def matchInputFile(truthFile: pathlib.Path, predictionPath: pathlib.Path) -> pat
     return predictionFileCandidates[0]
 
 
-def scoreP1Image(truthFile: pathlib.Path, predictionFile: pathlib.Path) -> list:
+def loadBinaryImages(truthFile: pathlib.Path, predictionFile: pathlib.Path) -> \
+        (np.ndarray, np.ndarray):
     truthImage = loadSegmentationImage(truthFile)
     truthImage = assertBinaryImage(truthImage, truthFile.name)
     predictionImage = loadSegmentationImage(predictionFile)
@@ -51,22 +54,28 @@ def scoreP1Image(truthFile: pathlib.Path, predictionFile: pathlib.Path) -> list:
     truthBinaryImage = (truthImage > 128)
     predictionBinaryImage = (predictionImage > 128)
 
+    return truthBinaryImage, predictionBinaryImage
+
+
+def scoreImage(truthBinaryImage: np.ndarray, predictionBinaryImage: np.ndarray) -> dict:
     truePositive, trueNegative, falsePositive, falseNegative = computeTFPN(
         truthBinaryImage, predictionBinaryImage)
 
-    jaccard = truePositive / (truePositive + falseNegative + falsePositive)
+    jaccard = truePositive / (truePositive + falsePositive + falseNegative)
     thresholdJaccard = jaccard if jaccard >= 0.65 else 0.0
 
-    metrics = [
-        {
-            'name': 'threshold_jaccard',
-            'value': thresholdJaccard
-        }
-    ]
-    return metrics
+    return {
+        'threshold_jaccard': thresholdJaccard,
+        'jaccard': jaccard,
+        'dice': (2 * truePositive) / ((2 * truePositive) + falsePositive + falseNegative),
+        'sensitivity': truePositive / (truePositive + falseNegative),
+        'specificity': trueNegative / (trueNegative + falsePositive),
+        'accuracy': (truePositive + trueNegative) /
+                    (truePositive + trueNegative + falsePositive + falseNegative),
+    }
 
 
-def scoreP1(truthPath: pathlib.Path, predictionPath: pathlib.Path) -> list:
+def score(truthPath: pathlib.Path, predictionPath: pathlib.Path) -> list:
     # Iterate over each file and call scoring executable on the pair
     scores = []
     for truthFile in sorted(truthPath.iterdir()):
@@ -77,12 +86,20 @@ def scoreP1(truthPath: pathlib.Path, predictionPath: pathlib.Path) -> list:
 
         # truthFile ~= 'ISIC_0000003_segmentation.png'
         imageName = truthFile.stem.rsplit('_', 1)[0]
-        metrics = scoreP1Image(truthFile, predictionFile)
+
+        truthBinaryImage, predictionBinaryImage = loadBinaryImages(truthFile, predictionFile)
+        metrics = scoreImage(truthBinaryImage, predictionBinaryImage)
 
         # TODO: maybe only return an 'aggregate' metric, rather than per-image scores
         scores.append({
             'dataset': imageName,
-            'metrics': metrics
+            'metrics': [
+                {
+                    'name': metricName,
+                    'value': metricValue
+                }
+                for metricName, metricValue in metrics.items()
+            ]
         })
 
     return scores
