@@ -26,7 +26,7 @@ import zipfile
 
 from .scoreCommon import ScoreException
 from .task1 import score as scoreTask1
-from .task2 import scoreP2
+from .task2 import score as scoreTask2
 from .task3 import scoreP3
 
 
@@ -151,7 +151,7 @@ def scoreAll(truthInputPath, predictionInputPath):
     if taskNum == '1':
         scores = scoreTask1(truthPath, predictionPath)
     elif taskNum == '2':
-        scores = scoreP2(truthPath, predictionPath)
+        scores = scoreTask2(truthPath, predictionPath)
     elif taskNum == '3':
         scores = scoreP3(truthPath, predictionPath)
     else:
