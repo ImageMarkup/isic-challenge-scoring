@@ -18,6 +18,8 @@
 
 import pathlib
 
+import numpy as np
+
 from .scoreCommon import ScoreException, assertBinaryImage, loadSegmentationImage, computeTFPN
 
 
@@ -39,12 +41,8 @@ def matchInputFile(truthFile: pathlib.Path, predictionPath: pathlib.Path) -> pat
     return predictionFileCandidates[0]
 
 
-def scoreP2(truthPath: pathlib.Path, predictionPath: pathlib.Path) -> list:
-    truePositiveTotal = 0.0
-    trueNegativeTotal = 0.0
-    falsePositiveTotal = 0.0
-    falseNegativeTotal = 0.0
-
+def iterImagePairs(truthPath: pathlib.Path, predictionPath: pathlib.Path) -> \
+        (np.ndarray, np.ndarray):
     for truthFile in sorted(truthPath.iterdir()):
         if truthFile.name in {'ATTRIBUTION.txt', 'LICENSE.txt'}:
             continue
@@ -60,6 +58,16 @@ def scoreP2(truthPath: pathlib.Path, predictionPath: pathlib.Path) -> list:
                 f'Image {predictionFile.name} has dimensions {predictionImage.shape[0:2]}; '
                 f'expected {truthImage.shape[0:2]}.')
 
+        return truthImage, predictionImage
+
+
+def score(truthPath: pathlib.Path, predictionPath: pathlib.Path) -> list:
+    truePositiveTotal = 0.0
+    trueNegativeTotal = 0.0
+    falsePositiveTotal = 0.0
+    falseNegativeTotal = 0.0
+
+    for truthImage, predictionImage in iterImagePairs(truthPath, predictionPath):
         truthBinaryImage = (truthImage > 128)
         predictionBinaryImage = (predictionImage > 128)
 
@@ -76,14 +84,19 @@ def scoreP2(truthPath: pathlib.Path, predictionPath: pathlib.Path) -> list:
         falsePositiveTotal += falsePositive / imageSize
         falseNegativeTotal += falseNegative / imageSize
 
-    jaccardTotal = truePositiveTotal / (truePositiveTotal + falseNegativeTotal + falsePositiveTotal)
     scores = [
         {
             'dataset': 'aggregate',
             'metrics': [
                 {
                     'name': 'jaccard',
-                    'value': jaccardTotal
+                    'value': truePositiveTotal /
+                            (truePositiveTotal + falsePositiveTotal + falseNegativeTotal)
+                },
+                {
+                    'name': 'dice',
+                    'value': (2 * truePositiveTotal) /
+                             ((2 * truePositiveTotal) + falsePositiveTotal + falseNegativeTotal)
                 }
             ]
         }
