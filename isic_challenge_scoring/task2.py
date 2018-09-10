@@ -59,7 +59,7 @@ def iterImagePairs(truthPath: pathlib.Path, predictionPath: pathlib.Path) -> \
                 f'Image {predictionFile.name} has dimensions {predictionImage.shape[0:2]}; '
                 f'expected {truthImage.shape[0:2]}.')
 
-        return truthImage, predictionImage
+        yield truthImage, predictionImage
 
 
 def score(truthPath: pathlib.Path, predictionPath: pathlib.Path) -> List[Dict]:

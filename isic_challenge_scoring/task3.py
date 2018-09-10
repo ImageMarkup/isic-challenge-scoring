@@ -202,10 +202,10 @@ def scoreP3(truthPath: pathlib.Path, predictionPath: pathlib.Path) -> List[Dict]
     )
     if len(predictionFiles) > 1:
         raise ScoreException(
-            'Multiple prediction files submitted. Exactly 1 CSV file should be submitted.')
+            'Multiple prediction files submitted. Exactly one CSV file should be submitted.')
     elif len(predictionFiles) < 1:
         raise ScoreException(
-            'No prediction files submitted. Exactly 1 CSV file should be submitted.')
+            'No prediction files submitted. Exactly one CSV file should be submitted.')
     predictionFile = predictionFiles[0]
 
     with truthFile.open('rb') as truthFileStream, predictionFile.open('rb') as predictionFileStream:
