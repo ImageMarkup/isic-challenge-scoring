@@ -129,7 +129,7 @@ def ensureManuscript(predictionPath):
             'must included in the submission.')
 
 
-def scoreAll(truthInputPath, predictionInputPath):
+def scoreAll(truthInputPath, predictionInputPath, taskNum):
     # Unzip zip files contained in the input folders
     truthPath, truthTempDir = unzipAll(truthInputPath)
 
@@ -147,12 +147,11 @@ def scoreAll(truthInputPath, predictionInputPath):
     if phaseType == 'Test':
         ensureManuscript(predictionPath)
 
-    taskNum = truthRe.group('taskNum')
-    if taskNum == '1':
+    if taskNum == 1:
         scores = scoreTask1(truthPath, predictionPath)
-    elif taskNum == '2':
+    elif taskNum == 2:
         scores = scoreTask2(truthPath, predictionPath)
-    elif taskNum == '3':
+    elif taskNum == 3:
         scores = scoreP3(truthPath, predictionPath)
     else:
         raise ScoreException(

@@ -31,12 +31,14 @@ DirectoryPath = click.Path(exists=True, file_okay=False, dir_okay=True, readable
               help='path to the ground truth directory')
 @click.option('predictionInputPath', '--submission', required=True, type=DirectoryPath,
               help='path to the submission directory')
-def main(truthInputPath, predictionInputPath):
+@click.option('taskNum', '--task', required=True, type=click.IntRange(1, 3),
+              help='challenge task number (1, 2, or 3)')
+def main(truthInputPath, predictionInputPath, taskNum):
     truthInputPath = pathlib.Path(truthInputPath)
     predictionInputPath = pathlib.Path(predictionInputPath)
 
     try:
-        scoreAll(truthInputPath, predictionInputPath)
+        scoreAll(truthInputPath, predictionInputPath, taskNum)
     except ScoreException as e:
         covalicErrorPrefix = 'covalic.error: '
         print(covalicErrorPrefix + str(e), file=sys.stderr)
