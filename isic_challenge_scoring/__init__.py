@@ -129,22 +129,13 @@ def ensureManuscript(predictionPath):
             'must included in the submission.')
 
 
-def scoreAll(truthInputPath, predictionInputPath, taskNum):
+def scoreAll(truthInputPath, predictionInputPath, taskNum, requireManuscript):
     # Unzip zip files contained in the input folders
     truthPath, truthTempDir = unzipAll(truthInputPath)
 
     predictionPath, predictionTempDir = unzipAll(predictionInputPath, allowManuscriptDirectory=True)
 
-    # Identify which phase this is, based on ground truth file name
-    truthRe = re.match(
-        r'^ISIC2018_Task(?P<taskNum>[0-9])_(?P<phaseType>Validation|Test)_GroundTruth\.zip$',
-        next(truthInputPath.iterdir()).name)
-    if not truthRe:
-        raise ScoreException(
-            f'Internal error: could not parse ground truth file name: {truthInputPath.name}.')
-
-    phaseType = truthRe.group('phaseType')
-    if phaseType == 'Test':
+    if requireManuscript:
         ensureManuscript(predictionPath)
 
     if taskNum == 1:
@@ -155,7 +146,7 @@ def scoreAll(truthInputPath, predictionInputPath, taskNum):
         scores = scoreP3(truthPath, predictionPath)
     else:
         raise ScoreException(
-            f'Internal error: unknown ground truth phase number: {truthInputPath.name}.')
+            f'Internal error: unknown ground truth phase number: {taskNum}.')
 
     print(json.dumps(scores))
 
