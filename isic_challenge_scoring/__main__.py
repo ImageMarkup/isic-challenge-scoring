@@ -16,34 +16,26 @@
 #  limitations under the License.
 ###############################################################################
 
-import argparse
+import click
 import pathlib
 import sys
 
 from . import scoreAll
 from .scoreCommon import ScoreException
 
+DirectoryPath = click.Path(exists=True, file_okay=False, dir_okay=True, readable=True)
 
-def main():
-    parser = argparse.ArgumentParser(
-        description='Submission scoring helper script')
-    parser.add_argument('-g', '--groundtruth', required=True,
-                        help='path to the ground truth directory')
-    parser.add_argument('-s', '--submission', required=True,
-                        help='path to the submission directory')
-    args = parser.parse_args()
+
+@click.command(name='isic-challenge-scoring', help='ISIC Challenge submission scoring')
+@click.option('truthInputPath', '--groundtruth', required=True, type=DirectoryPath,
+              help='path to the ground truth directory')
+@click.option('predictionInputPath', '--submission', required=True, type=DirectoryPath,
+              help='path to the submission directory')
+def main(truthInputPath, predictionInputPath):
+    truthInputPath = pathlib.Path(truthInputPath)
+    predictionInputPath = pathlib.Path(predictionInputPath)
 
     try:
-        truthInputPath = pathlib.Path(args.groundtruth)
-        if not truthInputPath.is_dir():
-            raise ScoreException(
-                'Internal error: "--groundtruth" argument must reference a directory')
-
-        predictionInputPath = pathlib.Path(args.submission)
-        if not predictionInputPath.is_dir():
-            raise ScoreException(
-                'Internal error: "--submission" argument must reference a directory')
-
         scoreAll(truthInputPath, predictionInputPath)
     except ScoreException as e:
         covalicErrorPrefix = 'covalic.error: '
