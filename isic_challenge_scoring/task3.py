@@ -187,7 +187,7 @@ def computeMetrics(truthFileStream, predictionFileStream) -> list:
 
 def scoreP3(truthPath: pathlib.Path, predictionPath: pathlib.Path) -> list:
     for truthFile in truthPath.iterdir():
-        if re.match(r'^ISIC2018_Task3_(?:Validation|Test)_GroundTruth\.csv$', truthFile.name):
+        if re.match(r'^ISIC.*GroundTruth\.csv$', truthFile.name):
             break
     else:
         raise ScoreException('Internal error, truth file could not be found.')
