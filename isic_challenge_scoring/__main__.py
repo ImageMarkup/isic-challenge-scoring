@@ -34,7 +34,7 @@ DirectoryPath = click.Path(exists=True, file_okay=False, dir_okay=True, readable
 @click.option('taskNum', '--task', required=True, type=click.IntRange(1, 3),
               help='challenge task number (1, 2, or 3)')
 @click.option('--require-manuscript', 'requireManuscript', is_flag=True, default=False)
-def main(truthInputPath, predictionInputPath, taskNum, requireManuscript):
+def main(truthInputPath: str, predictionInputPath: str, taskNum: int, requireManuscript: bool):
     truthInputPath = pathlib.Path(truthInputPath)
     predictionInputPath = pathlib.Path(predictionInputPath)
 

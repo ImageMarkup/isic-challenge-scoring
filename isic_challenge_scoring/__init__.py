@@ -19,9 +19,9 @@
 import json
 import os
 import pathlib
-import re
 import shutil
 import tempfile
+from typing import Tuple
 import zipfile
 
 from .scoreCommon import ScoreException
@@ -30,7 +30,7 @@ from .task2 import score as scoreTask2
 from .task3 import scoreP3
 
 
-def extractZip(zipPath, outputPath, flatten=True):
+def extractZip(zipPath: pathlib.Path, outputPath: pathlib.Path, flatten: bool = True):
     """
     Extract a zip file, optionally flattening it into a single directory.
     """
@@ -59,7 +59,8 @@ def extractZip(zipPath, outputPath, flatten=True):
         raise ScoreException(f'Could not read ZIP file "{zipPath.name}": {str(e)}.')
 
 
-def unzipAll(inputPath, allowManuscriptDirectory=False):
+def unzipAll(inputPath: pathlib.Path, allowManuscriptDirectory: bool = False) -> \
+        Tuple[pathlib.Path, tempfile.TemporaryDirectory]:
     """
     Extract / copy all files in directory. Validate that the path contains
     exactly one file. Optionally allow an 'Abstract' directory to exist that
@@ -114,7 +115,7 @@ def unzipAll(inputPath, allowManuscriptDirectory=False):
     return outputPath, outputTempDir
 
 
-def ensureManuscript(predictionPath):
+def ensureManuscript(predictionPath: pathlib.Path):
     manuscriptFileCount = sum(
         manuscriptFile.suffix.lower() == '.pdf'
         for manuscriptFile in predictionPath.iterdir()
@@ -129,7 +130,8 @@ def ensureManuscript(predictionPath):
             'must included in the submission.')
 
 
-def scoreAll(truthInputPath, predictionInputPath, taskNum, requireManuscript):
+def scoreAll(truthInputPath: pathlib.Path, predictionInputPath: pathlib.Path,
+             taskNum: int, requireManuscript: bool):
     # Unzip zip files contained in the input folders
     truthPath, truthTempDir = unzipAll(truthInputPath)
 
