@@ -8,17 +8,17 @@ setup(
     license='Apache 2.0',
     packages=['isic_challenge_scoring'],
     install_requires=[
-          'numpy',
-          'pandas',
-          'pillow',
-          'scipy',
-          'scikit-learn'
+        'numpy',
+        'pandas',
+        'pillow',
+        'scipy',
+        'scikit-learn'
     ],
     setup_requires=[
-          'pytest-runner'
+        'pytest-runner'
     ],
     tests_require=[
-          'pytest'
+        'pytest'
     ],
     zip_safe=False
 )
