@@ -18,6 +18,7 @@
 
 import pathlib
 import re
+from typing import Dict, List
 import warnings
 
 import numpy as np
@@ -84,7 +85,7 @@ def parseCsv(csvFileStream):
     return probabilities
 
 
-def excludeRows(probabilities: pd.DataFrame, labels: list):
+def excludeRows(probabilities: pd.DataFrame, labels: List):
     """Exclude rows with specified labels, in-place."""
     probabilities.drop(index=labels, inplace=True, errors='ignore')
 
@@ -158,7 +159,7 @@ def balancedMulticlassAccuracy(truthLabels: pd.Series, predictionLabels: pd.Seri
     return balancedAccuracy
 
 
-def computeMetrics(truthFileStream, predictionFileStream) -> list:
+def computeMetrics(truthFileStream, predictionFileStream) -> List[Dict]:
     truthProbabilities = parseCsv(truthFileStream)
     predictionProbabilities = parseCsv(predictionFileStream)
 
@@ -187,7 +188,7 @@ def computeMetrics(truthFileStream, predictionFileStream) -> list:
     return scores
 
 
-def scoreP3(truthPath: pathlib.Path, predictionPath: pathlib.Path) -> list:
+def scoreP3(truthPath: pathlib.Path, predictionPath: pathlib.Path) -> List[Dict]:
     for truthFile in truthPath.iterdir():
         if re.match(r'^ISIC.*GroundTruth\.csv$', truthFile.name):
             break

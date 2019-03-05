@@ -17,6 +17,7 @@
 ###############################################################################
 
 import pathlib
+from typing import Dict, List, Tuple
 
 import numpy as np
 
@@ -41,7 +42,7 @@ def matchInputFile(truthFile: pathlib.Path, predictionPath: pathlib.Path) -> pat
 
 
 def loadBinaryImages(truthFile: pathlib.Path, predictionFile: pathlib.Path) -> \
-        (np.ndarray, np.ndarray):
+        Tuple[np.ndarray, np.ndarray]:
     truthImage = loadSegmentationImage(truthFile)
     truthImage = assertBinaryImage(truthImage, truthFile.name)
     predictionImage = loadSegmentationImage(predictionFile)
@@ -57,7 +58,7 @@ def loadBinaryImages(truthFile: pathlib.Path, predictionFile: pathlib.Path) -> \
     return truthBinaryImage, predictionBinaryImage
 
 
-def scoreImage(truthBinaryImage: np.ndarray, predictionBinaryImage: np.ndarray) -> dict:
+def scoreImage(truthBinaryImage: np.ndarray, predictionBinaryImage: np.ndarray) -> Dict:
     truePositive, trueNegative, falsePositive, falseNegative = computeTFPN(
         truthBinaryImage, predictionBinaryImage)
 
@@ -75,7 +76,7 @@ def scoreImage(truthBinaryImage: np.ndarray, predictionBinaryImage: np.ndarray) 
     }
 
 
-def score(truthPath: pathlib.Path, predictionPath: pathlib.Path) -> list:
+def score(truthPath: pathlib.Path, predictionPath: pathlib.Path) -> List[Dict]:
     # Iterate over each file and call scoring executable on the pair
     scores = []
     for truthFile in sorted(truthPath.iterdir()):

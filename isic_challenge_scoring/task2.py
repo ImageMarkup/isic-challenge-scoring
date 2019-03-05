@@ -17,6 +17,7 @@
 ###############################################################################
 
 import pathlib
+from typing import Dict, List, Tuple
 
 import numpy as np
 
@@ -42,7 +43,7 @@ def matchInputFile(truthFile: pathlib.Path, predictionPath: pathlib.Path) -> pat
 
 
 def iterImagePairs(truthPath: pathlib.Path, predictionPath: pathlib.Path) -> \
-        (np.ndarray, np.ndarray):
+        Tuple[np.ndarray, np.ndarray]:
     for truthFile in sorted(truthPath.iterdir()):
         if truthFile.name in {'ATTRIBUTION.txt', 'LICENSE.txt'}:
             continue
@@ -61,7 +62,7 @@ def iterImagePairs(truthPath: pathlib.Path, predictionPath: pathlib.Path) -> \
         return truthImage, predictionImage
 
 
-def score(truthPath: pathlib.Path, predictionPath: pathlib.Path) -> list:
+def score(truthPath: pathlib.Path, predictionPath: pathlib.Path) -> List[Dict]:
     truePositiveTotal = 0.0
     trueNegativeTotal = 0.0
     falsePositiveTotal = 0.0
