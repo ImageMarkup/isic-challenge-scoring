@@ -7,6 +7,7 @@ setup(
     url='https://github.com/ImageMarkup/isic-challenge-scoring',
     license='Apache 2.0',
     packages=['isic_challenge_scoring'],
+    python_requires='>=3.7.0',
     install_requires=[
         'click',
         'numpy',
