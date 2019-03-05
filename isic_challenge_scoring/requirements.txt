@@ -1,8 +1,0 @@
-click
-numpy
-pillow
-scipy
-scikit-learn
-
-flake8
-pytest
