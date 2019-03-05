@@ -16,9 +16,10 @@
 #  limitations under the License.
 ###############################################################################
 
-import click
 import pathlib
 import sys
+
+import click
 
 from . import scoreAll
 from .scoreCommon import ScoreException

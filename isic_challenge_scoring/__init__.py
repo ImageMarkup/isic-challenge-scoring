@@ -31,9 +31,7 @@ from .task3 import scoreP3
 
 
 def extractZip(zipPath: pathlib.Path, outputPath: pathlib.Path, flatten: bool = True):
-    """
-    Extract a zip file, optionally flattening it into a single directory.
-    """
+    """Extract a zip file, optionally flattening it into a single directory."""
     try:
         with zipfile.ZipFile(zipPath) as zf:
             if flatten:
@@ -62,10 +60,10 @@ def extractZip(zipPath: pathlib.Path, outputPath: pathlib.Path, flatten: bool = 
 def unzipAll(inputPath: pathlib.Path, allowManuscriptDirectory: bool = False) -> \
         Tuple[pathlib.Path, tempfile.TemporaryDirectory]:
     """
-    Extract / copy all files in directory. Validate that the path contains
-    exactly one file. Optionally allow an 'Abstract' directory to exist that
-    contains exactly one manuscript file.
-    Return a path to the extracted content.
+    Extract / copy all files in directory.
+
+    Validates that the path contains exactly one file. Optionally allow an 'Abstract' directory to
+    exist which contains exactly one manuscript file. Return a path to the extracted content.
     """
     inputFiles = [f for f in inputPath.iterdir() if f.is_file()]
     inputDirs = [f for f in inputPath.iterdir() if f.is_dir()]

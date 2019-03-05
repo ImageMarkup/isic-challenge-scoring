@@ -91,6 +91,8 @@ def excludeRows(probabilities: pd.DataFrame, labels: list):
 
 def validateRows(truthProbabilities: pd.DataFrame, predictionProbabilities: pd.DataFrame):
     """
+    Ensure prediction rows correspond to truth rows.
+
     Fail when predictionProbabilities is missing rows or has extra rows compared to
     truthProbabilities.
     """

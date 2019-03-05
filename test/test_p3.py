@@ -279,7 +279,7 @@ def test_getFrequencies():
     (['MEL', 'NV'], ['MEL', 'MEL'], 0.5),
     (['MEL', 'NV', 'MEL'], ['MEL', 'MEL', 'MEL'], 0.5),
     (['MEL', 'NV', 'MEL', 'MEL'], ['MEL', 'MEL', 'MEL', 'MEL'], 0.5),
-    (['MEL', 'NV', 'MEL', 'MEL'], ['MEL', 'MEL', 'MEL', 'NV'], 1/3),
+    (['MEL', 'NV', 'MEL', 'MEL'], ['MEL', 'MEL', 'MEL', 'NV'], 1 / 3),
     (['MEL', 'NV', 'MEL', 'MEL'], ['NV', 'MEL', 'NV', 'NV'], 0.0),
 ])
 def test_balancedMulticlassAccuracy(truthLabels, predictionLabels, balancedAccuracy):

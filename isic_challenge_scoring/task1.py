@@ -20,7 +20,7 @@ import pathlib
 
 import numpy as np
 
-from .scoreCommon import ScoreException, loadSegmentationImage, assertBinaryImage, computeTFPN
+from .scoreCommon import assertBinaryImage, computeTFPN, loadSegmentationImage, ScoreException
 
 
 def matchInputFile(truthFile: pathlib.Path, predictionPath: pathlib.Path) -> pathlib.Path:

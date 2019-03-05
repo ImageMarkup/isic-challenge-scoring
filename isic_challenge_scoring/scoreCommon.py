@@ -87,9 +87,7 @@ def computeTFPN(truthBinaryValues, testBinaryValues):
 
 
 def computeCommonMetrics(truthBinaryValues, testBinaryValues):
-    """
-    Computes accuracy, sensitivity, and specificity.
-    """
+    """Compute accuracy, sensitivity, and specificity."""
     truePositive, trueNegative, falsePositive, falseNegative = computeTFPN(
         truthBinaryValues, testBinaryValues
     )
@@ -123,9 +121,7 @@ def computeCommonMetrics(truthBinaryValues, testBinaryValues):
 
 
 def computeSimilarityMetrics(truthBinaryValues, testBinaryValues):
-    """
-    Computes Jaccard index and Dice coefficient.
-    """
+    """Compute Jaccard index and Dice coefficient."""
     truePositive, trueNegative, falsePositive, falseNegative = computeTFPN(
         truthBinaryValues, testBinaryValues
     )
@@ -152,9 +148,7 @@ def computeSimilarityMetrics(truthBinaryValues, testBinaryValues):
 
 
 def computeAveragePrecisionMetrics(truthValues, testValues):
-    """
-    Compute average precision.
-    """
+    """Compute average precision."""
     metrics = [
         {
             'name': 'average_precision',
@@ -166,9 +160,7 @@ def computeAveragePrecisionMetrics(truthValues, testValues):
 
 
 def computeAUCMetrics(truthValues, testValues):
-    """
-    Compute AUC measure.
-    """
+    """Compute AUC measure."""
     metrics = [
         {
             'name': 'area_under_roc',
@@ -180,9 +172,7 @@ def computeAUCMetrics(truthValues, testValues):
 
 
 def computeSPECMetrics(truthValues, testValues, sensitivityThreshold):
-    """
-    Compute specificity at specified sensitivity.
-    """
+    """Compute specificity at specified sensitivity."""
     # Use sklearn to grab the ROC curve
     falsePositiveRates, truePositiveRates, thresholds = roc_curve(
         y_true=truthValues, y_score=testValues)
