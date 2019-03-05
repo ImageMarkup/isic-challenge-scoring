@@ -1,0 +1,13 @@
+version: 2
+jobs:
+  test:
+    docker:
+      - image: python:3.7
+    steps:
+      - checkout
+      - run:
+          name: Install Tox
+          command: pip install tox
+      - run:
+          name: Run tests
+          command: tox
