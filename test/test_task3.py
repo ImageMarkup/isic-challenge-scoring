@@ -283,5 +283,5 @@ def test_getFrequencies():
     (['MEL', 'NV', 'MEL', 'MEL'], ['NV', 'MEL', 'NV', 'NV'], 0.0),
 ])
 def test_balancedMulticlassAccuracy(truthLabels, predictionLabels, balancedAccuracy):
-    assert balancedAccuracy == pytest.approx(task3.balancedMulticlassAccuracy(
+    assert balancedAccuracy == pytest.approx(task3.computeBalancedMulticlassAccuracy(
         pd.Series(truthLabels), pd.Series(predictionLabels)))

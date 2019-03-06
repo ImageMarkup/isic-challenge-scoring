@@ -38,7 +38,7 @@ CATEGORIES = pd.Index(['MEL', 'NV', 'BCC', 'AKIEC', 'BKL', 'DF', 'VASC'])
 EXCLUDE_LABELS = ['ISIC_0035068']
 
 
-def parseCsv(csvFileStream):
+def parseCsv(csvFileStream) -> pd.DataFrame:
     probabilities = pd.read_csv(
         csvFileStream,
         header=0
@@ -131,7 +131,7 @@ def getFrequencies(labels: pd.Series) -> pd.Series:
     return labels.value_counts().reindex(CATEGORIES, fill_value=0)
 
 
-def balancedMulticlassAccuracy(truthLabels: pd.Series, predictionLabels: pd.Series) -> float:
+def computeBalancedMulticlassAccuracy(truthLabels: pd.Series, predictionLabels: pd.Series) -> float:
     # See http://scikit-learn.org/dev/modules/model_evaluation.html#balanced-accuracy-score ; in
     # summary, 'sklearn.metrics.balanced_accuracy_score' is for binary classification only, so we
     # need to implement our own; here, we implement a simpler version of "balanced accuracy" than
@@ -159,6 +159,62 @@ def balancedMulticlassAccuracy(truthLabels: pd.Series, predictionLabels: pd.Seri
     return balancedAccuracy
 
 
+def computeCategoryAccuracy(truthBinaryValues: pd.Series, predictionBinaryValues: pd.Series) -> \
+        float:
+    accuracy = sklearn.metrics.accuracy_score(truthBinaryValues, predictionBinaryValues)
+    return accuracy
+
+
+def computeCategorySensitivity(truthBinaryValues: pd.Series, predictionBinaryValues: pd.Series) -> \
+        float:
+    sensitivity = sklearn.metrics.recall_score(truthBinaryValues, predictionBinaryValues)
+    return sensitivity
+
+
+def computeCategorySpecificity(truthBinaryValues: pd.Series, predictionBinaryValues: pd.Series) -> \
+        float:
+    binaryConfusionMatrix = sklearn.metrics.confusion_matrix(
+        truthBinaryValues,
+        predictionBinaryValues
+    )
+    # TODO: https://docs.scipy.org/doc/numpy-1.13.0/user/basics.subclassing.html to create a
+    # binary confusion matrix type
+    trueNegative, falsePositive, falseNegative, truePositive = binaryConfusionMatrix.ravel()
+
+    specificity = trueNegative / (trueNegative + falsePositive)
+    return specificity
+
+
+def computeCategoryF1(truthBinaryValues: pd.Series, predictionBinaryValues: pd.Series) -> float:
+    f1 = sklearn.metrics.f1_score(truthBinaryValues, predictionBinaryValues)
+    return f1
+
+
+def computeCategoryPpv(truthBinaryValues: pd.Series, predictionBinaryValues: pd.Series) -> float:
+    ppv = sklearn.metrics.precision_score(truthBinaryValues, predictionBinaryValues)
+    return ppv
+
+
+def computeCategoryNpv(truthBinaryValues: pd.Series, predictionBinaryValues: pd.Series) -> float:
+    binaryConfusionMatrix = sklearn.metrics.confusion_matrix(
+        truthBinaryValues,
+        predictionBinaryValues
+    )
+    trueNegative, falsePositive, falseNegative, truePositive = binaryConfusionMatrix.ravel()
+
+    npv = trueNegative / (trueNegative + falseNegative)
+    return npv
+
+
+def computeCategoryAuc(truthProbabilities: pd.DataFrame, predictionProbabilities: pd.DataFrame,
+                       category: str) -> float:
+    truthCategoryProbabilities = truthProbabilities[category]
+    predictionCategoryProbabilities = predictionProbabilities[category]
+
+    auc = sklearn.metrics.roc_auc_score(truthCategoryProbabilities, predictionCategoryProbabilities)
+    return auc
+
+
 def computeMetrics(truthFileStream, predictionFileStream) -> List[Dict]:
     truthProbabilities = parseCsv(truthFileStream)
     predictionProbabilities = parseCsv(predictionFileStream)
@@ -180,11 +236,51 @@ def computeMetrics(truthFileStream, predictionFileStream) -> List[Dict]:
             'metrics': [
                 {
                     'name': 'balanced_accuracy',
-                    'value': balancedMulticlassAccuracy(truthLabels, predictionLabels)
+                    'value': computeBalancedMulticlassAccuracy(truthLabels, predictionLabels)
                 }
             ]
-        }
+        },
     ]
+
+    for category in CATEGORIES:
+        truthBinaryValues = truthLabels == category
+        predictionBinaryValues = predictionLabels == category
+
+        scores.append({
+            'dataset': category,
+            'metrics': [
+                {
+                    'name': 'accuracy',
+                    'value': computeCategoryAccuracy(truthBinaryValues, predictionBinaryValues)
+                },
+                {
+                    'name': 'sensitivity',
+                    'value': computeCategorySensitivity(truthBinaryValues, predictionBinaryValues)
+                },
+                {
+                    'name': 'specificity',
+                    'value': computeCategorySpecificity(truthBinaryValues, predictionBinaryValues)
+                },
+                {
+                    'name': 'f1_score',
+                    'value': computeCategoryF1(truthBinaryValues, predictionBinaryValues)
+                },
+                {
+                    'name': 'ppv',
+                    'value': computeCategoryPpv(truthBinaryValues, predictionBinaryValues)
+                },
+                {
+                    'name': 'npv',
+                    'value': computeCategoryNpv(truthBinaryValues, predictionBinaryValues)
+                },
+                {
+                    'name': 'area_under_roc',
+                    'value': computeCategoryAuc(
+                        truthProbabilities, predictionProbabilities, category)
+                },
+            ]
+        })
+
     return scores
 
 
