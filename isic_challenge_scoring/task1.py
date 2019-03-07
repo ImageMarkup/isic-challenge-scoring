@@ -17,48 +17,18 @@
 ###############################################################################
 
 import pathlib
-from typing import Dict, List, Tuple
+from typing import Dict, List
 
 import numpy as np
 
-from .scoreCommon import assertBinaryImage, computeTFPN, loadSegmentationImage, ScoreException
-
-
-def matchInputFile(truthFile: pathlib.Path, predictionPath: pathlib.Path) -> pathlib.Path:
-    # truthFile ~= 'ISIC_0000003_Segmentation.png'
-    truthFileId = truthFile.stem.split('_')[1]
-
-    predictionFileCandidates = [
-        predictionFile
-        for predictionFile in predictionPath.iterdir()
-        if truthFileId in predictionFile.stem
-    ]
-
-    if not predictionFileCandidates:
-        raise ScoreException(f'No matching submission for: {truthFile.name}')
-    elif len(predictionFileCandidates) > 1:
-        raise ScoreException(f'Multiple matching submissions for: {truthFile.name}')
-    return predictionFileCandidates[0]
-
-
-def loadBinaryImages(truthFile: pathlib.Path, predictionFile: pathlib.Path) -> \
-        Tuple[np.ndarray, np.ndarray]:
-    truthImage = loadSegmentationImage(truthFile)
-    truthImage = assertBinaryImage(truthImage, truthFile.name)
-    predictionImage = loadSegmentationImage(predictionFile)
-
-    if predictionImage.shape[0:2] != truthImage.shape[0:2]:
-        raise ScoreException(
-            f'Image {predictionFile.name} has dimensions {predictionImage.shape[0:2]}; '
-            f'expected {truthImage.shape[0:2]}.')
-
-    truthBinaryImage = (truthImage > 128)
-    predictionBinaryImage = (predictionImage > 128)
-
-    return truthBinaryImage, predictionBinaryImage
+from isic_challenge_scoring import metrics
+from isic_challenge_scoring.scoreCommon import computeTFPN, iterImagePairs
 
 
 def scoreImage(truthBinaryImage: np.ndarray, predictionBinaryImage: np.ndarray) -> Dict:
+    truthBinaryImage = truthBinaryImage.ravel()
+    predictionBinaryImage = predictionBinaryImage.ravel()
+
     truePositive, trueNegative, falsePositive, falseNegative = computeTFPN(
         truthBinaryImage, predictionBinaryImage)
 
@@ -69,31 +39,25 @@ def scoreImage(truthBinaryImage: np.ndarray, predictionBinaryImage: np.ndarray) 
         'threshold_jaccard': thresholdJaccard,
         'jaccard': jaccard,
         'dice': (2 * truePositive) / ((2 * truePositive) + falsePositive + falseNegative),
-        'sensitivity': truePositive / (truePositive + falseNegative),
-        'specificity': trueNegative / (trueNegative + falsePositive),
-        'accuracy': (truePositive + trueNegative) /
-                    (truePositive + trueNegative + falsePositive + falseNegative),
+        'sensitivity': metrics.binarySensitivity(truthBinaryImage, predictionBinaryImage),
+        'specificity': metrics.binarySpecificity(truthBinaryImage, predictionBinaryImage),
+        'accuracy': metrics.binaryAccuracy(truthBinaryImage, predictionBinaryImage),
     }
 
 
 def score(truthPath: pathlib.Path, predictionPath: pathlib.Path) -> List[Dict]:
     # Iterate over each file and call scoring executable on the pair
     scores = []
-    for truthFile in sorted(truthPath.iterdir()):
-        if truthFile.name in {'ATTRIBUTION.txt', 'LICENSE.txt'}:
-            continue
 
-        predictionFile = matchInputFile(truthFile, predictionPath)
+    for truthImage, predictionImage, truthFileId in iterImagePairs(truthPath, predictionPath):
+        truthBinaryImage = (truthImage > 128)
+        predictionBinaryImage = (predictionImage > 128)
 
-        # truthFile ~= 'ISIC_0000003_segmentation.png'
-        imageName = truthFile.stem.rsplit('_', 1)[0]
-
-        truthBinaryImage, predictionBinaryImage = loadBinaryImages(truthFile, predictionFile)
         metrics = scoreImage(truthBinaryImage, predictionBinaryImage)
 
         # TODO: maybe only return an 'aggregate' metric, rather than per-image scores
         scores.append({
-            'dataset': imageName,
+            'dataset': truthFileId,
             'metrics': [
                 {
                     'name': metricName,

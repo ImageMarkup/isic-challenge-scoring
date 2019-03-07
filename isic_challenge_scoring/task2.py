@@ -17,49 +17,9 @@
 ###############################################################################
 
 import pathlib
-from typing import Dict, List, Tuple
+from typing import Dict, List
 
-import numpy as np
-
-from .scoreCommon import assertBinaryImage, computeTFPN, loadSegmentationImage, ScoreException
-
-
-def matchInputFile(truthFile: pathlib.Path, predictionPath: pathlib.Path) -> pathlib.Path:
-    # truthFile ~= 'ISIC_0000003_attribute_streaks.png
-    truthFileId = truthFile.stem.split('_')[1]
-    truthFileAttribute = truthFile.stem.split('_')[3]
-
-    predictionFileCandidates = [
-        predictionFile
-        for predictionFile in predictionPath.iterdir()
-        if truthFileId in predictionFile.stem and truthFileAttribute in predictionFile.stem
-    ]
-
-    if not predictionFileCandidates:
-        raise ScoreException(f'No matching submission for: {truthFile.name}')
-    elif len(predictionFileCandidates) > 1:
-        raise ScoreException(f'Multiple matching submissions for: {truthFile.name}')
-    return predictionFileCandidates[0]
-
-
-def iterImagePairs(truthPath: pathlib.Path, predictionPath: pathlib.Path) -> \
-        Tuple[np.ndarray, np.ndarray]:
-    for truthFile in sorted(truthPath.iterdir()):
-        if truthFile.name in {'ATTRIBUTION.txt', 'LICENSE.txt'}:
-            continue
-
-        predictionFile = matchInputFile(truthFile, predictionPath)
-
-        truthImage = loadSegmentationImage(truthFile)
-        truthImage = assertBinaryImage(truthImage, truthFile.name)
-
-        predictionImage = loadSegmentationImage(predictionFile)
-        if predictionImage.shape[0:2] != truthImage.shape[0:2]:
-            raise ScoreException(
-                f'Image {predictionFile.name} has dimensions {predictionImage.shape[0:2]}; '
-                f'expected {truthImage.shape[0:2]}.')
-
-        yield truthImage, predictionImage
+from isic_challenge_scoring.scoreCommon import computeTFPN, iterImagePairs
 
 
 def score(truthPath: pathlib.Path, predictionPath: pathlib.Path) -> List[Dict]:
@@ -68,7 +28,7 @@ def score(truthPath: pathlib.Path, predictionPath: pathlib.Path) -> List[Dict]:
     falsePositiveTotal = 0.0
     falseNegativeTotal = 0.0
 
-    for truthImage, predictionImage in iterImagePairs(truthPath, predictionPath):
+    for truthImage, predictionImage, truthFileId in iterImagePairs(truthPath, predictionPath):
         truthBinaryImage = (truthImage > 128)
         predictionBinaryImage = (predictionImage > 128)
 

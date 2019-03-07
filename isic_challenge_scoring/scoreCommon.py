@@ -17,6 +17,7 @@
 ###############################################################################
 
 import pathlib
+from typing import Tuple
 
 import numpy as np
 from PIL import Image
@@ -68,6 +69,57 @@ def assertBinaryImage(image, imageName):
             'Image %s contains values other than 0 and 255.' % imageName)
 
     return image
+
+
+def matchInputFile(truthFile: pathlib.Path, predictionPath: pathlib.Path) -> pathlib.Path:
+    # TODO: refactor to reduce duplication
+    if 'segmentation' in truthFile.stem.lower():
+        # truthFile ~= 'ISIC_0000003_Segmentation.png'
+        truthFileId = truthFile.stem.split('_')[1]
+        predictionFileCandidates = [
+            predictionFile
+            for predictionFile in predictionPath.iterdir()
+            if truthFileId in predictionFile.stem
+        ]
+    elif 'attribute' in truthFile.stem.lower():
+        # truthFile ~= 'ISIC_0000003_attribute_streaks.png
+        truthFileId = truthFile.stem.split('_')[1]
+        truthFileAttribute = truthFile.stem.split('_')[3]
+        predictionFileCandidates = [
+            predictionFile
+            for predictionFile in predictionPath.iterdir()
+            if truthFileId in predictionFile.stem and truthFileAttribute in predictionFile.stem
+        ]
+    else:
+        raise ScoreException(f'Internal error: unknown ground truth file: {truthFile.name}.')
+
+    if not predictionFileCandidates:
+        raise ScoreException(f'No matching submission for: {truthFile.name}')
+    elif len(predictionFileCandidates) > 1:
+        raise ScoreException(f'Multiple matching submissions for: {truthFile.name}')
+    return predictionFileCandidates[0]
+
+
+def iterImagePairs(truthPath: pathlib.Path, predictionPath: pathlib.Path) -> \
+        Tuple[np.ndarray, np.ndarray, str]:
+    for truthFile in sorted(truthPath.iterdir()):
+        if truthFile.name in {'ATTRIBUTION.txt', 'LICENSE.txt'}:
+            continue
+
+        predictionFile = matchInputFile(truthFile, predictionPath)
+
+        truthImage = loadSegmentationImage(truthFile)
+        truthImage = assertBinaryImage(truthImage, truthFile.name)
+
+        predictionImage = loadSegmentationImage(predictionFile)
+        if predictionImage.shape[0:2] != truthImage.shape[0:2]:
+            raise ScoreException(
+                f'Image {predictionFile.name} has dimensions {predictionImage.shape[0:2]}; '
+                f'expected {truthImage.shape[0:2]}.')
+
+        truthFileId = truthFile.stem.split('_')[1]
+
+        yield truthImage, predictionImage, truthFileId
 
 
 def computeTFPN(truthBinaryValues, testBinaryValues):

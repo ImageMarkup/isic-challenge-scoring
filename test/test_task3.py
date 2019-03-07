@@ -1,3 +1,5 @@
+# -*- coding: utf-8 -*-
+
 import io
 import warnings
 
@@ -225,63 +227,3 @@ def test_sortRows():
         [0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0],
         [0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0]
     ], index=['ISIC_0000123', 'ISIC_0000124', 'ISIC_0000125'], columns=task3.CATEGORIES))
-
-
-def test_toLabels():
-    probabilities = pd.DataFrame([
-        # NV
-        [0.0, 0.1, 0.0, 0.0, 0.0, 0.0, 0.0],
-        # undecided
-        [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
-        # AKIEC
-        [0.2, 0.2, 0.2, 0.8, 0.2, 0.2, 0.2],
-        # undecided
-        [0.4, 0.4, 0.4, 0.4, 0.4, 0.4, 0.4],
-        # MEL
-        [1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
-    ], columns=task3.CATEGORIES)
-
-    labels = task3.toLabels(probabilities)
-
-    assert labels.equals(pd.Series([
-        'NV',
-        'undecided',
-        'AKIEC',
-        'undecided',
-        'MEL'
-    ]))
-
-
-def test_getFrequencies():
-    labels = pd.Series(['MEL', 'MEL', 'VASC', 'AKIEC'])
-
-    labelFrequencies = task3.getFrequencies(labels)
-
-    assert labelFrequencies.equals(pd.Series({
-        'MEL': 2,
-        'NV': 0,
-        'BCC': 0,
-        'AKIEC': 1,
-        'BKL': 0,
-        'DF': 0,
-        'VASC': 1
-    }))
-    # Ensure the ordering is correct (although Python3.6 dicts are ordered)
-    assert labelFrequencies.index.equals(task3.CATEGORIES)
-
-
-@pytest.mark.parametrize('truthLabels, predictionLabels, balancedAccuracy', [
-    (['MEL'], ['MEL'], 1.0),
-    (['NV'], ['NV'], 1.0),
-    (['NV'], ['MEL'], 0.0),
-    (['MEL', 'MEL'], ['MEL', 'MEL'], 1.0),
-    (['MEL', 'NV'], ['MEL', 'NV'], 1.0),
-    (['MEL', 'NV'], ['MEL', 'MEL'], 0.5),
-    (['MEL', 'NV', 'MEL'], ['MEL', 'MEL', 'MEL'], 0.5),
-    (['MEL', 'NV', 'MEL', 'MEL'], ['MEL', 'MEL', 'MEL', 'MEL'], 0.5),
-    (['MEL', 'NV', 'MEL', 'MEL'], ['MEL', 'MEL', 'MEL', 'NV'], 1/3),  # noqa: E226
-    (['MEL', 'NV', 'MEL', 'MEL'], ['NV', 'MEL', 'NV', 'NV'], 0.0),
-])
-def test_balancedMulticlassAccuracy(truthLabels, predictionLabels, balancedAccuracy):
-    assert balancedAccuracy == pytest.approx(task3.computeBalancedMulticlassAccuracy(
-        pd.Series(truthLabels), pd.Series(predictionLabels)))
