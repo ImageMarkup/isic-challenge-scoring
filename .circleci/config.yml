@@ -2,12 +2,9 @@ version: 2
 jobs:
   build:
     docker:
-      - image: python:3.7
+      - image: isic/isic-challenge-scoring-test:latest
     steps:
       - checkout
-      - run:
-          name: Install Tox
-          command: pip install tox
       - run:
           name: Run tests
           command: tox
