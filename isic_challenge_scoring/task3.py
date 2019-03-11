@@ -1,37 +1,14 @@
 # -*- coding: utf-8 -*-
-
-###############################################################################
-#  Copyright Kitware Inc.
-#
-#  Licensed under the Apache License, Version 2.0 ( the "License" );
-#  you may not use this file except in compliance with the License.
-#  You may obtain a copy of the License at
-#
-#    http://www.apache.org/licenses/LICENSE-2.0
-#
-#  Unless required by applicable law or agreed to in writing, software
-#  distributed under the License is distributed on an "AS IS" BASIS,
-#  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-#  See the License for the specific language governing permissions and
-#  limitations under the License.
-###############################################################################
-
 import pathlib
 import re
 from typing import Dict, List
-import warnings
 
 import numpy as np
-with warnings.catch_warnings():
-    # See https://stackoverflow.com/a/40846742
-    warnings.filterwarnings(
-        'ignore',
-        r'^numpy\.dtype size changed, may indicate binary incompatibility\.',
-        RuntimeWarning)
-    import pandas as pd
+import pandas as pd
 
-from isic_challenge_scoring import metrics  # noqa: E402
-from isic_challenge_scoring.scoreCommon import ScoreException  # noqa: E402
+from isic_challenge_scoring import metrics
+from isic_challenge_scoring.confusion import createBinaryConfusionMatrix
+from isic_challenge_scoring.scoreCommon import ScoreException
 
 
 CATEGORIES = pd.Index(['MEL', 'NV', 'BCC', 'AKIEC', 'BKL', 'DF', 'VASC'])
@@ -143,32 +120,38 @@ def computeMetrics(truthFileStream, predictionFileStream) -> List[Dict]:
         truthBinaryValues: pd.Series = truthCategoryProbabilities.gt(0.5)
         predictionBinaryValues: pd.Series = predictionCategoryProbabilities.gt(0.5)
 
+        categoryCm = createBinaryConfusionMatrix(
+            truthBinaryValues=truthBinaryValues.to_numpy(),
+            predictionBinaryValues=predictionBinaryValues.to_numpy(),
+            name=category
+        )
+
         scores.append({
             'dataset': category,
             'metrics': [
                 {
                     'name': 'accuracy',
-                    'value': metrics.binaryAccuracy(truthBinaryValues, predictionBinaryValues)
+                    'value': metrics.binaryAccuracy(categoryCm)
                 },
                 {
                     'name': 'sensitivity',
-                    'value': metrics.binarySensitivity(truthBinaryValues, predictionBinaryValues)
+                    'value': metrics.binarySensitivity(categoryCm)
                 },
                 {
                     'name': 'specificity',
-                    'value': metrics.binarySpecificity(truthBinaryValues, predictionBinaryValues)
+                    'value': metrics.binarySpecificity(categoryCm)
                 },
                 {
-                    'name': 'f1_score',
-                    'value': metrics.binaryF1(truthBinaryValues, predictionBinaryValues)
+                    'name': 'f1_score',  # TODO: call dice
+                    'value': metrics.binaryDice(categoryCm)
                 },
                 {
                     'name': 'ppv',
-                    'value': metrics.binaryPpv(truthBinaryValues, predictionBinaryValues)
+                    'value': metrics.binaryPpv(categoryCm)
                 },
                 {
                     'name': 'npv',
-                    'value': metrics.binaryNpv(truthBinaryValues, predictionBinaryValues)
+                    'value': metrics.binaryNpv(categoryCm)
                 },
                 {
                     'name': 'auc',
@@ -183,21 +166,30 @@ def computeMetrics(truthFileStream, predictionFileStream) -> List[Dict]:
             ]
         })
 
+    """
+    Individual Category Metrics
+        mean average precision
+
+    Aggregate Metrics
+        average AUC across all diagnoses
+        malignant vs.benign diagnoses categoryAUC
+    """
+
     return scores
 
 
-def scoreP3(truthPath: pathlib.Path, predictionPath: pathlib.Path) -> List[Dict]:
+def score(truthPath: pathlib.Path, predictionPath: pathlib.Path) -> List[Dict]:
     for truthFile in truthPath.iterdir():
         if re.match(r'^ISIC.*GroundTruth\.csv$', truthFile.name):
             break
     else:
         raise ScoreException('Internal error, truth file could not be found.')
 
-    predictionFiles = list(
+    predictionFiles = [
         predictionFile
         for predictionFile in predictionPath.iterdir()
         if predictionFile.suffix.lower() == '.csv'
-    )
+    ]
     if len(predictionFiles) > 1:
         raise ScoreException(
             'Multiple prediction files submitted. Exactly one CSV file should be submitted.')

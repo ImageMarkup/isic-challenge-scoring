@@ -1,16 +1,7 @@
 # -*- coding: utf-8 -*-
-
-import warnings
-
 import numpy as np
-with warnings.catch_warnings():
-    # See https://stackoverflow.com/a/40846742
-    warnings.filterwarnings(
-        'ignore',
-        r'^numpy\.dtype size changed, may indicate binary incompatibility\.',
-        RuntimeWarning)
-    import pandas as pd
-import sklearn.metrics  # noqa: E402
+import pandas as pd
+import sklearn.metrics
 
 
 def _toLabels(probabilities: pd.DataFrame) -> pd.Series:
@@ -73,56 +64,71 @@ def balancedMulticlassAccuracy(
     return balancedAccuracy
 
 
-def binaryAccuracy(truthBinaryValues: pd.Series, predictionBinaryValues: pd.Series) -> float:
-    accuracy = sklearn.metrics.accuracy_score(truthBinaryValues, predictionBinaryValues)
-    return accuracy
+def binaryAccuracy(cm: pd.Series) -> float:
+    return (cm.at['TP'] + cm.at['TN']) / (cm.at['TP'] + cm.at['TN'] + cm.at['FP'] + cm.at['FN'])
 
 
-def binarySensitivity(truthBinaryValues: pd.Series, predictionBinaryValues: pd.Series) -> float:
-    if not truthBinaryValues.any():
+def binarySensitivity(cm: pd.Series) -> float:
+    if cm.at['TP'] + cm.at['FN'] == 0:
         # sensitivity can't be calculated if all are negative, so make this metric a freebie
-        sensitivity = 1.0
+        return 1.0
     else:
-        sensitivity = sklearn.metrics.recall_score(truthBinaryValues, predictionBinaryValues)
-    return sensitivity
+        return cm.at['TP'] / (cm.at['TP'] + cm.at['FN'])
 
 
-def binarySpecificity(truthBinaryValues: pd.Series, predictionBinaryValues: pd.Series) -> float:
-    if truthBinaryValues.all():
+def binarySpecificity(cm: pd.Series) -> float:
+    if cm.at['TN'] + cm.at['FP'] == 0:
         # specificity can't be calculated if all are positive, so make this metric a freebie
-        specificity = 1
+        return 1.0
     else:
-        binaryConfusionMatrix = sklearn.metrics.confusion_matrix(
-            truthBinaryValues,
-            predictionBinaryValues
-        )
-        # TODO: https://docs.scipy.org/doc/numpy-1.13.0/user/basics.subclassing.html to create a
-        # binary confusion matrix type
-        trueNegative, falsePositive, falseNegative, truePositive = binaryConfusionMatrix.ravel()
-
-        specificity = trueNegative / (trueNegative + falsePositive)
-    return specificity
+        return cm.at['TN'] / (cm.at['TN'] + cm.at['FP'])
 
 
-def binaryF1(truthBinaryValues: pd.Series, predictionBinaryValues: pd.Series) -> float:
-    f1 = sklearn.metrics.f1_score(truthBinaryValues, predictionBinaryValues)
-    return f1
+def binaryJaccard(cm: pd.Series) -> float:
+    if cm.at['TP'] + cm.at['FP'] + cm.at['FN'] == 0:
+        # Jaccard is ill-defined if all are negative and the prediction is perfect, but we'll
+        # just score that as a perfect answer
+        return 1.0
+    else:
+        return cm.at['TP'] / (cm.at['TP'] + cm.at['FP'] + cm.at['FN'])
 
 
-def binaryPpv(truthBinaryValues: pd.Series, predictionBinaryValues: pd.Series) -> float:
-    ppv = sklearn.metrics.precision_score(truthBinaryValues, predictionBinaryValues)
-    return ppv
+def binaryThresholdJaccard(cm: pd.Series, threshold: float = 0.65) -> float:
+    jaccard = binaryJaccard(cm)
+    return jaccard if jaccard >= threshold else 0.0
 
 
-def binaryNpv(truthBinaryValues: pd.Series, predictionBinaryValues: pd.Series) -> float:
-    binaryConfusionMatrix = sklearn.metrics.confusion_matrix(
-        truthBinaryValues,
-        predictionBinaryValues
-    )
-    trueNegative, falsePositive, falseNegative, truePositive = binaryConfusionMatrix.ravel()
+def binaryDice(cm: pd.Series) -> float:
+    if cm.at['TP'] + cm.at['FP'] + cm.at['FN'] == 0:
+        # Dice is ill-defined if all are negative and the prediction is perfect, but we'll
+        # just score that as a perfect answer
+        return 1.0
+    else:
+        return (2 * cm.at['TP']) / ((2 * cm.at['TP']) + cm.at['FP'] + cm.at['FN'])
 
-    npv = trueNegative / (trueNegative + falseNegative)
-    return npv
+
+def binaryPpv(cm: pd.Series) -> float:
+    if cm.at['TP'] + cm.at['FP'] == 0:
+        # PPV is ill-defined if all predictions are negative; we'll score it as perfect, which
+        # doesn't penalize the case where all are truly negative (a good predictor), and is sane
+        # for the case where some are truly positive (a limitation of this metric)
+        # Note, some other implementations would score the latter case as 0:
+        # https://github.com/dice-group/gerbil/wiki/Precision,-Recall-and-F1-measure
+        return 1.0
+    else:
+        return cm.at['TP'] / (cm.at['TP'] + cm.at['FP'])
+
+
+def binaryNpv(cm: pd.Series) -> float:
+    if cm.at['TN'] + cm.at['FN'] == 0:
+        # NPV is ill-defined if all predictions are positive; we'll score it as perfect, which
+        # doesn't penalize the case where all are truly positive (a good predictor), and is sane
+        # for the case where some are truly negative (a limitation of this metric)
+        # Note, some other implementations would score the latter case as 0:
+        # https://github.com/dice-group/gerbil/wiki/Precision,-Recall-and-F1-measure
+        return 1.0
+    else:
+        return cm.at['TN'] / (cm.at['TN'] + cm.at['FN'])
 
 
 def auc(truthProbabilities: pd.Series, predictionProbabilities: pd.Series) -> float:

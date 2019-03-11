@@ -1,29 +1,10 @@
 # -*- coding: utf-8 -*-
-
-###############################################################################
-#  Copyright Kitware Inc.
-#
-#  Licensed under the Apache License, Version 2.0 ( the "License" );
-#  you may not use this file except in compliance with the License.
-#  You may obtain a copy of the License at
-#
-#    http://www.apache.org/licenses/LICENSE-2.0
-#
-#  Unless required by applicable law or agreed to in writing, software
-#  distributed under the License is distributed on an "AS IS" BASIS,
-#  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-#  See the License for the specific language governing permissions and
-#  limitations under the License.
-###############################################################################
-
 import pathlib
 from typing import Tuple
 
 import numpy as np
 from PIL import Image
 from sklearn.metrics import average_precision_score
-from sklearn.metrics import roc_auc_score
-from sklearn.metrics import roc_curve
 
 
 class ScoreException(Exception):
@@ -122,83 +103,6 @@ def iterImagePairs(truthPath: pathlib.Path, predictionPath: pathlib.Path) -> \
         yield truthImage, predictionImage, truthFileId
 
 
-def computeTFPN(truthBinaryValues, testBinaryValues):
-    truthBinaryNegativeValues = 1 - truthBinaryValues
-    testBinaryNegativeValues = 1 - testBinaryValues
-
-    truePositive = np.sum(np.logical_and(truthBinaryValues,
-                                         testBinaryValues))
-    trueNegative = np.sum(np.logical_and(truthBinaryNegativeValues,
-                                         testBinaryNegativeValues))
-    falsePositive = np.sum(np.logical_and(truthBinaryNegativeValues,
-                                          testBinaryValues))
-    falseNegative = np.sum(np.logical_and(truthBinaryValues,
-                                          testBinaryNegativeValues))
-
-    return truePositive, trueNegative, falsePositive, falseNegative
-
-
-def computeCommonMetrics(truthBinaryValues, testBinaryValues):
-    """Compute accuracy, sensitivity, and specificity."""
-    truePositive, trueNegative, falsePositive, falseNegative = computeTFPN(
-        truthBinaryValues, testBinaryValues
-    )
-
-    metrics = [
-        {
-            'name': 'accuracy',
-            'value': (float(truePositive + trueNegative) /
-                      float(truePositive + trueNegative +
-                            falsePositive + falseNegative))
-        },
-        {
-            'name': 'sensitivity',
-            'value': ((float(truePositive) /
-                       float(truePositive + falseNegative))
-                      # sensitivity can't be calculated if all are negative
-                      if np.any(truthBinaryValues)
-                      else None)
-        },
-        {
-            'name': 'specificity',
-            'value': ((float(trueNegative) /
-                       float(trueNegative + falsePositive))
-                      # specificity can't be calculated if all are positive
-                      if not np.all(truthBinaryValues)
-                      else None)
-
-        }
-    ]
-    return metrics
-
-
-def computeSimilarityMetrics(truthBinaryValues, testBinaryValues):
-    """Compute Jaccard index and Dice coefficient."""
-    truePositive, trueNegative, falsePositive, falseNegative = computeTFPN(
-        truthBinaryValues, testBinaryValues
-    )
-    truthValuesSum = np.sum(truthBinaryValues, dtype=np.int)
-    testValuesSum = np.sum(testBinaryValues, dtype=np.int)
-
-    metrics = [
-        {
-            'name': 'jaccard',
-            'value': ((float(truePositive) /
-                       float(truePositive + falseNegative + falsePositive))
-                      if (truePositive + falseNegative + falsePositive) != 0
-                      else None)
-        },
-        {
-            'name': 'dice',
-            'value': ((float(2 * truePositive) /
-                       float(truthValuesSum + testValuesSum))
-                      if (truthValuesSum + testValuesSum) != 0
-                      else None)
-        }
-    ]
-    return metrics
-
-
 def computeAveragePrecisionMetrics(truthValues, testValues):
     """Compute average precision."""
     metrics = [
@@ -206,46 +110,6 @@ def computeAveragePrecisionMetrics(truthValues, testValues):
             'name': 'average_precision',
             'value': average_precision_score(
                 y_true=truthValues, y_score=testValues)
-        }
-    ]
-    return metrics
-
-
-def computeAUCMetrics(truthValues, testValues):
-    """Compute AUC measure."""
-    metrics = [
-        {
-            'name': 'area_under_roc',
-            'value': roc_auc_score(
-                y_true=truthValues, y_score=testValues)
-        }
-    ]
-    return metrics
-
-
-def computeSPECMetrics(truthValues, testValues, sensitivityThreshold):
-    """Compute specificity at specified sensitivity."""
-    # Use sklearn to grab the ROC curve
-    falsePositiveRates, truePositiveRates, thresholds = roc_curve(
-        y_true=truthValues, y_score=testValues)
-
-    # Search for the point along the curve where sensitivityThreshold occurs.
-    for position, truePositiveRate in enumerate(truePositiveRates):
-        if truePositiveRate >= sensitivityThreshold:
-            falsePositiveRate = falsePositiveRates[position]
-            trueNegativeRate = 1.0 - falsePositiveRate
-            break
-    else:
-        trueNegativeRate = 0.0
-
-    # Report the value
-    metrics = [
-        {
-            # Metric names may not contain periods, in order for Covalic to
-            # store title / description mappings for them
-            'name': 'spec_at_sens_%s' %
-                    ('%g' % (sensitivityThreshold * 100)).replace('.', '_'),
-            'value': trueNegativeRate  # This is specificity
         }
     ]
     return metrics

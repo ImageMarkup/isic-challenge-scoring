@@ -1,17 +1,8 @@
 # -*- coding: utf-8 -*-
+import pandas as pd
+import pytest
 
-import warnings
-
-with warnings.catch_warnings():
-    # See https://stackoverflow.com/a/40846742
-    warnings.filterwarnings(
-        'ignore',
-        r'^numpy\.dtype size changed, may indicate binary incompatibility\.',
-        RuntimeWarning)
-    import pandas as pd
-import pytest  # noqa: E402
-
-from isic_challenge_scoring import metrics, task3  # noqa: E402
+from isic_challenge_scoring import metrics, task3
 
 
 def test_toLabels():
@@ -57,7 +48,7 @@ def test_getFrequencies():
     assert labelFrequencies.index.equals(task3.CATEGORIES)
 
 
-@pytest.mark.parametrize('truthLabels, predictionLabels, balancedAccuracy', [
+@pytest.mark.parametrize('truthLabels, predictionLabels, correctValue', [
     (['MEL'], ['MEL'], 1.0),
     (['NV'], ['NV'], 1.0),
     (['NV'], ['MEL'], 0.0),
@@ -66,16 +57,21 @@ def test_getFrequencies():
     (['MEL', 'NV'], ['MEL', 'MEL'], 0.5),
     (['MEL', 'NV', 'MEL'], ['MEL', 'MEL', 'MEL'], 0.5),
     (['MEL', 'NV', 'MEL', 'MEL'], ['MEL', 'MEL', 'MEL', 'MEL'], 0.5),
-    (['MEL', 'NV', 'MEL', 'MEL'], ['MEL', 'MEL', 'MEL', 'NV'], 1/3),  # noqa: E226
+    (['MEL', 'NV', 'MEL', 'MEL'], ['MEL', 'MEL', 'MEL', 'NV'], 1 / 3),
     (['MEL', 'NV', 'MEL', 'MEL'], ['NV', 'MEL', 'NV', 'NV'], 0.0),
 ])
-def test_labelBalancedMulticlassAccuracy(truthLabels, predictionLabels, balancedAccuracy):
-    assert balancedAccuracy == pytest.approx(metrics._labelBalancedMulticlassAccuracy(
-        pd.Series(truthLabels), pd.Series(predictionLabels), task3.CATEGORIES))
+def test_labelBalancedMulticlassAccuracy(truthLabels, predictionLabels, correctValue):
+    value = metrics._labelBalancedMulticlassAccuracy(
+        pd.Series(truthLabels),
+        pd.Series(predictionLabels),
+        task3.CATEGORIES
+    )
+
+    assert value == correctValue
 
 
 @pytest.mark.parametrize(
-    'truthProbabilities, predictionProbabilities, sensitivityThreshold, partialAuc', [
+    'truthProbabilities, predictionProbabilities, sensitivityThreshold, correctValue', [
         # This only checks some edge cases for sanity
         # Perfect predictor, tolerant threshold
         ([0.0, 0.0, 1.0, 1.0], [0.2, 0.4, 0.6, 0.8], 0.0, 1.0),
@@ -91,7 +87,11 @@ def test_labelBalancedMulticlassAccuracy(truthLabels, predictionLabels, balanced
         ([0.0, 0.0, 1.0, 1.0], [0.8, 0.6, 0.4, 0.2], 1.0, 0.0),
     ])
 def test_aucAboveSensitivity(
-        truthProbabilities, predictionProbabilities, sensitivityThreshold, partialAuc):
+        truthProbabilities, predictionProbabilities, sensitivityThreshold, correctValue):
+    value = metrics.aucAboveSensitivity(
+        pd.Series(truthProbabilities),
+        pd.Series(predictionProbabilities),
+        sensitivityThreshold
+    )
 
-    assert partialAuc == pytest.approx(metrics.aucAboveSensitivity(
-        pd.Series(truthProbabilities), pd.Series(predictionProbabilities), sensitivityThreshold))
+    assert value == correctValue
