@@ -100,18 +100,7 @@ def computeMetrics(truthFileStream, predictionFileStream) -> List[Dict]:
     sortRows(truthProbabilities)
     sortRows(predictionProbabilities)
 
-    scores = [
-        {
-            'dataset': 'aggregate',
-            'metrics': [
-                {
-                    'name': 'balanced_accuracy',
-                    'value': metrics.balancedMulticlassAccuracy(
-                        truthProbabilities, predictionProbabilities)
-                }
-            ]
-        },
-    ]
+    scores = []
 
     for category in CATEGORIES:
         truthCategoryProbabilities: pd.Series = truthProbabilities[category]
@@ -163,17 +152,37 @@ def computeMetrics(truthFileStream, predictionFileStream) -> List[Dict]:
                     'value': metrics.aucAboveSensitivity(
                         truthCategoryProbabilities, predictionCategoryProbabilities, 0.80)
                 },
+                {
+                    'name': 'ap',
+                    'value': metrics.averagePrecision(
+                        truthCategoryProbabilities, predictionCategoryProbabilities)
+                },
             ]
         })
 
-    """
-    Individual Category Metrics
-        mean average precision
-
-    Aggregate Metrics
-        average AUC across all diagnoses
-        malignant vs.benign diagnoses categoryAUC
-    """
+    scores.append({
+        'dataset': 'macro_average',
+        'metrics': [
+            {
+                'name': 'auc',
+                'value': [
+                    metric['value']
+                    for score in scores
+                    for metric in score['metrics'] if metric['name'] == 'auc'
+                ]
+            }
+        ]
+    })
+    scores.append({
+        'dataset': 'aggregate',
+        'metrics': [
+            {
+                'name': 'balanced_accuracy',
+                'value': metrics.balancedMulticlassAccuracy(
+                    truthProbabilities, predictionProbabilities)
+            }
+        ]
+    })
 
     return scores
 

@@ -164,3 +164,8 @@ def aucAboveSensitivity(truthProbabilities: pd.Series, predictionProbabilities: 
     # complementaryAuc is the left / lower area, and we want the right / upper area
     partialAuc = totalAuc - complementaryAuc
     return partialAuc
+
+
+def averagePrecision(truthProbabilities: pd.Series, predictionProbabilities: pd.Series) -> float:
+    ap = sklearn.metrics.average_precision_score(truthProbabilities, predictionProbabilities)
+    return ap
