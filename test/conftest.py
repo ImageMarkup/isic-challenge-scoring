@@ -3,7 +3,7 @@ import pathlib
 
 import pytest
 
-from isic_challenge_scoring.scoreCommon import loadSegmentationImage
+from isic_challenge_scoring.load_image import loadSegmentationImage
 
 
 data_dir = (pathlib.Path(__file__).parent / 'data').resolve()

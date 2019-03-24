@@ -6,18 +6,17 @@ import pandas as pd
 
 from isic_challenge_scoring import metrics
 from isic_challenge_scoring.confusion import createBinaryConfusionMatrix
-from isic_challenge_scoring.scoreCommon import iterImagePairs
+from isic_challenge_scoring.load_image import iterImagePairs
 
 
 def score(truthPath: pathlib.Path, predictionPath: pathlib.Path) -> List[Dict]:
     confusionMatrics = pd.DataFrame([
         createBinaryConfusionMatrix(
-            truthBinaryValues=truthImage > 128,
-            predictionBinaryValues=predictionImage > 128,
-            name=truthFileId
+            truthBinaryValues=imagePair.truthImage > 128,
+            predictionBinaryValues=imagePair.predictionImage > 128,
+            name=(imagePair.imageId, imagePair.attributeId)
         )
-        for truthImage, predictionImage, truthFileId in
-        iterImagePairs(truthPath, predictionPath)
+        for imagePair in iterImagePairs(truthPath, predictionPath)
     ])
 
     return [

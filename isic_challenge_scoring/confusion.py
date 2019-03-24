@@ -4,8 +4,7 @@ import pandas as pd
 
 
 def createBinaryConfusionMatrix(
-        truthBinaryValues: np.ndarray, predictionBinaryValues: np.ndarray,
-        name: str = None) -> pd.Series:
+        truthBinaryValues: np.ndarray, predictionBinaryValues: np.ndarray, name=None) -> pd.Series:
     # This implementation is:
     # ~30x faster than sklearn.metrics.confusion_matrix
     # ~25x faster than sklearn.metrics.confusion_matrix(labels=[False, True])
