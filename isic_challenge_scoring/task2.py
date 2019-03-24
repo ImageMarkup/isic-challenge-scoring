@@ -28,11 +28,26 @@ def score(truthPath: pathlib.Path, predictionPath: pathlib.Path) -> List[Dict]:
         axis='columns'
     )
 
+    scores = []
+    for attribute in sorted(confusionMatrics.index.unique('attributeId')):
+        attributeConfusionMatrics = normalizedConfusionMatrics.loc(axis=0)[attribute, :]
+        sumAttributeConfusionMatrics = attributeConfusionMatrics.sum(axis='index')
+        scores.append({
+            'dataset': attribute,
+            'metrics': [
+                {
+                    'name': 'jaccard',
+                    'value': metrics.binaryJaccard(sumAttributeConfusionMatrics)
+                },
+                {
+                    'name': 'dice',
+                    'value': metrics.binaryDice(sumAttributeConfusionMatrics)
+                },
+            ]
+        })
+
     sumConfusionMatrix = normalizedConfusionMatrics.sum(axis='index')
-
-    # TODO: per-attribute metrics
-
-    return [
+    scores.extend([
         {
             'dataset': 'micro_average',
             'metrics': [
@@ -46,4 +61,6 @@ def score(truthPath: pathlib.Path, predictionPath: pathlib.Path) -> List[Dict]:
                 },
             ]
         }
-    ]
+    ])
+
+    return scores
