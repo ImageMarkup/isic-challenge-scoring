@@ -8,7 +8,7 @@ import pandas as pd
 
 from isic_challenge_scoring import metrics
 from isic_challenge_scoring.confusion import createBinaryConfusionMatrix
-from isic_challenge_scoring.scoreCommon import ScoreException
+from isic_challenge_scoring.exception import ScoreException
 
 
 CATEGORIES = pd.Index(['MEL', 'NV', 'BCC', 'AKIEC', 'BKL', 'DF', 'VASC'])

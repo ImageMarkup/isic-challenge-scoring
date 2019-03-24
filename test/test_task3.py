@@ -5,7 +5,7 @@ import pandas as pd
 import pytest
 
 from isic_challenge_scoring import task3
-from isic_challenge_scoring.scoreCommon import ScoreException
+from isic_challenge_scoring.exception import ScoreException
 
 
 def test_parseCsv():

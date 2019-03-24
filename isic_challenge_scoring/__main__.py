@@ -4,8 +4,9 @@ import sys
 
 import click
 
-from . import scoreAll
-from .scoreCommon import ScoreException
+from isic_challenge_scoring import scoreAll
+from isic_challenge_scoring.exception import ScoreException
+
 
 DirectoryPath = click.Path(exists=True, file_okay=False, dir_okay=True, readable=True)
 

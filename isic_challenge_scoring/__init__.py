@@ -7,10 +7,10 @@ import tempfile
 from typing import Tuple
 import zipfile
 
-from .scoreCommon import ScoreException
-from .task1 import score as scoreTask1
-from .task2 import score as scoreTask2
-from .task3 import score as scoreTask3
+from isic_challenge_scoring.exception import ScoreException
+from isic_challenge_scoring.task1 import score as scoreTask1
+from isic_challenge_scoring.task2 import score as scoreTask2
+from isic_challenge_scoring.task3 import score as scoreTask3
 
 
 def extractZip(zipPath: pathlib.Path, outputPath: pathlib.Path, flatten: bool = True):
