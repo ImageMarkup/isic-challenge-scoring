@@ -6,20 +6,21 @@ import pandas as pd
 
 from isic_challenge_scoring import metrics
 from isic_challenge_scoring.confusion import createBinaryConfusionMatrix, normalizeConfusionMatrix
-from isic_challenge_scoring.scoreCommon import iterImagePairs
+from isic_challenge_scoring.load_image import iterImagePairs
 
 
 def score(truthPath: pathlib.Path, predictionPath: pathlib.Path) -> List[Dict]:
     confusionMatrics = pd.DataFrame([
         createBinaryConfusionMatrix(
-            truthBinaryValues=truthImage > 128,
-            predictionBinaryValues=predictionImage > 128,
-            name=truthFileId
+            truthBinaryValues=imagePair.truthImage > 128,
+            predictionBinaryValues=imagePair.predictionImage > 128,
+            name=(imagePair.attributeId, imagePair.imageId)
         )
-        # TODO: truthFileId needs to include attribute
-        for truthImage, predictionImage, truthFileId in
-        iterImagePairs(truthPath, predictionPath)
+        for imagePair in iterImagePairs(truthPath, predictionPath)
     ])
+    confusionMatrics = confusionMatrics.reindex(
+        index=pd.MultiIndex.from_tuples(confusionMatrics.index, names=('attributeId', 'imageId'))
+    )
 
     # Normalize all values, since image sizes vary
     normalizedConfusionMatrics = confusionMatrics.apply(
@@ -27,11 +28,26 @@ def score(truthPath: pathlib.Path, predictionPath: pathlib.Path) -> List[Dict]:
         axis='columns'
     )
 
+    scores = []
+    for attribute in sorted(confusionMatrics.index.unique('attributeId')):
+        attributeConfusionMatrics = normalizedConfusionMatrics.loc(axis=0)[attribute, :]
+        sumAttributeConfusionMatrics = attributeConfusionMatrics.sum(axis='index')
+        scores.append({
+            'dataset': attribute,
+            'metrics': [
+                {
+                    'name': 'jaccard',
+                    'value': metrics.binaryJaccard(sumAttributeConfusionMatrics)
+                },
+                {
+                    'name': 'dice',
+                    'value': metrics.binaryDice(sumAttributeConfusionMatrics)
+                },
+            ]
+        })
+
     sumConfusionMatrix = normalizedConfusionMatrics.sum(axis='index')
-
-    # TODO: per-attribute metrics
-
-    return [
+    scores.extend([
         {
             'dataset': 'micro_average',
             'metrics': [
@@ -45,4 +61,6 @@ def score(truthPath: pathlib.Path, predictionPath: pathlib.Path) -> List[Dict]:
                 },
             ]
         }
-    ]
+    ])
+
+    return scores
