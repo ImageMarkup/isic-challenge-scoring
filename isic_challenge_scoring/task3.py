@@ -58,11 +58,13 @@ def computeMetrics(truthFileStream, predictionFileStream) -> Dict[str, Dict[str,
 
     # Compute averages for all per-category metrics
     perCategoryMetrics: ValuesView[str] = next(iter(scores.values())).keys()
-    for metric in perCategoryMetrics:
-        scores['macro_average'][metric] = float(np.mean(
+    scores['macro_average'] = {
+        metric: float(np.mean([
             scores[category][metric]
             for category in CATEGORIES
-        ))
+        ]))
+        for metric in perCategoryMetrics
+    }
 
     # Compute multi-category aggregate metrics
     scores['aggregate'] = {
