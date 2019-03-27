@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 import pathlib
-from typing import Dict, List
+from typing import Dict
 
 import pandas as pd
 
@@ -9,7 +9,7 @@ from isic_challenge_scoring.confusion import createBinaryConfusionMatrix
 from isic_challenge_scoring.load_image import iterImagePairs
 
 
-def score(truthPath: pathlib.Path, predictionPath: pathlib.Path) -> List[Dict]:
+def score(truthPath: pathlib.Path, predictionPath: pathlib.Path) -> Dict[str, Dict[str, float]]:
     confusionMatrics = pd.DataFrame([
         createBinaryConfusionMatrix(
             truthBinaryValues=imagePair.truthImage > 128,
@@ -19,53 +19,32 @@ def score(truthPath: pathlib.Path, predictionPath: pathlib.Path) -> List[Dict]:
         for imagePair in iterImagePairs(truthPath, predictionPath)
     ])
 
-    return [
-        {
-            'dataset': 'macro_average',
-            'metrics': [
-                {
-                    'name': 'threshold_jaccard',
-                    'value': confusionMatrics.apply(
-                        metrics.binaryThresholdJaccard,
-                        threshold=0.65,
-                        axis='columns'
-                    ).mean()
-                },
-                {
-                    'name': 'jaccard',
-                    'value': confusionMatrics.apply(
-                        metrics.binaryJaccard,
-                        axis='columns'
-                    ).mean()
-                },
-                {
-                    'name': 'dice',
-                    'value': confusionMatrics.apply(
-                        metrics.binaryDice,
-                        axis='columns'
-                    ).mean()
-                },
-                {
-                    'name': 'accuracy',
-                    'value': confusionMatrics.apply(
-                        metrics.binaryAccuracy,
-                        axis='columns'
-                    ).mean()
-                },
-                {
-                    'name': 'sensitivity',
-                    'value': confusionMatrics.apply(
-                        metrics.binarySensitivity,
-                        axis='columns'
-                    ).mean()
-                },
-                {
-                    'name': 'specificity',
-                    'value': confusionMatrics.apply(
-                        metrics.binarySpecificity,
-                        axis='columns'
-                    ).mean()
-                },
-            ]
+    return {
+        'macro_average': {
+            'threshold_jaccard': confusionMatrics.apply(
+                metrics.binaryThresholdJaccard,
+                threshold=0.65,
+                axis='columns'
+            ).mean(),
+            'jaccard': confusionMatrics.apply(
+                metrics.binaryJaccard,
+                axis='columns'
+            ).mean(),
+            'dice': confusionMatrics.apply(
+                metrics.binaryDice,
+                axis='columns'
+            ).mean(),
+            'accuracy': confusionMatrics.apply(
+                metrics.binaryAccuracy,
+                axis='columns'
+            ).mean(),
+            'sensitivity': confusionMatrics.apply(
+                metrics.binarySensitivity,
+                axis='columns'
+            ).mean(),
+            'specificity': confusionMatrics.apply(
+                metrics.binarySpecificity,
+                axis='columns'
+            ).mean(),
         }
-    ]
+    }

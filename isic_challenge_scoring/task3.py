@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 import pathlib
 import re
-from typing import Dict, List
+from typing import Dict, List, ValuesView
 
 import numpy as np
 import pandas as pd
@@ -88,7 +88,7 @@ def sortRows(probabilities: pd.DataFrame):
     probabilities.sort_index(axis='rows', inplace=True)
 
 
-def computeMetrics(truthFileStream, predictionFileStream) -> List[Dict]:
+def computeMetrics(truthFileStream, predictionFileStream) -> Dict[str, Dict[str, float]]:
     truthProbabilities = parseCsv(truthFileStream)
     predictionProbabilities = parseCsv(predictionFileStream)
 
@@ -100,8 +100,7 @@ def computeMetrics(truthFileStream, predictionFileStream) -> List[Dict]:
     sortRows(truthProbabilities)
     sortRows(predictionProbabilities)
 
-    scores = []
-
+    scores: Dict[str, Dict[str, float]] = {}
     for category in CATEGORIES:
         truthCategoryProbabilities: pd.Series = truthProbabilities[category]
         predictionCategoryProbabilities: pd.Series = predictionProbabilities[category]
@@ -115,79 +114,38 @@ def computeMetrics(truthFileStream, predictionFileStream) -> List[Dict]:
             name=category
         )
 
-        scores.append({
-            'dataset': category,
-            'metrics': [
-                {
-                    'name': 'accuracy',
-                    'value': metrics.binaryAccuracy(categoryCm)
-                },
-                {
-                    'name': 'sensitivity',
-                    'value': metrics.binarySensitivity(categoryCm)
-                },
-                {
-                    'name': 'specificity',
-                    'value': metrics.binarySpecificity(categoryCm)
-                },
-                {
-                    'name': 'f1_score',  # TODO: call dice
-                    'value': metrics.binaryDice(categoryCm)
-                },
-                {
-                    'name': 'ppv',
-                    'value': metrics.binaryPpv(categoryCm)
-                },
-                {
-                    'name': 'npv',
-                    'value': metrics.binaryNpv(categoryCm)
-                },
-                {
-                    'name': 'auc',
-                    'value': metrics.auc(
-                        truthCategoryProbabilities, predictionCategoryProbabilities)
-                },
-                {
-                    'name': 'auc_sens_80',
-                    'value': metrics.aucAboveSensitivity(
-                        truthCategoryProbabilities, predictionCategoryProbabilities, 0.80)
-                },
-                {
-                    'name': 'ap',
-                    'value': metrics.averagePrecision(
-                        truthCategoryProbabilities, predictionCategoryProbabilities)
-                },
-            ]
-        })
+        scores[category] = {
+            'accuracy': metrics.binaryAccuracy(categoryCm),
+            'sensitivity': metrics.binarySensitivity(categoryCm),
+            'specificity': metrics.binarySpecificity(categoryCm),
+            'dice': metrics.binaryDice(categoryCm),
+            'ppv': metrics.binaryPpv(categoryCm),
+            'npv': metrics.binaryNpv(categoryCm),
+            'auc': metrics.auc(truthCategoryProbabilities, predictionCategoryProbabilities),
+            'auc_sens_80': metrics.aucAboveSensitivity(
+                truthCategoryProbabilities, predictionCategoryProbabilities, 0.80),
+            'ap': metrics.averagePrecision(
+                truthCategoryProbabilities, predictionCategoryProbabilities),
+        }
 
-    scores.append({
-        'dataset': 'macro_average',
-        'metrics': [
-            {
-                'name': 'auc',
-                'value': [
-                    metric['value']
-                    for score in scores
-                    for metric in score['metrics'] if metric['name'] == 'auc'
-                ]
-            }
-        ]
-    })
-    scores.append({
-        'dataset': 'aggregate',
-        'metrics': [
-            {
-                'name': 'balanced_accuracy',
-                'value': metrics.balancedMulticlassAccuracy(
-                    truthProbabilities, predictionProbabilities)
-            }
-        ]
-    })
+    # Compute averages for all per-category metrics
+    perCategoryMetrics: ValuesView[str] = next(iter(scores.values())).keys()
+    for metric in perCategoryMetrics:
+        scores['macro_average'][metric] = float(np.mean(
+            scores[category][metric]
+            for category in CATEGORIES
+        ))
+
+    # Compute multi-category aggregate metrics
+    scores['aggregate'] = {
+        'balanced_accuracy': metrics.balancedMulticlassAccuracy(
+            truthProbabilities, predictionProbabilities)
+    }
 
     return scores
 
 
-def score(truthPath: pathlib.Path, predictionPath: pathlib.Path) -> List[Dict]:
+def score(truthPath: pathlib.Path, predictionPath: pathlib.Path) -> Dict[str, Dict[str, float]]:
     for truthFile in truthPath.iterdir():
         if re.match(r'^ISIC.*GroundTruth\.csv$', truthFile.name):
             break
