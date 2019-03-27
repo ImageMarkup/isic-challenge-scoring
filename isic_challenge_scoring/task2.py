@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 import pathlib
-from typing import Dict, List
+from typing import Dict
 
 import pandas as pd
 
@@ -9,7 +9,7 @@ from isic_challenge_scoring.confusion import createBinaryConfusionMatrix, normal
 from isic_challenge_scoring.load_image import iterImagePairs
 
 
-def score(truthPath: pathlib.Path, predictionPath: pathlib.Path) -> List[Dict]:
+def score(truthPath: pathlib.Path, predictionPath: pathlib.Path) -> Dict[str, Dict[str, float]]:
     confusionMatrics = pd.DataFrame([
         createBinaryConfusionMatrix(
             truthBinaryValues=imagePair.truthImage > 128,
@@ -28,39 +28,20 @@ def score(truthPath: pathlib.Path, predictionPath: pathlib.Path) -> List[Dict]:
         axis='columns'
     )
 
-    scores = []
+    scores: Dict[str, Dict[str, float]] = {}
     for attribute in sorted(confusionMatrics.index.unique('attributeId')):
         attributeConfusionMatrics = normalizedConfusionMatrics.loc(axis=0)[attribute, :]
         sumAttributeConfusionMatrics = attributeConfusionMatrics.sum(axis='index')
-        scores.append({
-            'dataset': attribute,
-            'metrics': [
-                {
-                    'name': 'jaccard',
-                    'value': metrics.binaryJaccard(sumAttributeConfusionMatrics)
-                },
-                {
-                    'name': 'dice',
-                    'value': metrics.binaryDice(sumAttributeConfusionMatrics)
-                },
-            ]
-        })
+
+        scores[attribute] = {
+            'jaccard': metrics.binaryJaccard(sumAttributeConfusionMatrics),
+            'dice': metrics.binaryDice(sumAttributeConfusionMatrics)
+        }
 
     sumConfusionMatrix = normalizedConfusionMatrics.sum(axis='index')
-    scores.extend([
-        {
-            'dataset': 'micro_average',
-            'metrics': [
-                {
-                    'name': 'jaccard',
-                    'value': metrics.binaryJaccard(sumConfusionMatrix)
-                },
-                {
-                    'name': 'dice',
-                    'value': metrics.binaryDice(sumConfusionMatrix)
-                },
-            ]
-        }
-    ])
+    scores['micro_average'] = {
+        'jaccard': metrics.binaryJaccard(sumConfusionMatrix),
+        'dice': metrics.binaryDice(sumConfusionMatrix)
+    }
 
     return scores

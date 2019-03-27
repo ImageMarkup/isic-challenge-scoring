@@ -131,7 +131,20 @@ def scoreAll(truthInputPath: pathlib.Path, predictionInputPath: pathlib.Path,
         raise ScoreException(
             f'Internal error: unknown ground truth phase number: {taskNum}.')
 
-    print(json.dumps(scores))
+    # Output in Covalic format
+    print(json.dumps([
+        {
+            'dataset': dataset,
+            'metrics': [
+                {
+                    'name': metricName,
+                    'value': metricValue
+                }
+                for metricName, metricValue in metrics.items()
+            ]
+        }
+        for dataset, metrics in scores.items()
+    ]))
 
     truthTempDir.cleanup()
     predictionTempDir.cleanup()
