@@ -30,6 +30,16 @@ def task2_prediction_path():
 
 
 @pytest.fixture
+def task3_truth_path():
+    yield data_dir / 'task3' / 'groundtruth'
+
+
+@pytest.fixture
+def task3_prediction_path():
+    yield data_dir / 'task3' / 'prediction'
+
+
+@pytest.fixture
 def truth_binary_values(task1_truth_path):
     # TODO: don't hardcode this filename
     truth_file = task1_truth_path / 'ISIC_0000193_segmentation.png'
