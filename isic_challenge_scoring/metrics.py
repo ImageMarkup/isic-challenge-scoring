@@ -4,71 +4,72 @@ import pandas as pd
 import sklearn.metrics
 
 
-def _toLabels(probabilities: pd.DataFrame) -> pd.Series:
+def _to_labels(probabilities: pd.DataFrame) -> pd.Series:
     labels = probabilities.idxmax(axis='columns')
 
     # Find places where there are multiple maximum values
-    maxProbabilities = probabilities.max(axis='columns')
-    isMax: pd.DataFrame = probabilities.eq(maxProbabilities, axis='rows')
-    numberOfMax: pd.Series = isMax.sum(axis='columns')
-    multipleMax: pd.Series = numberOfMax.gt(1)
+    max_probabilities = probabilities.max(axis='columns')
+    is_max: pd.DataFrame = probabilities.eq(max_probabilities, axis='rows')
+    number_of_max: pd.Series = is_max.sum(axis='columns')
+    multiple_max: pd.Series = number_of_max.gt(1)
     # Set those locations as an 'undecided' label
-    labels[multipleMax] = 'undecided'
+    labels[multiple_max] = 'undecided'
     # TODO: emit a warning if any are set to 'undecided'
 
     return labels
 
 
-def _getFrequencies(labels: pd.Series, categories: pd.Index) -> pd.Series:
+def _get_frequencies(labels: pd.Series, categories: pd.Index) -> pd.Series:
     # .reindex sorts this by the order in categories
     return labels.value_counts().reindex(categories, fill_value=0)
 
 
-def _labelBalancedMulticlassAccuracy(
-        truthLabels: pd.Series, predictionLabels: pd.Series, categories: pd.Index) -> float:
+def _label_balanced_multiclass_accuracy(
+    truth_labels: pd.Series, prediction_labels: pd.Series, categories: pd.Index
+) -> float:
     # See http://scikit-learn.org/dev/modules/model_evaluation.html#balanced-accuracy-score ; in
     # summary, 'sklearn.metrics.balanced_accuracy_score' is for binary classification only, so we
     # need to implement our own; here, we implement a simpler version of "balanced accuracy" than
     # the definitions mentioned by SciKit learn, as it's just a normalization of TP scores by true
     # class proportions
-    confusionMatrix = sklearn.metrics.confusion_matrix(
-        truthLabels,
-        predictionLabels,
-        labels=categories
+    confusion_matrix = sklearn.metrics.confusion_matrix(
+        truth_labels, prediction_labels, labels=categories
     )
     # TODO: try to convert to a DataFrame, for useful debugging labels
-    # confusionMatrix = pd.DataFrame(
-    #     confusionMatrix,
+    # confusion_matrix = pd.DataFrame(
+    #     confusion_matrix,
     #     index=LABELS.map(lambda label: f'true_{label}'),
     #     columns=LABELS.map(lambda label: f'predicted_{label}')
     # )
 
-    truePositiveCounts = pd.Series(confusionMatrix.diagonal(), index=categories)
+    true_positive_counts = pd.Series(confusion_matrix.diagonal(), index=categories)
 
     # These are equal to rows of the confusion matrix
-    trueLabelFrequencies = _getFrequencies(truthLabels, categories)
+    true_label_frequencies = _get_frequencies(truth_labels, categories)
 
-    balancedAccuracy = truePositiveCounts.divide(trueLabelFrequencies).mean()
-    return balancedAccuracy
+    balanced_accuracy = true_positive_counts.divide(true_label_frequencies).mean()
+    return balanced_accuracy
 
 
-def balancedMulticlassAccuracy(
-        truthProbabilities: pd.DataFrame, predictionProbabilities: pd.DataFrame) -> float:
-    truthLabels = _toLabels(truthProbabilities)
-    predictionLabels = _toLabels(predictionProbabilities)
-    categories = truthProbabilities.columns
+def balanced_multiclass_accuracy(
+    truth_probabilities: pd.DataFrame, prediction_probabilities: pd.DataFrame
+) -> float:
+    truth_labels = _to_labels(truth_probabilities)
+    prediction_labels = _to_labels(prediction_probabilities)
+    categories = truth_probabilities.columns
 
     # This is easier to test
-    balancedAccuracy = _labelBalancedMulticlassAccuracy(
-        truthLabels, predictionLabels, categories)
-    return balancedAccuracy
+    balanced_accuracy = _label_balanced_multiclass_accuracy(
+        truth_labels, prediction_labels, categories
+    )
+    return balanced_accuracy
 
 
-def binaryAccuracy(cm: pd.Series) -> float:
+def binary_accuracy(cm: pd.Series) -> float:
     return (cm.at['TP'] + cm.at['TN']) / (cm.at['TP'] + cm.at['TN'] + cm.at['FP'] + cm.at['FN'])
 
 
-def binarySensitivity(cm: pd.Series) -> float:
+def binary_sensitivity(cm: pd.Series) -> float:
     if cm.at['TP'] + cm.at['FN'] == 0:
         # sensitivity can't be calculated if all are negative, so make this metric a freebie
         return 1.0
@@ -76,7 +77,7 @@ def binarySensitivity(cm: pd.Series) -> float:
         return cm.at['TP'] / (cm.at['TP'] + cm.at['FN'])
 
 
-def binarySpecificity(cm: pd.Series) -> float:
+def binary_specificity(cm: pd.Series) -> float:
     if cm.at['TN'] + cm.at['FP'] == 0:
         # specificity can't be calculated if all are positive, so make this metric a freebie
         return 1.0
@@ -84,7 +85,7 @@ def binarySpecificity(cm: pd.Series) -> float:
         return cm.at['TN'] / (cm.at['TN'] + cm.at['FP'])
 
 
-def binaryJaccard(cm: pd.Series) -> float:
+def binary_jaccard(cm: pd.Series) -> float:
     if cm.at['TP'] + cm.at['FP'] + cm.at['FN'] == 0:
         # Jaccard is ill-defined if all are negative and the prediction is perfect, but we'll
         # just score that as a perfect answer
@@ -93,12 +94,12 @@ def binaryJaccard(cm: pd.Series) -> float:
         return cm.at['TP'] / (cm.at['TP'] + cm.at['FP'] + cm.at['FN'])
 
 
-def binaryThresholdJaccard(cm: pd.Series, threshold: float = 0.65) -> float:
-    jaccard = binaryJaccard(cm)
+def binary_threshold_jaccard(cm: pd.Series, threshold: float = 0.65) -> float:
+    jaccard = binary_jaccard(cm)
     return jaccard if jaccard >= threshold else 0.0
 
 
-def binaryDice(cm: pd.Series) -> float:
+def binary_dice(cm: pd.Series) -> float:
     if cm.at['TP'] + cm.at['FP'] + cm.at['FN'] == 0:
         # Dice is ill-defined if all are negative and the prediction is perfect, but we'll
         # just score that as a perfect answer
@@ -107,7 +108,7 @@ def binaryDice(cm: pd.Series) -> float:
         return (2 * cm.at['TP']) / ((2 * cm.at['TP']) + cm.at['FP'] + cm.at['FN'])
 
 
-def binaryPpv(cm: pd.Series) -> float:
+def binary_ppv(cm: pd.Series) -> float:
     if cm.at['TP'] + cm.at['FP'] == 0:
         # PPV is ill-defined if all predictions are negative; we'll score it as perfect, which
         # doesn't penalize the case where all are truly negative (a good predictor), and is sane
@@ -119,7 +120,7 @@ def binaryPpv(cm: pd.Series) -> float:
         return cm.at['TP'] / (cm.at['TP'] + cm.at['FP'])
 
 
-def binaryNpv(cm: pd.Series) -> float:
+def binary_npv(cm: pd.Series) -> float:
     if cm.at['TN'] + cm.at['FN'] == 0:
         # NPV is ill-defined if all predictions are positive; we'll score it as perfect, which
         # doesn't penalize the case where all are truly positive (a good predictor), and is sane
@@ -131,41 +132,45 @@ def binaryNpv(cm: pd.Series) -> float:
         return cm.at['TN'] / (cm.at['TN'] + cm.at['FN'])
 
 
-def auc(truthProbabilities: pd.Series, predictionProbabilities: pd.Series) -> float:
-    auc = sklearn.metrics.roc_auc_score(truthProbabilities, predictionProbabilities)
+def auc(truth_probabilities: pd.Series, prediction_probabilities: pd.Series) -> float:
+    auc = sklearn.metrics.roc_auc_score(truth_probabilities, prediction_probabilities)
     return auc
 
 
-def aucAboveSensitivity(truthProbabilities: pd.Series, predictionProbabilities: pd.Series,
-                        sensitivityThreshold: float) -> float:
+def auc_above_sensitivity(
+    truth_probabilities: pd.Series,
+    prediction_probabilities: pd.Series,
+    sensitivity_threshold: float,
+) -> float:
     # Get the ROC curve points
     # TODO: We must have both some true and false instances in truthProbabilities
-    falsePositiveRates, truePositiveRates, thresholds = sklearn.metrics.roc_curve(
-        truthProbabilities, predictionProbabilities)
+    false_positive_rates, true_positive_rates, thresholds = sklearn.metrics.roc_curve(
+        truth_probabilities, prediction_probabilities
+    )
 
-    # Search for the index along the curve where sensitivityThreshold occurs
-    # sensitivity == truePositiveRate
-    thresholdIndex = np.argmax(truePositiveRates >= sensitivityThreshold)
+    # Search for the index along the curve where sensitivity_threshold occurs
+    # sensitivity == true_positive_rate
+    threshold_index = np.argmax(true_positive_rates >= sensitivity_threshold)
 
     # Get the corresponding FPR value at the threshold, needed for sklearn
-    fprThreshold = falsePositiveRates[thresholdIndex]
-    # Compute the partial AUC over the range [0, fprThreshold], which is the complement of what we
-    # want (i.e. [fprThreshold, 1]), but this is all sklearn can provide
-    if fprThreshold == 0.0:
+    fpr_threshold = false_positive_rates[threshold_index]
+    # Compute the partial AUC over the range [0, fpr_threshold], which is the complement of what we
+    # want (i.e. [fpr_threshold, 1]), but this is all sklearn can provide
+    if fpr_threshold == 0.0:
         # roc_auc_score's max_fpr requires a value > 0
-        complementaryAuc = 0.0
+        complementary_auc = 0.0
     else:
-        complementaryAuc = sklearn.metrics.roc_auc_score(
-            truthProbabilities, predictionProbabilities,
-            max_fpr=fprThreshold)
+        complementary_auc = sklearn.metrics.roc_auc_score(
+            truth_probabilities, prediction_probabilities, max_fpr=fpr_threshold
+        )
 
-    totalAuc = sklearn.metrics.roc_auc_score(truthProbabilities, predictionProbabilities)
+    total_auc = sklearn.metrics.roc_auc_score(truth_probabilities, prediction_probabilities)
 
-    # complementaryAuc is the left / lower area, and we want the right / upper area
-    partialAuc = totalAuc - complementaryAuc
-    return partialAuc
+    # complementary_auc is the left / lower area, and we want the right / upper area
+    partial_auc = total_auc - complementary_auc
+    return partial_auc
 
 
-def averagePrecision(truthProbabilities: pd.Series, predictionProbabilities: pd.Series) -> float:
-    ap = sklearn.metrics.average_precision_score(truthProbabilities, predictionProbabilities)
+def average_precision(truth_probabilities: pd.Series, prediction_probabilities: pd.Series) -> float:
+    ap = sklearn.metrics.average_precision_score(truth_probabilities, prediction_probabilities)
     return ap

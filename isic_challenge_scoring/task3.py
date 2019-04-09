@@ -7,93 +7,97 @@ import numpy as np
 import pandas as pd
 
 from isic_challenge_scoring import metrics
-from isic_challenge_scoring.confusion import createBinaryConfusionMatrix
+from isic_challenge_scoring.confusion import create_binary_confusion_matrix
 from isic_challenge_scoring.exception import ScoreException
-from isic_challenge_scoring.load_csv import excludeRows, parseCsv, sortRows, validateRows
+from isic_challenge_scoring.load_csv import exclude_rows, parse_csv, sort_rows, validate_rows
 
 
 CATEGORIES = pd.Index(['MEL', 'NV', 'BCC', 'AKIEC', 'BKL', 'DF', 'VASC'])
 EXCLUDE_LABELS = ['ISIC_0035068']
 
 
-def computeMetrics(truthFileStream, predictionFileStream) -> Dict[str, Dict[str, float]]:
-    truthProbabilities = parseCsv(truthFileStream, CATEGORIES)
-    predictionProbabilities = parseCsv(predictionFileStream, CATEGORIES)
+def compute_metrics(truth_file_stream, prediction_file_stream) -> Dict[str, Dict[str, float]]:
+    truth_probabilities = parse_csv(truth_file_stream, CATEGORIES)
+    prediction_probabilities = parse_csv(prediction_file_stream, CATEGORIES)
 
-    excludeRows(truthProbabilities, EXCLUDE_LABELS)
-    excludeRows(predictionProbabilities, EXCLUDE_LABELS)
+    exclude_rows(truth_probabilities, EXCLUDE_LABELS)
+    exclude_rows(prediction_probabilities, EXCLUDE_LABELS)
 
-    validateRows(truthProbabilities, predictionProbabilities)
+    validate_rows(truth_probabilities, prediction_probabilities)
 
-    sortRows(truthProbabilities)
-    sortRows(predictionProbabilities)
+    sort_rows(truth_probabilities)
+    sort_rows(prediction_probabilities)
 
     scores: Dict[str, Dict[str, float]] = {}
     for category in CATEGORIES:
-        truthCategoryProbabilities: pd.Series = truthProbabilities[category]
-        predictionCategoryProbabilities: pd.Series = predictionProbabilities[category]
+        truth_category_probabilities: pd.Series = truth_probabilities[category]
+        prediction_category_probabilities: pd.Series = prediction_probabilities[category]
 
-        truthBinaryValues: pd.Series = truthCategoryProbabilities.gt(0.5)
-        predictionBinaryValues: pd.Series = predictionCategoryProbabilities.gt(0.5)
+        truth_binary_values: pd.Series = truth_category_probabilities.gt(0.5)
+        prediction_binary_values: pd.Series = prediction_category_probabilities.gt(0.5)
 
-        categoryCm = createBinaryConfusionMatrix(
-            truthBinaryValues=truthBinaryValues.to_numpy(),
-            predictionBinaryValues=predictionBinaryValues.to_numpy(),
-            name=category
+        category_cm = create_binary_confusion_matrix(
+            truth_binary_values=truth_binary_values.to_numpy(),
+            prediction_binary_values=prediction_binary_values.to_numpy(),
+            name=category,
         )
 
         scores[category] = {
-            'accuracy': metrics.binaryAccuracy(categoryCm),
-            'sensitivity': metrics.binarySensitivity(categoryCm),
-            'specificity': metrics.binarySpecificity(categoryCm),
-            'dice': metrics.binaryDice(categoryCm),
-            'ppv': metrics.binaryPpv(categoryCm),
-            'npv': metrics.binaryNpv(categoryCm),
-            'auc': metrics.auc(truthCategoryProbabilities, predictionCategoryProbabilities),
-            'auc_sens_80': metrics.aucAboveSensitivity(
-                truthCategoryProbabilities, predictionCategoryProbabilities, 0.80),
-            'ap': metrics.averagePrecision(
-                truthCategoryProbabilities, predictionCategoryProbabilities),
+            'accuracy': metrics.binary_accuracy(category_cm),
+            'sensitivity': metrics.binary_sensitivity(category_cm),
+            'specificity': metrics.binary_specificity(category_cm),
+            'dice': metrics.binary_dice(category_cm),
+            'ppv': metrics.binary_ppv(category_cm),
+            'npv': metrics.binary_npv(category_cm),
+            'auc': metrics.auc(truth_category_probabilities, prediction_category_probabilities),
+            'auc_sens_80': metrics.auc_above_sensitivity(
+                truth_category_probabilities, prediction_category_probabilities, 0.80
+            ),
+            'ap': metrics.average_precision(
+                truth_category_probabilities, prediction_category_probabilities
+            ),
         }
 
     # Compute averages for all per-category metrics
-    perCategoryMetrics: ValuesView[str] = next(iter(scores.values())).keys()
+    per_category_metrics: ValuesView[str] = next(iter(scores.values())).keys()
     scores['macro_average'] = {
-        metric: float(np.mean([
-            scores[category][metric]
-            for category in CATEGORIES
-        ]))
-        for metric in perCategoryMetrics
+        metric: float(np.mean([scores[category][metric] for category in CATEGORIES]))
+        for metric in per_category_metrics
     }
 
     # Compute multi-category aggregate metrics
     scores['aggregate'] = {
-        'balanced_accuracy': metrics.balancedMulticlassAccuracy(
-            truthProbabilities, predictionProbabilities)
+        'balanced_accuracy': metrics.balanced_multiclass_accuracy(
+            truth_probabilities, prediction_probabilities
+        )
     }
 
     return scores
 
 
-def score(truthPath: pathlib.Path, predictionPath: pathlib.Path) -> Dict[str, Dict[str, float]]:
-    for truthFile in truthPath.iterdir():
-        if re.match(r'^ISIC.*GroundTruth\.csv$', truthFile.name):
+def score(truth_path: pathlib.Path, prediction_path: pathlib.Path) -> Dict[str, Dict[str, float]]:
+    for truth_file in truth_path.iterdir():
+        if re.match(r'^ISIC.*GroundTruth\.csv$', truth_file.name):
             break
     else:
         raise ScoreException('Internal error, truth file could not be found.')
 
-    predictionFiles = [
-        predictionFile
-        for predictionFile in predictionPath.iterdir()
-        if predictionFile.suffix.lower() == '.csv'
+    prediction_files = [
+        prediction_file
+        for prediction_file in prediction_path.iterdir()
+        if prediction_file.suffix.lower() == '.csv'
     ]
-    if len(predictionFiles) > 1:
+    if len(prediction_files) > 1:
         raise ScoreException(
-            'Multiple prediction files submitted. Exactly one CSV file should be submitted.')
-    elif len(predictionFiles) < 1:
+            'Multiple prediction files submitted. Exactly one CSV file should be submitted.'
+        )
+    elif len(prediction_files) < 1:
         raise ScoreException(
-            'No prediction files submitted. Exactly one CSV file should be submitted.')
-    predictionFile = predictionFiles[0]
+            'No prediction files submitted. Exactly one CSV file should be submitted.'
+        )
+    prediction_file = prediction_files[0]
 
-    with truthFile.open('rb') as truthFileStream, predictionFile.open('rb') as predictionFileStream:
-        return computeMetrics(truthFileStream, predictionFileStream)
+    with truth_file.open('rb') as truth_file_stream, prediction_file.open(
+        'rb'
+    ) as prediction_file_stream:
+        return compute_metrics(truth_file_stream, prediction_file_stream)
