@@ -20,15 +20,21 @@ def prerelease_local_scheme(version):
         return get_local_node_and_date(version)
 
 
+with (pathlib.Path(__file__).parent / 'README.md').open() as description_stream:
+    long_description = description_stream.read()
+
+
 setup(
     name='isic_challenge_scoring',
-    version='4.0.0',
-    description='ISIC: Skin Lesion Analysis Towards Melanoma Detection Scoring',
+    description='Submission scoring for the ISIC Challenge',
+    long_description=long_description,
+    long_description_content_type='text/markdown',
     url='https://github.com/ImageMarkup/isic-challenge-scoring',
     license='Apache 2.0',
+    maintainer='ISIC Archive',
+    maintainer_email='admin@isic-archive.com',
     packages=find_packages(exclude=['tests']),
     python_requires='>=3.7.0',
     install_requires=['click', 'numpy', 'pandas', 'pillow', 'scipy', 'scikit-learn'],
     use_scm_version={'local_scheme': prerelease_local_scheme},
-    setup_requires=['setuptools_scm'],
 )
