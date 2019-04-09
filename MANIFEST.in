@@ -1,0 +1,5 @@
+exclude .*
+exclude Dockerfile
+exclude tox.ini
+prune .circleci
+prune tests
