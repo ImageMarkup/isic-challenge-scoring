@@ -1,4 +1,4 @@
-from setuptools import setup
+from setuptools import find_packages, setup
 
 setup(
     name='isic_challenge_scoring',
@@ -6,15 +6,7 @@ setup(
     description='ISIC: Skin Lesion Analysis Towards Melanoma Detection Scoring',
     url='https://github.com/ImageMarkup/isic-challenge-scoring',
     license='Apache 2.0',
-    packages=['isic_challenge_scoring'],
+    packages=find_packages(exclude=['tests']),
     python_requires='>=3.7.0',
-    install_requires=[
-        'click',
-        'numpy',
-        'pandas',
-        'pillow',
-        'scipy',
-        'scikit-learn'
-    ],
-    zip_safe=False
+    install_requires=['click', 'numpy', 'pandas', 'pillow', 'scipy', 'scikit-learn'],
 )

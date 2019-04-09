@@ -12,65 +12,68 @@ from isic_challenge_scoring.exception import ScoreException
 
 @dataclass
 class ImagePair:
-    truthFile: pathlib.Path = None
-    truthImage: np.ndarray = None
+    truth_file: pathlib.Path = None
+    truth_image: np.ndarray = None
     predictionFile: pathlib.Path = None
     predictionImage: np.ndarray = None
     imageId: str = None
-    attributeId: str = None
+    attribute_id: str = None
 
-    def parseImageId(self):
-        imageIdMatch: Match[str] = re.search(r'ISIC_[0-9]{7}', self.truthFile.stem)
+    def parse_image_id(self):
+        imageIdMatch: Match[str] = re.search(r'ISIC_[0-9]{7}', self.truth_file.stem)
         if not imageIdMatch:
             raise ScoreException(
-                f'Internal error: unknown ground truth file: {self.truthFile.name}.')
+                f'Internal error: unknown ground truth file: {self.truth_file.name}.'
+            )
         self.imageId = imageIdMatch.group(0)
 
-        attributeIdMatch: Match[str] = re.search(r'attribute_([a-z_]+)', self.truthFile.stem)
+        attributeIdMatch: Match[str] = re.search(r'attribute_([a-z_]+)', self.truth_file.stem)
         if attributeIdMatch:
-            self.attributeId = attributeIdMatch.group(1)
+            self.attribute_id = attributeIdMatch.group(1)
 
-    def findPredictionFile(self, predictionPath: pathlib.Path):
-        imageNumber: str = self.imageId.split('_')[1]
+    def find_prediction_file(self, prediction_path: pathlib.Path):
+        image_number: str = self.imageId.split('_')[1]
 
-        if not self.attributeId:
-            predictionFileCandidates = [
-                predictionFile
-                for predictionFile in predictionPath.iterdir()
-                if imageNumber in predictionFile.stem
+        if not self.attribute_id:
+            prediction_file_candidates = [
+                prediction_file
+                for prediction_file in prediction_path.iterdir()
+                if image_number in prediction_file.stem
             ]
         else:
-            predictionFileCandidates = [
-                predictionFile
-                for predictionFile in predictionPath.iterdir()
-                if imageNumber in predictionFile.stem and self.attributeId in predictionFile.stem
+            prediction_file_candidates = [
+                prediction_file
+                for prediction_file in prediction_path.iterdir()
+                if image_number in prediction_file.stem
+                and self.attribute_id in prediction_file.stem
             ]
 
-        if not predictionFileCandidates:
-            raise ScoreException(f'No matching submission for: {self.truthFile.name}')
-        elif len(predictionFileCandidates) > 1:
-            raise ScoreException(f'Multiple matching submissions for: {self.truthFile.name}')
+        if not prediction_file_candidates:
+            raise ScoreException(f'No matching submission for: {self.truth_file.name}')
+        elif len(prediction_file_candidates) > 1:
+            raise ScoreException(f'Multiple matching submissions for: {self.truth_file.name}')
 
-        self.predictionFile = predictionFileCandidates[0]
+        self.predictionFile = prediction_file_candidates[0]
 
-    def loadTruthImage(self):
-        self.truthImage = loadSegmentationImage(self.truthFile)
-        self.truthImage = assertBinaryImage(self.truthImage, self.truthFile)
+    def load_truth_image(self):
+        self.truth_image = load_segmentation_image(self.truth_file)
+        self.truth_image = assert_binary_image(self.truth_image, self.truth_file)
 
-    def loadPredictionImage(self):
-        self.predictionImage = loadSegmentationImage(self.predictionFile)
-        if self.predictionImage.shape[0:2] != self.truthImage.shape[0:2]:
+    def load_prediction_image(self):
+        self.predictionImage = load_segmentation_image(self.predictionFile)
+        if self.predictionImage.shape[0:2] != self.truth_image.shape[0:2]:
             raise ScoreException(
                 f'Image {self.predictionFile.name} has dimensions '
-                f'{self.predictionImage.shape[0:2]}; expected {self.truthImage.shape[0:2]}.')
+                f'{self.predictionImage.shape[0:2]}; expected {self.truth_image.shape[0:2]}.'
+            )
 
 
-def loadSegmentationImage(imagePath: pathlib.Path) -> np.ndarray:
+def load_segmentation_image(image_path: pathlib.Path) -> np.ndarray:
     """Load a segmentation image as a NumPy array, given a file path."""
     try:
-        image = Image.open(str(imagePath))
+        image = Image.open(str(image_path))
     except Exception as e:
-        raise ScoreException(f'Could not decode image "{imagePath.name}" because: "{str(e)}"')
+        raise ScoreException(f'Could not decode image "{image_path.name}" because: "{str(e)}"')
 
     if image.mode == '1':
         # NumPy crashes if a 1-bit (black and white) image is directly
@@ -78,43 +81,43 @@ def loadSegmentationImage(imagePath: pathlib.Path) -> np.ndarray:
         image = image.convert('L')
 
     if image.mode != 'L':
-        raise ScoreException(f'Image {imagePath.name} is not single-channel (greyscale).')
+        raise ScoreException(f'Image {image_path.name} is not single-channel (greyscale).')
 
     image = np.array(image)
 
     return image
 
 
-def assertBinaryImage(image: np.ndarray, imagePath: pathlib.Path):
+def assert_binary_image(image: np.ndarray, image_path: pathlib.Path):
     """Ensure a NumPy array image is binary, correcting if possible."""
-    imageValues = set(np.unique(image))
-    if imageValues <= {0, 255}:
+    image_values = set(np.unique(image))
+    if image_values <= {0, 255}:
         # Expected values
         pass
-    elif len(imageValues) <= 2:
+    elif len(image_values) <= 2:
         # Binary image with high value other than 255 can be corrected
-        highValue = (imageValues - {0}).pop()
-        image /= highValue
+        high_value = (image_values - {0}).pop()
+        image /= high_value
         image *= 255
         if set(np.unique(image)) > {0, 255}:
-            raise ScoreException(
-                f'Image {imagePath.name} contains values other than 0 and 255.')
+            raise ScoreException(f'Image {image_path.name} contains values other than 0 and 255.')
     else:
-        raise ScoreException(
-            f'Image {imagePath.name} contains values other than 0 and 255.')
+        raise ScoreException(f'Image {image_path.name} contains values other than 0 and 255.')
 
     return image
 
 
-def iterImagePairs(truthPath: pathlib.Path, predictionPath: pathlib.Path) -> Iterable[ImagePair]:
-    for truthFile in sorted(truthPath.iterdir()):
-        if truthFile.name in {'ATTRIBUTION.txt', 'LICENSE.txt'}:
+def iter_image_pairs(
+    truth_path: pathlib.Path, prediction_path: pathlib.Path
+) -> Iterable[ImagePair]:
+    for truth_file in sorted(truth_path.iterdir()):
+        if truth_file.name in {'ATTRIBUTION.txt', 'LICENSE.txt'}:
             continue
 
-        imagePair = ImagePair(truthFile=truthFile)
-        imagePair.parseImageId()
-        imagePair.findPredictionFile(predictionPath)
-        imagePair.loadTruthImage()
-        imagePair.loadPredictionImage()
+        image_pair = ImagePair(truth_file=truth_file)
+        image_pair.parse_image_id()
+        image_pair.find_prediction_file(prediction_path)
+        image_pair.load_truth_image()
+        image_pair.load_prediction_image()
 
-        yield imagePair
+        yield image_pair
