@@ -1,4 +1,5 @@
 import os
+import pathlib
 
 from setuptools import find_packages, setup
 
@@ -14,7 +15,9 @@ def prerelease_local_scheme(version):
     """
     from setuptools_scm.version import get_local_node_and_date
 
-    if os.getenv('CIRCLE_BRANCH') == 'master':
+    gitlab_branch = os.getenv('CI_COMMIT_REF_NAME')
+    circleci_branch = os.getenv('CIRCLE_BRANCH')
+    if (gitlab_branch or circleci_branch) == 'master':
         return ''
     else:
         return get_local_node_and_date(version)
