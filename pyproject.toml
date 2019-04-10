@@ -1,3 +1,10 @@
+[build-system]
+requires = [
+    "setuptools",
+    "setuptools_scm"
+]
+build-backend = "setuptools.build_meta"
+
 [tool.black]
 line-length = 100
 skip-string-normalization = true
