@@ -3,25 +3,16 @@ stages:
   - test
   - release
 
-variables:
-  # Handle git cloning via github manually, since gitlab mirroring doesn't
-  # support LFS objects, see https://gitlab.com/gitlab-org/gitlab-ce/issues/50048
-  GIT_STRATEGY: none
-
 test:
   image: isic/isic-challenge-scoring-test:latest
   stage: test
   script:
-    - git clone https://github.com/ImageMarkup/isic-challenge-scoring.git
-    - cd isic-challenge-scoring
     - tox
 
 release:
   image: isic/isic-challenge-scoring-test:latest
   stage: release
   script:
-    - git clone https://github.com/ImageMarkup/isic-challenge-scoring.git
-    - cd isic-challenge-scoring
     - tox -e release
   only:
     - master
