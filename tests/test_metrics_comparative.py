@@ -29,10 +29,7 @@ def test_binary_jaccard_reference(truth_binary_values, prediction_binary_values)
     cm = create_binary_confusion_matrix(truth_binary_values, prediction_binary_values)
 
     value = metrics.binary_jaccard(cm)
-    # sklearn has a very idiosyncratic implementation of jaccard_similarity_score; unless the input
-    # arrays are wrapped in an additional dimension, the result is actually the accuracy score
-    # see: https://github.com/scikit-learn/scikit-learn/issues/3037
-    reference_value = sklearn.metrics.jaccard_similarity_score(
+    reference_value = sklearn.metrics.jaccard_score(
         np.expand_dims(truth_binary_values, axis=0),
         np.expand_dims(prediction_binary_values, axis=0),
     )
