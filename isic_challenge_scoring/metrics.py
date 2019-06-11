@@ -174,3 +174,9 @@ def auc_above_sensitivity(
 def average_precision(truth_probabilities: pd.Series, prediction_probabilities: pd.Series) -> float:
     ap = sklearn.metrics.average_precision_score(truth_probabilities, prediction_probabilities)
     return ap
+
+
+def roc(truth_probabilities: pd.Series, prediction_probabilities: pd.Series):
+    fpr, tpr, thresholds = sklearn.metrics.roc_curve(truth_probabilities, prediction_probabilities)
+    roc = list(map(lambda x, y, t: {'x': x, 'y': y, 'thresh': t}, fpr, tpr, thresholds))
+    return roc

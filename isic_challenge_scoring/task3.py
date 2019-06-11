@@ -56,6 +56,7 @@ def compute_metrics(truth_file_stream, prediction_file_stream) -> Dict[str, Dict
             'ap': metrics.average_precision(
                 truth_category_probabilities, prediction_category_probabilities
             ),
+            # 'roc': metrics.roc(truth_category_probabilities, prediction_category_probabilities),
         }
 
     # Compute averages for all per-category metrics
@@ -71,6 +72,13 @@ def compute_metrics(truth_file_stream, prediction_file_stream) -> Dict[str, Dict
             truth_probabilities, prediction_probabilities
         )
     }
+
+    for category in CATEGORIES:
+        truth_category_probabilities: pd.Series = truth_probabilities[category]
+        prediction_category_probabilities: pd.Series = prediction_probabilities[category]
+        scores[category]['roc'] = metrics.roc(
+            truth_category_probabilities, prediction_category_probabilities
+        )
 
     return scores
 
