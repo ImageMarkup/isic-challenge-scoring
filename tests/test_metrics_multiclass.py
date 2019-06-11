@@ -88,3 +88,59 @@ def test_auc_above_sensitivity(
     )
 
     assert value == correct_value
+
+
+@pytest.mark.parametrize(
+    'truth_probabilities, prediction_probabilities, correct_roc',
+    [
+        # This only checks some edge cases for sanity
+        # Sklearn example
+        (
+            [0.0, 0.0, 1.0, 1.0],
+            [0.1, 0.4, 0.35, 0.8],
+            [
+                {'x': 0.0, 'y': 0.0, 'thresh': 1.8},
+                {'x': 0.0, 'y': 0.5, 'thresh': 0.8},
+                {'x': 0.5, 'y': 0.5, 'thresh': 0.4},
+                {'x': 0.5, 'y': 1.0, 'thresh': 0.35},
+                {'x': 1.0, 'y': 1.0, 'thresh': 0.1},
+            ],
+        ),
+        # Perfect predictor
+        (
+            [0.0, 0.0, 1.0, 1.0],
+            [0.2, 0.4, 0.6, 0.8],
+            [
+                {'x': 0.0, 'y': 0.0, 'thresh': 1.8},
+                {'x': 0.0, 'y': 0.5, 'thresh': 0.8},
+                {'x': 0.0, 'y': 1.0, 'thresh': 0.6},
+                {'x': 1.0, 'y': 1.0, 'thresh': 0.2},
+            ],
+        ),
+        # 50/50 predictor
+        (
+            [0.0, 0.0, 1.0, 1.0],
+            [0.3, 0.7, 0.3, 0.7],
+            [
+                {'x': 0.0, 'y': 0.0, 'thresh': 1.7},
+                {'x': 0.5, 'y': 0.5, 'thresh': 0.7},
+                {'x': 1.0, 'y': 1.0, 'thresh': 0.3},
+            ],
+        ),
+        # Wrong predictor
+        (
+            [0.0, 0.0, 1.0, 1.0],
+            [0.8, 0.6, 0.4, 0.2],
+            [
+                {'x': 0.0, 'y': 0.0, 'thresh': 1.8},
+                {'x': 0.5, 'y': 0.0, 'thresh': 0.8},
+                {'x': 1.0, 'y': 0.0, 'thresh': 0.6},
+                {'x': 1.0, 'y': 1.0, 'thresh': 0.2},
+            ],
+        ),
+    ],
+)
+def test_roc(truth_probabilities, prediction_probabilities, correct_roc):
+    roc = metrics.roc(pd.Series(truth_probabilities), pd.Series(prediction_probabilities))
+
+    assert roc == correct_roc
