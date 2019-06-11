@@ -1,5 +1,4 @@
 # -*- coding: utf-8 -*-
-import numpy as np
 import pytest
 import sklearn.metrics
 
@@ -29,11 +28,7 @@ def test_binary_jaccard_reference(truth_binary_values, prediction_binary_values)
     cm = create_binary_confusion_matrix(truth_binary_values, prediction_binary_values)
 
     value = metrics.binary_jaccard(cm)
-    reference_value = sklearn.metrics.jaccard_score(
-        np.expand_dims(truth_binary_values, axis=0),
-        np.expand_dims(prediction_binary_values, axis=0),
-        average='micro',
-    )
+    reference_value = sklearn.metrics.jaccard_score(truth_binary_values, prediction_binary_values)
 
     assert value == pytest.approx(reference_value)
 
