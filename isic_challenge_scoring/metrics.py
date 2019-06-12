@@ -177,6 +177,6 @@ def average_precision(truth_probabilities: pd.Series, prediction_probabilities: 
 
 
 def roc(truth_probabilities: pd.Series, prediction_probabilities: pd.Series):
-    fpr, tpr, thresholds = sklearn.metrics.roc_curve(truth_probabilities, prediction_probabilities)
-    roc = list(map(lambda x, y, t: {'x': x, 'y': y, 'thresh': t}, fpr, tpr, thresholds))
+    fprs, tprs, thresholds = sklearn.metrics.roc_curve(truth_probabilities, prediction_probabilities)
+    roc = list(map(lambda fpr, tpr, t: {'fpr': fpr, 'tpr': tpr, 'threshold': t}, fprs, tprs, thresholds))
     return roc
