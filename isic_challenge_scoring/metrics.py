@@ -1,4 +1,6 @@
 # -*- coding: utf-8 -*-
+from typing import Dict, List
+
 import numpy as np
 import pandas as pd
 import sklearn.metrics
@@ -176,7 +178,13 @@ def average_precision(truth_probabilities: pd.Series, prediction_probabilities: 
     return ap
 
 
-def roc(truth_probabilities: pd.Series, prediction_probabilities: pd.Series):
-    fprs, tprs, thresholds = sklearn.metrics.roc_curve(truth_probabilities, prediction_probabilities)
-    roc = list(map(lambda fpr, tpr, t: {'fpr': fpr, 'tpr': tpr, 'threshold': t}, fprs, tprs, thresholds))
+def roc(
+    truth_probabilities: pd.Series, prediction_probabilities: pd.Series
+) -> List[Dict[str, float]]:
+    fprs, tprs, thresholds = sklearn.metrics.roc_curve(
+        truth_probabilities, prediction_probabilities
+    )
+    roc = list(
+        map(lambda fpr, tpr, t: {'fpr': fpr, 'tpr': tpr, 'threshold': t}, fprs, tprs, thresholds)
+    )
     return roc
