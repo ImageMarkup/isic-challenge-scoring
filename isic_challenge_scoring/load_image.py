@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 import pathlib
 import re
-from typing import Iterable, Match
+from typing import Iterable, Match, Optional
 
 import numpy as np
 from PIL import Image
@@ -12,12 +12,12 @@ from isic_challenge_scoring.exception import ScoreException
 
 @dataclass
 class ImagePair:
-    truth_file: pathlib.Path = None
-    truth_image: np.ndarray = None
-    predictionFile: pathlib.Path = None
-    predictionImage: np.ndarray = None
-    imageId: str = None
-    attribute_id: str = None
+    truth_file: pathlib.Path
+    truth_image: np.ndarray = field(init=False)
+    predictionFile: pathlib.Path = field(init=False)
+    predictionImage: np.ndarray = field(init=False)
+    imageId: str = field(init=False)
+    attribute_id: Optional[str] = field(default=None, init=False)
 
     def parse_image_id(self):
         imageIdMatch: Match[str] = re.search(r'ISIC_[0-9]{7}', self.truth_file.stem)
