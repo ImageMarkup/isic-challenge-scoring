@@ -7,7 +7,7 @@ from typing import Iterable, Match, Optional
 import numpy as np
 from PIL import Image
 
-from isic_challenge_scoring.exception import ScoreException
+from isic_challenge_scoring.types import ScoreException
 
 
 @dataclass

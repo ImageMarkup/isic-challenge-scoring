@@ -1,22 +1,22 @@
 # -*- coding: utf-8 -*-
 import pathlib
 import re
-from typing import Dict, KeysView
+from typing import KeysView
 
 import numpy as np
 import pandas as pd
 
 from isic_challenge_scoring import metrics
 from isic_challenge_scoring.confusion import create_binary_confusion_matrix
-from isic_challenge_scoring.exception import ScoreException
 from isic_challenge_scoring.load_csv import exclude_rows, parse_csv, sort_rows, validate_rows
+from isic_challenge_scoring.types import ScoreException, ScoresType
 
 
 CATEGORIES = pd.Index(['MEL', 'NV', 'BCC', 'AKIEC', 'BKL', 'DF', 'VASC'])
 EXCLUDE_LABELS = ['ISIC_0035068']
 
 
-def compute_metrics(truth_file_stream, prediction_file_stream) -> Dict[str, Dict[str, float]]:
+def compute_metrics(truth_file_stream, prediction_file_stream) -> ScoresType:
     truth_probabilities = parse_csv(truth_file_stream, CATEGORIES)
     prediction_probabilities = parse_csv(prediction_file_stream, CATEGORIES)
 
@@ -28,7 +28,7 @@ def compute_metrics(truth_file_stream, prediction_file_stream) -> Dict[str, Dict
     sort_rows(truth_probabilities)
     sort_rows(prediction_probabilities)
 
-    scores: Dict[str, Dict[str, float]] = {}
+    scores: ScoresType = {}
     for category in CATEGORIES:
         truth_category_probabilities: pd.Series = truth_probabilities[category]
         prediction_category_probabilities: pd.Series = prediction_probabilities[category]
@@ -77,7 +77,7 @@ def compute_metrics(truth_file_stream, prediction_file_stream) -> Dict[str, Dict
     return scores
 
 
-def score(truth_path: pathlib.Path, prediction_path: pathlib.Path) -> Dict[str, Dict[str, float]]:
+def score(truth_path: pathlib.Path, prediction_path: pathlib.Path) -> ScoresType:
     for truth_file in truth_path.iterdir():
         if re.match(r'^ISIC.*GroundTruth\.csv$', truth_file.name):
             break

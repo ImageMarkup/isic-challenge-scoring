@@ -7,10 +7,10 @@ import tempfile
 from typing import Tuple
 import zipfile
 
-from isic_challenge_scoring.exception import ScoreException
-from isic_challenge_scoring.task1 import score as score_task1
-from isic_challenge_scoring.task2 import score as score_task2
-from isic_challenge_scoring.task3 import score as score_task3
+from isic_challenge_scoring import task1
+from isic_challenge_scoring import task2
+from isic_challenge_scoring import task3
+from isic_challenge_scoring.types import ScoreException, ScoresType
 
 
 def extract_zip(zip_path: pathlib.Path, output_path: pathlib.Path, flatten: bool = True):
@@ -130,13 +130,14 @@ def score_all(
         ensure_manuscript(prediction_path)
 
     if task_num == 1:
-        scores = score_task1(truth_path, prediction_path)
+        score = task1.score
     elif task_num == 2:
-        scores = score_task2(truth_path, prediction_path)
-    elif task_num == 3:
-        scores = score_task3(truth_path, prediction_path)
+        score = task2.score
+    if task_num == 3:
+        score = task3.score
     else:
         raise ScoreException(f'Internal error: unknown ground truth phase number: {task_num}.')
+    scores: ScoresType = score(truth_path, prediction_path)
 
     # Output in Covalic format
     print(

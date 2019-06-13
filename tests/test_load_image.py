@@ -4,7 +4,7 @@ import pathlib
 import pytest
 
 from isic_challenge_scoring import load_image
-from isic_challenge_scoring.exception import ScoreException
+from isic_challenge_scoring.types import ScoreException
 
 
 @pytest.mark.parametrize(

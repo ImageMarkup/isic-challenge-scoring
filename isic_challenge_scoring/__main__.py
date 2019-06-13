@@ -6,7 +6,7 @@ import click
 import click_pathlib
 
 from isic_challenge_scoring import score_all
-from isic_challenge_scoring.exception import ScoreException
+from isic_challenge_scoring.types import ScoreException
 
 
 DirectoryPath = click_pathlib.Path(exists=True, file_okay=False, dir_okay=True, readable=True)
