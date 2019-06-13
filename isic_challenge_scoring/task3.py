@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 import pathlib
 import re
-from typing import Dict, ValuesView
+from typing import Dict, KeysView
 
 import numpy as np
 import pandas as pd
@@ -59,7 +59,7 @@ def compute_metrics(truth_file_stream, prediction_file_stream) -> Dict[str, Dict
         }
 
     # Compute averages for all per-category metrics
-    per_category_metrics: ValuesView[str] = next(iter(scores.values())).keys()
+    per_category_metrics: KeysView[str] = next(iter(scores.values())).keys()
     scores['macro_average'] = {
         metric: float(np.mean([scores[category][metric] for category in CATEGORIES]))
         for metric in per_category_metrics
