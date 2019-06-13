@@ -38,6 +38,14 @@ setup(
     maintainer_email='admin@isic-archive.com',
     packages=find_packages(exclude=['tests']),
     python_requires='>=3.7.0',
-    install_requires=['click', 'numpy', 'pandas', 'pillow', 'scipy', 'scikit-learn'],
+    install_requires=[
+        'click',
+        'click-pathlib',
+        'numpy',
+        'pandas',
+        'pillow',
+        'scipy',
+        'scikit-learn',
+    ],
     use_scm_version={'local_scheme': prerelease_local_scheme},
 )

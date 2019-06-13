@@ -3,12 +3,13 @@ import pathlib
 import sys
 
 import click
+import click_pathlib
 
 from isic_challenge_scoring import score_all
 from isic_challenge_scoring.exception import ScoreException
 
 
-DirectoryPath = click.Path(exists=True, file_okay=False, dir_okay=True, readable=True)
+DirectoryPath = click_pathlib.Path(exists=True, file_okay=False, dir_okay=True, readable=True)
 
 
 @click.command(name='isic-challenge-scoring', help='ISIC Challenge submission scoring')
@@ -35,11 +36,11 @@ DirectoryPath = click.Path(exists=True, file_okay=False, dir_okay=True, readable
 )
 @click.option('--require-manuscript', 'require_manuscript', is_flag=True, default=False)
 def main(
-    truth_input_path: str, prediction_input_path: str, task_num: int, require_manuscript: bool
+    truth_input_path: pathlib.Path,
+    prediction_input_path: pathlib.Path,
+    task_num: int,
+    require_manuscript: bool,
 ):
-    truth_input_path = pathlib.Path(truth_input_path)
-    prediction_input_path = pathlib.Path(prediction_input_path)
-
     try:
         score_all(truth_input_path, prediction_input_path, task_num, require_manuscript)
     except ScoreException as e:
