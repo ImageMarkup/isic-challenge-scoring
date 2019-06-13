@@ -4,7 +4,7 @@ from typing import List
 import numpy as np
 import pandas as pd
 
-from isic_challenge_scoring.exception import ScoreException
+from isic_challenge_scoring.types import ScoreException
 
 
 def parse_csv(csv_file_stream, categories: pd.Index) -> pd.DataFrame:

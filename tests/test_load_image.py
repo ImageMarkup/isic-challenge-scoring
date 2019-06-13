@@ -4,7 +4,7 @@ import pathlib
 import pytest
 
 from isic_challenge_scoring import load_image
-from isic_challenge_scoring.exception import ScoreException
+from isic_challenge_scoring.types import ScoreException
 
 
 @pytest.mark.parametrize(
@@ -21,7 +21,7 @@ def test_parse_image_id_valid(truth_file, correct_image_id, correct_attribute_id
 
     image_pair.parse_image_id()
 
-    assert image_pair.imageId == correct_image_id
+    assert image_pair.image_id == correct_image_id
     assert image_pair.attribute_id == correct_attribute_id
 
 

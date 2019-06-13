@@ -7,32 +7,32 @@ from typing import Iterable, Match, Optional
 import numpy as np
 from PIL import Image
 
-from isic_challenge_scoring.exception import ScoreException
+from isic_challenge_scoring.types import ScoreException
 
 
 @dataclass
 class ImagePair:
     truth_file: pathlib.Path
     truth_image: np.ndarray = field(init=False)
-    predictionFile: pathlib.Path = field(init=False)
-    predictionImage: np.ndarray = field(init=False)
-    imageId: str = field(init=False)
+    prediction_file: pathlib.Path = field(init=False)
+    prediction_image: np.ndarray = field(init=False)
+    image_id: str = field(init=False)
     attribute_id: Optional[str] = field(default=None, init=False)
 
     def parse_image_id(self):
-        imageIdMatch: Match[str] = re.search(r'ISIC_[0-9]{7}', self.truth_file.stem)
-        if not imageIdMatch:
+        image_id_match: Match[str] = re.search(r'ISIC_[0-9]{7}', self.truth_file.stem)
+        if not image_id_match:
             raise ScoreException(
                 f'Internal error: unknown ground truth file: {self.truth_file.name}.'
             )
-        self.imageId = imageIdMatch.group(0)
+        self.image_id = image_id_match.group(0)
 
-        attributeIdMatch: Match[str] = re.search(r'attribute_([a-z_]+)', self.truth_file.stem)
-        if attributeIdMatch:
-            self.attribute_id = attributeIdMatch.group(1)
+        attribute_id_match: Match[str] = re.search(r'attribute_([a-z_]+)', self.truth_file.stem)
+        if attribute_id_match:
+            self.attribute_id = attribute_id_match.group(1)
 
     def find_prediction_file(self, prediction_path: pathlib.Path):
-        image_number: str = self.imageId.split('_')[1]
+        image_number: str = self.image_id.split('_')[1]
 
         if not self.attribute_id:
             prediction_file_candidates = [
@@ -53,18 +53,18 @@ class ImagePair:
         elif len(prediction_file_candidates) > 1:
             raise ScoreException(f'Multiple matching submissions for: {self.truth_file.name}')
 
-        self.predictionFile = prediction_file_candidates[0]
+        self.prediction_file = prediction_file_candidates[0]
 
     def load_truth_image(self):
         self.truth_image = load_segmentation_image(self.truth_file)
         self.truth_image = assert_binary_image(self.truth_image, self.truth_file)
 
     def load_prediction_image(self):
-        self.predictionImage = load_segmentation_image(self.predictionFile)
-        if self.predictionImage.shape[0:2] != self.truth_image.shape[0:2]:
+        self.prediction_image = load_segmentation_image(self.prediction_file)
+        if self.prediction_image.shape[0:2] != self.truth_image.shape[0:2]:
             raise ScoreException(
-                f'Image {self.predictionFile.name} has dimensions '
-                f'{self.predictionImage.shape[0:2]}; expected {self.truth_image.shape[0:2]}.'
+                f'Image {self.prediction_file.name} has dimensions '
+                f'{self.prediction_image.shape[0:2]}; expected {self.truth_image.shape[0:2]}.'
             )
 
 

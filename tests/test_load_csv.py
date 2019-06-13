@@ -5,8 +5,8 @@ import pandas as pd
 import pytest
 
 from isic_challenge_scoring import load_csv
-from isic_challenge_scoring.exception import ScoreException
 from isic_challenge_scoring.task3 import CATEGORIES
+from isic_challenge_scoring.types import ScoreException
 
 
 def test_parse_csv():
