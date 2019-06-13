@@ -21,7 +21,7 @@ def test_parse_image_id_valid(truth_file, correct_image_id, correct_attribute_id
 
     image_pair.parse_image_id()
 
-    assert image_pair.imageId == correct_image_id
+    assert image_pair.image_id == correct_image_id
     assert image_pair.attribute_id == correct_attribute_id
 
 

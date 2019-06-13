@@ -14,8 +14,8 @@ def score(truth_path: pathlib.Path, prediction_path: pathlib.Path) -> Dict[str, 
         [
             create_binary_confusion_matrix(
                 truth_binary_values=image_pair.truth_image > 128,
-                prediction_binary_values=image_pair.predictionImage > 128,
-                name=(image_pair.imageId, image_pair.attribute_id),
+                prediction_binary_values=image_pair.prediction_image > 128,
+                name=(image_pair.image_id, image_pair.attribute_id),
             )
             for image_pair in iter_image_pairs(truth_path, prediction_path)
         ]
