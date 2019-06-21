@@ -133,7 +133,7 @@ def score_all(
         score = task1.score
     elif task_num == 2:
         score = task2.score
-    if task_num == 3:
+    elif task_num == 3:
         score = task3.score
     else:
         raise ScoreException(f'Internal error: unknown ground truth phase number: {task_num}.')
