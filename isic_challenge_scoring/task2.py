@@ -48,4 +48,6 @@ def score(truth_path: pathlib.Path, prediction_path: pathlib.Path) -> ScoresType
         'dice': metrics.binary_dice(sum_confusion_matrix),
     }
 
+    score['overall'] = scores['micro_average']['jaccard']
+
     return scores

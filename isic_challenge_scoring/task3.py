@@ -74,6 +74,8 @@ def compute_metrics(truth_file_stream, prediction_file_stream) -> ScoresType:
         )
     }
 
+    scores['overall'] = scores['aggregate']['balanced_accuracy']
+
     return scores
 
 

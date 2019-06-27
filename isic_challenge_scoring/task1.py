@@ -21,7 +21,7 @@ def score(truth_path: pathlib.Path, prediction_path: pathlib.Path) -> ScoresType
         ]
     )
 
-    return {
+    scores = {
         'macro_average': {
             'threshold_jaccard': confusion_matrics.apply(
                 metrics.binary_threshold_jaccard, threshold=0.65, axis='columns'
@@ -37,3 +37,6 @@ def score(truth_path: pathlib.Path, prediction_path: pathlib.Path) -> ScoresType
             ).mean(),
         }
     }
+    scores['overall'] = scores['macro_average']['threshold_jaccard']
+
+    return scores
