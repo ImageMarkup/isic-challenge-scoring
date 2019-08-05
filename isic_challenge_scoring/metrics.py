@@ -21,13 +21,14 @@ def _to_labels(probabilities: pd.DataFrame) -> pd.Series:
     return labels
 
 
-def _get_frequencies(labels: pd.Series, categories: pd.Index) -> pd.Series:
+def _get_frequencies(labels: pd.Series, weights: pd.Series, categories: pd.Index) -> pd.Series:
+    # Directly sum the weights, grouping them by label
     # .reindex sorts this by the order in categories
-    return labels.value_counts().reindex(categories, fill_value=0)
+    return weights.groupby(labels, sort=False).sum().reindex(categories, fill_value=0)
 
 
 def _label_balanced_multiclass_accuracy(
-    truth_labels: pd.Series, prediction_labels: pd.Series, categories: pd.Index
+    truth_labels: pd.Series, prediction_labels: pd.Series, weights: pd.Series, categories: pd.Index
 ) -> float:
     # See http://scikit-learn.org/dev/modules/model_evaluation.html#balanced-accuracy-score ; in
     # summary, 'sklearn.metrics.balanced_accuracy_score' is for binary classification only, so we
@@ -35,7 +36,7 @@ def _label_balanced_multiclass_accuracy(
     # the definitions mentioned by SciKit learn, as it's just a normalization of TP scores by true
     # class proportions
     confusion_matrix = sklearn.metrics.confusion_matrix(
-        truth_labels, prediction_labels, labels=categories
+        truth_labels, prediction_labels, labels=categories, sample_weight=weights
     )
     # TODO: try to convert to a DataFrame, for useful debugging labels
     # confusion_matrix = pd.DataFrame(
@@ -47,14 +48,14 @@ def _label_balanced_multiclass_accuracy(
     true_positive_counts = pd.Series(confusion_matrix.diagonal(), index=categories)
 
     # These are equal to rows of the confusion matrix
-    true_label_frequencies = _get_frequencies(truth_labels, categories)
+    true_label_frequencies = _get_frequencies(truth_labels, weights, categories)
 
     balanced_accuracy = true_positive_counts.divide(true_label_frequencies).mean()
     return balanced_accuracy
 
 
 def balanced_multiclass_accuracy(
-    truth_probabilities: pd.DataFrame, prediction_probabilities: pd.DataFrame
+    truth_probabilities: pd.DataFrame, prediction_probabilities: pd.DataFrame, weights: pd.Series
 ) -> float:
     truth_labels = _to_labels(truth_probabilities)
     prediction_labels = _to_labels(prediction_probabilities)
@@ -62,7 +63,7 @@ def balanced_multiclass_accuracy(
 
     # This is easier to test
     balanced_accuracy = _label_balanced_multiclass_accuracy(
-        truth_labels, prediction_labels, categories
+        truth_labels, prediction_labels, weights, categories
     )
     return balanced_accuracy
 
@@ -134,20 +135,25 @@ def binary_npv(cm: pd.Series) -> float:
         return cm.at['TN'] / (cm.at['TN'] + cm.at['FN'])
 
 
-def auc(truth_probabilities: pd.Series, prediction_probabilities: pd.Series) -> float:
-    auc = sklearn.metrics.roc_auc_score(truth_probabilities, prediction_probabilities)
+def auc(
+    truth_probabilities: pd.Series, prediction_probabilities: pd.Series, weights: pd.Series
+) -> float:
+    auc = sklearn.metrics.roc_auc_score(
+        truth_probabilities, prediction_probabilities, sample_weight=weights
+    )
     return auc
 
 
 def auc_above_sensitivity(
     truth_probabilities: pd.Series,
     prediction_probabilities: pd.Series,
+    weights: pd.Series,
     sensitivity_threshold: float,
 ) -> float:
     # Get the ROC curve points
     # TODO: We must have both some true and false instances in truthProbabilities
     false_positive_rates, true_positive_rates, thresholds = sklearn.metrics.roc_curve(
-        truth_probabilities, prediction_probabilities
+        truth_probabilities, prediction_probabilities, sample_weight=weights
     )
 
     # Search for the index along the curve where sensitivity_threshold occurs
@@ -163,26 +169,35 @@ def auc_above_sensitivity(
         complementary_auc = 0.0
     else:
         complementary_auc = sklearn.metrics.roc_auc_score(
-            truth_probabilities, prediction_probabilities, max_fpr=fpr_threshold
+            truth_probabilities,
+            prediction_probabilities,
+            sample_weight=weights,
+            max_fpr=fpr_threshold,
         )
 
-    total_auc = sklearn.metrics.roc_auc_score(truth_probabilities, prediction_probabilities)
+    total_auc = sklearn.metrics.roc_auc_score(
+        truth_probabilities, prediction_probabilities, sample_weight=weights
+    )
 
     # complementary_auc is the left / lower area, and we want the right / upper area
     partial_auc = total_auc - complementary_auc
     return partial_auc
 
 
-def average_precision(truth_probabilities: pd.Series, prediction_probabilities: pd.Series) -> float:
-    ap = sklearn.metrics.average_precision_score(truth_probabilities, prediction_probabilities)
+def average_precision(
+    truth_probabilities: pd.Series, prediction_probabilities: pd.Series, weights: pd.Series
+) -> float:
+    ap = sklearn.metrics.average_precision_score(
+        truth_probabilities, prediction_probabilities, sample_weight=weights
+    )
     return ap
 
 
 def roc(
-    truth_probabilities: pd.Series, prediction_probabilities: pd.Series
+    truth_probabilities: pd.Series, prediction_probabilities: pd.Series, weights: pd.Series
 ) -> List[Dict[str, float]]:
     fprs, tprs, thresholds = sklearn.metrics.roc_curve(
-        truth_probabilities, prediction_probabilities
+        truth_probabilities, prediction_probabilities, sample_weight=weights
     )
     roc = list(
         map(lambda fpr, tpr, t: {'fpr': fpr, 'tpr': tpr, 'threshold': t}, fprs, tprs, thresholds)

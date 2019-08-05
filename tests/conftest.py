@@ -1,12 +1,19 @@
 # -*- coding: utf-8 -*-
 import pathlib
 
+import pandas as pd
 import pytest
 
+from isic_challenge_scoring.confusion import create_binary_confusion_matrix
 from isic_challenge_scoring.load_image import load_segmentation_image
 
 
 data_dir = (pathlib.Path(__file__).parent / 'data').resolve()
+
+
+@pytest.fixture
+def categories():
+    return pd.Index(['MEL', 'NV', 'BCC', 'AKIEC', 'BKL', 'DF', 'VASC'])
 
 
 @pytest.fixture
@@ -55,3 +62,8 @@ def prediction_binary_values(task1_prediction_path):
     prediction_image = load_segmentation_image(prediction_file)
     binary_prediction_values = (prediction_image > 128).ravel()
     yield binary_prediction_values
+
+
+@pytest.fixture
+def cm(truth_binary_values, prediction_binary_values):
+    return create_binary_confusion_matrix(truth_binary_values, prediction_binary_values)

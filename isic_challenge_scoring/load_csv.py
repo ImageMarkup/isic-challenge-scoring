@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from typing import List
+from typing import TextIO, Tuple
 
 import numpy as np
 import pandas as pd
@@ -7,7 +7,27 @@ import pandas as pd
 from isic_challenge_scoring.types import ScoreException
 
 
-def parse_csv(csv_file_stream, categories: pd.Index) -> pd.DataFrame:
+def parse_truth_csv(csv_file_stream: TextIO) -> Tuple[pd.DataFrame, pd.DataFrame]:
+    table = pd.read_csv(csv_file_stream, header=0)
+
+    table.set_index('image', drop=True, inplace=True, verify_integrity=False)
+
+    # Support legacy truth files
+    if 'score_weight' not in table.columns:
+        table['score_weight'] = 1.0
+    if 'validation_weight' not in table.columns:
+        table['validation_weight'] = 1.0
+    if 'ISIC_0035068' in table.index:
+        # TODO: Move this to ground truth
+        table.loc['ISIC_0035068', ['score_weight', 'validation_weight']] = 0.0
+
+    probabilities = table.drop(columns=['score_weight', 'validation_weight'])
+    weights = table[['score_weight', 'validation_weight']]
+
+    return probabilities, weights
+
+
+def parse_csv(csv_file_stream: TextIO, categories: pd.Index) -> pd.DataFrame:
     probabilities = pd.read_csv(csv_file_stream, header=0)
 
     if 'image' not in probabilities.columns:
@@ -51,11 +71,6 @@ def parse_csv(csv_file_stream, categories: pd.Index) -> pd.DataFrame:
     # TODO: fail on extra columns in data rows
 
     return probabilities
-
-
-def exclude_rows(probabilities: pd.DataFrame, labels: List):
-    """Exclude rows with specified labels, in-place."""
-    probabilities.drop(index=labels, inplace=True, errors='ignore')
 
 
 def validate_rows(truth_probabilities: pd.DataFrame, prediction_probabilities: pd.DataFrame):
