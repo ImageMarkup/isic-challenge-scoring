@@ -28,7 +28,11 @@ def parse_truth_csv(csv_file_stream: TextIO) -> Tuple[pd.DataFrame, pd.DataFrame
 
 
 def parse_csv(csv_file_stream: TextIO, categories: pd.Index) -> pd.DataFrame:
-    probabilities = pd.read_csv(csv_file_stream, header=0)
+    try:
+        probabilities = pd.read_csv(csv_file_stream, header=0)
+    except pd.errors.ParserError as e:
+        # TODO: Test this case
+        raise ScoreException(f'Could not parse CSV: "{str(e)}"')
 
     if 'image' not in probabilities.columns:
         raise ScoreException('Missing column in CSV: "image".')
