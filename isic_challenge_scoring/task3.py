@@ -8,20 +8,14 @@ import pandas as pd
 
 from isic_challenge_scoring import metrics
 from isic_challenge_scoring.confusion import create_binary_confusion_matrix
-from isic_challenge_scoring.load_csv import exclude_rows, parse_csv, sort_rows, validate_rows
+from isic_challenge_scoring.load_csv import parse_csv, parse_truth_csv, sort_rows, validate_rows
 from isic_challenge_scoring.types import ScoreException, ScoresType
 
 
-CATEGORIES = pd.Index(['MEL', 'NV', 'BCC', 'AKIEC', 'BKL', 'DF', 'VASC'])
-EXCLUDE_LABELS = ['ISIC_0035068']
-
-
 def compute_metrics(truth_file_stream, prediction_file_stream) -> ScoresType:
-    truth_probabilities = parse_csv(truth_file_stream, CATEGORIES)
-    prediction_probabilities = parse_csv(prediction_file_stream, CATEGORIES)
-
-    exclude_rows(truth_probabilities, EXCLUDE_LABELS)
-    exclude_rows(prediction_probabilities, EXCLUDE_LABELS)
+    truth_probabilities, truth_weights = parse_truth_csv(truth_file_stream)
+    categories = truth_probabilities.columns
+    prediction_probabilities = parse_csv(prediction_file_stream, categories)
 
     validate_rows(truth_probabilities, prediction_probabilities)
 
@@ -29,7 +23,7 @@ def compute_metrics(truth_file_stream, prediction_file_stream) -> ScoresType:
     sort_rows(prediction_probabilities)
 
     scores: ScoresType = {}
-    for category in CATEGORIES:
+    for category in categories:
         truth_category_probabilities: pd.Series = truth_probabilities[category]
         prediction_category_probabilities: pd.Series = prediction_probabilities[category]
 
@@ -39,6 +33,7 @@ def compute_metrics(truth_file_stream, prediction_file_stream) -> ScoresType:
         category_cm = create_binary_confusion_matrix(
             truth_binary_values=truth_binary_values.to_numpy(),
             prediction_binary_values=prediction_binary_values.to_numpy(),
+            weights=truth_weights.score_weight.to_numpy(),
             name=category,
         )
 
@@ -49,20 +44,33 @@ def compute_metrics(truth_file_stream, prediction_file_stream) -> ScoresType:
             'dice': metrics.binary_dice(category_cm),
             'ppv': metrics.binary_ppv(category_cm),
             'npv': metrics.binary_npv(category_cm),
-            'auc': metrics.auc(truth_category_probabilities, prediction_category_probabilities),
+            'auc': metrics.auc(
+                truth_category_probabilities,
+                prediction_category_probabilities,
+                truth_weights.score_weight,
+            ),
             'auc_sens_80': metrics.auc_above_sensitivity(
-                truth_category_probabilities, prediction_category_probabilities, 0.80
+                truth_category_probabilities,
+                prediction_category_probabilities,
+                truth_weights.score_weight,
+                0.80,
             ),
             'ap': metrics.average_precision(
-                truth_category_probabilities, prediction_category_probabilities
+                truth_category_probabilities,
+                prediction_category_probabilities,
+                truth_weights.score_weight,
             ),
-            'roc': metrics.roc(truth_category_probabilities, prediction_category_probabilities),
+            'roc': metrics.roc(
+                truth_category_probabilities,
+                prediction_category_probabilities,
+                truth_weights.score_weight,
+            ),
         }
 
     # Compute averages for all per-category metrics
     per_category_metrics: KeysView[str] = next(iter(scores.values())).keys()
     scores['macro_average'] = {
-        metric: float(np.mean([scores[category][metric] for category in CATEGORIES]))
+        metric: float(np.mean([scores[category][metric] for category in categories]))
         for metric in per_category_metrics
         if metric != 'roc'
     }
@@ -70,11 +78,14 @@ def compute_metrics(truth_file_stream, prediction_file_stream) -> ScoresType:
     # Compute multi-category aggregate metrics
     scores['aggregate'] = {
         'balanced_accuracy': metrics.balanced_multiclass_accuracy(
-            truth_probabilities, prediction_probabilities
+            truth_probabilities, prediction_probabilities, truth_weights.score_weight
         )
     }
 
     scores['overall'] = scores['aggregate']['balanced_accuracy']
+    scores['validation'] = metrics.balanced_multiclass_accuracy(
+        truth_probabilities, prediction_probabilities, truth_weights.validation_weight
+    )
 
     return scores
 

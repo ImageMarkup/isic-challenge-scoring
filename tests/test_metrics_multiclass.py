@@ -2,10 +2,10 @@
 import pandas as pd
 import pytest
 
-from isic_challenge_scoring import metrics, task3
+from isic_challenge_scoring import metrics
 
 
-def test_to_labels():
+def test_to_labels(categories):
     probabilities = pd.DataFrame(
         [
             # NV
@@ -19,7 +19,7 @@ def test_to_labels():
             # MEL
             [1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
         ],
-        columns=task3.CATEGORIES,
+        columns=categories,
     )
 
     labels = metrics._to_labels(probabilities)
@@ -27,16 +27,19 @@ def test_to_labels():
     assert labels.equals(pd.Series(['NV', 'undecided', 'AKIEC', 'undecided', 'MEL']))
 
 
-def test_get_frequencies():
-    labels = pd.Series(['MEL', 'MEL', 'VASC', 'AKIEC'])
+def test_get_frequencies(categories):
+    labels = pd.Series(['MEL', 'MEL', 'VASC', 'AKIEC', 'MEL'])
+    weights = pd.Series([1.0, 1.0, 1.0, 1.0, 0.0])
 
-    label_frequencies = metrics._get_frequencies(labels, task3.CATEGORIES)
+    label_frequencies = metrics._get_frequencies(labels, weights, categories)
 
     assert label_frequencies.equals(
-        pd.Series({'MEL': 2, 'NV': 0, 'BCC': 0, 'AKIEC': 1, 'BKL': 0, 'DF': 0, 'VASC': 1})
+        pd.Series(
+            {'MEL': 2.0, 'NV': 0.0, 'BCC': 0.0, 'AKIEC': 1.0, 'BKL': 0.0, 'DF': 0.0, 'VASC': 1.0}
+        )
     )
     # Ensure the ordering is correct (although Python3.6 dicts are ordered)
-    assert label_frequencies.index.equals(task3.CATEGORIES)
+    assert label_frequencies.index.equals(categories)
 
 
 @pytest.mark.parametrize(
@@ -54,9 +57,20 @@ def test_get_frequencies():
         (['MEL', 'NV', 'MEL', 'MEL'], ['NV', 'MEL', 'NV', 'NV'], 0.0),
     ],
 )
-def test_label_balanced_multiclass_accuracy(truth_labels, prediction_labels, correct_value):
+@pytest.mark.parametrize('test_weight_zero', [False, True])
+def test_label_balanced_multiclass_accuracy(
+    truth_labels, prediction_labels, correct_value, test_weight_zero, categories
+):
+    weights = [1.0] * len(truth_labels)
+
+    if test_weight_zero:
+        # Insert a final incorrect, but unweighted prediction
+        truth_labels = truth_labels + ['MEL']
+        prediction_labels = prediction_labels + ['NV']
+        weights = weights + [0.0]
+
     value = metrics._label_balanced_multiclass_accuracy(
-        pd.Series(truth_labels), pd.Series(prediction_labels), task3.CATEGORIES
+        pd.Series(truth_labels), pd.Series(prediction_labels), pd.Series(weights), categories
     )
 
     assert value == correct_value
@@ -80,11 +94,27 @@ def test_label_balanced_multiclass_accuracy(truth_labels, prediction_labels, cor
         ([0.0, 0.0, 1.0, 1.0], [0.8, 0.6, 0.4, 0.2], 1.0, 0.0),
     ],
 )
+@pytest.mark.parametrize('test_weight_zero', [False, True])
 def test_auc_above_sensitivity(
-    truth_probabilities, prediction_probabilities, sensitivity_threshold, correct_value
+    truth_probabilities,
+    prediction_probabilities,
+    sensitivity_threshold,
+    correct_value,
+    test_weight_zero,
 ):
+    weights = [1.0] * len(truth_probabilities)
+
+    if test_weight_zero:
+        # Insert a final incorrect, but unweighted prediction
+        truth_probabilities = truth_probabilities + [1.0]
+        prediction_probabilities = prediction_probabilities + [0.2]
+        weights = weights + [0.0]
+
     value = metrics.auc_above_sensitivity(
-        pd.Series(truth_probabilities), pd.Series(prediction_probabilities), sensitivity_threshold
+        pd.Series(truth_probabilities),
+        pd.Series(prediction_probabilities),
+        pd.Series(weights),
+        sensitivity_threshold,
     )
 
     assert value == correct_value
@@ -140,7 +170,20 @@ def test_auc_above_sensitivity(
         ),
     ],
 )
-def test_roc(truth_probabilities, prediction_probabilities, correct_roc):
-    roc = metrics.roc(pd.Series(truth_probabilities), pd.Series(prediction_probabilities))
+@pytest.mark.parametrize('test_weight_zero', [False, True])
+def test_roc(truth_probabilities, prediction_probabilities, correct_roc, test_weight_zero):
+    weights = [1.0] * len(truth_probabilities)
+
+    if test_weight_zero:
+        # Insert a final incorrect, but unweighted prediction
+        truth_probabilities = truth_probabilities + [1.0]
+        # To avoid including additional threshold points in the output (which would be correct, but
+        # difficult to assert), insert one of the existing prediction probability values
+        prediction_probabilities = prediction_probabilities + [prediction_probabilities[0]]
+        weights = weights + [0.0]
+
+    roc = metrics.roc(
+        pd.Series(truth_probabilities), pd.Series(prediction_probabilities), pd.Series(weights)
+    )
 
     assert roc == correct_roc
