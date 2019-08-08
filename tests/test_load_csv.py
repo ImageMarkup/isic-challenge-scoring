@@ -72,8 +72,8 @@ def test_parse_csv(categories):
     prediction_file_stream = io.StringIO(
         'image,MEL,NV,BCC,AKIEC,BKL,DF,VASC\n'
         'ISIC_0000123,1.0,0.0,0.0,0.0,0.0,0.0,0.0\n'
-        'ISIC_0000124,0.0,1.0,0.0,0.0,0.0,0.0,0.0\n'
-        'ISIC_0000125,0.0,0.0,1.0,0.0,0.0,0.0,0.0\n'
+        'ISIC_0000124.jpg,0.0,1.0,0.0,0.0,0.0,0.0,0.0\n'
+        'ISIC_0000125.JPG,0.0,0.0,1.0,0.0,0.0,0.0,0.0\n'
     )
 
     prediction_probabilities = load_csv.parse_csv(prediction_file_stream, categories)
