@@ -37,6 +37,8 @@ def parse_csv(csv_file_stream: TextIO, categories: pd.Index) -> pd.DataFrame:
     if 'image' not in probabilities.columns:
         raise ScoreException('Missing column in CSV: "image".')
 
+    probabilities['image'] = probabilities['image'].str.replace(r'\.jpg$', '', case=False)
+
     probabilities.set_index('image', drop=True, inplace=True, verify_integrity=True)
 
     missing_columns = categories.difference(probabilities.columns)
