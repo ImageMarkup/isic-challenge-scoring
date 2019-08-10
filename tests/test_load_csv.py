@@ -199,6 +199,20 @@ def test_parse_csv_out_of_range_values(categories):
     )
 
 
+def test_parse_csv_duplicate_images(categories):
+    prediction_file_stream = io.StringIO(
+        'image,MEL,NV,BCC,AKIEC,BKL,DF,VASC\n'
+        'ISIC_0000123,1.0,0.0,0.0,0.0,0.0,0.0,0.0\n'
+        'ISIC_0000123,0.0,1.0,0.0,0.0,0.0,0.0,0.0\n'
+        'ISIC_0000124,0.0,0.0,1.0,0.0,0.0,0.0,0.0\n'
+    )
+
+    with pytest.raises(ScoreException) as exc_info:
+        load_csv.parse_csv(prediction_file_stream, categories)
+
+    assert 'Duplicate image rows detected in CSV: [\'ISIC_0000123\'].' == str(exc_info.value)
+
+
 def test_validate_rows_missing_images(categories):
     truth_probabilities = pd.DataFrame(
         [[1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0], [0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0]],

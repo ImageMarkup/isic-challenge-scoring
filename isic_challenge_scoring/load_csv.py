@@ -37,6 +37,12 @@ def parse_csv(csv_file_stream: TextIO, categories: pd.Index) -> pd.DataFrame:
     if 'image' not in probabilities.columns:
         raise ScoreException('Missing column in CSV: "image".')
 
+    images = probabilities['image']
+    duplicate_images = images[images.duplicated()]
+
+    if duplicate_images.any():
+        raise ScoreException(f'Duplicate image rows detected in CSV: {list(duplicate_images)}.')
+
     probabilities['image'] = probabilities['image'].str.replace(r'\.jpg$', '', case=False)
 
     probabilities.set_index('image', drop=True, inplace=True, verify_integrity=True)
