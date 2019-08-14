@@ -29,7 +29,7 @@ def parse_truth_csv(csv_file_stream: TextIO) -> Tuple[pd.DataFrame, pd.DataFrame
 
 def parse_csv(csv_file_stream: TextIO, categories: pd.Index) -> pd.DataFrame:
     try:
-        probabilities = pd.read_csv(csv_file_stream, header=0)
+        probabilities = pd.read_csv(csv_file_stream, header=0, index_col=False)
     except pd.errors.ParserError as e:
         # TODO: Test this case
         raise ScoreException(f'Could not parse CSV: "{str(e)}"')

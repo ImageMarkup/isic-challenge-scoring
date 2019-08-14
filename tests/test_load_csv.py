@@ -125,6 +125,26 @@ def test_parse_csv_misnamed_columns(categories):
     assert 'Missing columns in CSV: [\'DF\', \'NV\'].' == str(exc_info.value)
 
 
+def test_parse_csv_trailing_delimiters(categories):
+    prediction_file_stream = io.StringIO(
+        'image,MEL,NV,BCC,AKIEC,BKL,DF,VASC\n'
+        'ISIC_0000123,1.0,0.0,0.0,0.0,0.0,0.0,0.0,\n'
+        'ISIC_0000124,0.0,1.0,0.0,0.0,0.0,0.0,0.0,\n'
+    )
+
+    # If all data rows have trailing delimiters, 'pd.read_csv' can misinterpret the data without
+    # 'index_col=False'
+    prediction_probabilities = load_csv.parse_csv(prediction_file_stream, categories)
+
+    assert prediction_probabilities.equals(
+        pd.DataFrame(
+            [[1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0], [0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0]],
+            index=['ISIC_0000123', 'ISIC_0000124'],
+            columns=categories,
+        )
+    )
+
+
 def test_parse_csv_reordered_columns(categories):
     prediction_file_stream = io.StringIO(
         'NV,BCC,BKL,DF,AKIEC,MEL,VASC,image\n' '0.0,0.0,0.0,0.0,0.0,1.0,0.0,ISIC_0000123\n'
