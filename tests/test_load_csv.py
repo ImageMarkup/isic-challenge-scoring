@@ -125,6 +125,26 @@ def test_parse_csv_misnamed_columns(categories):
     assert 'Missing columns in CSV: [\'DF\', \'NV\'].' == str(exc_info.value)
 
 
+def test_parse_csv_trailing_delimiters(categories):
+    prediction_file_stream = io.StringIO(
+        'image,MEL,NV,BCC,AKIEC,BKL,DF,VASC\n'
+        'ISIC_0000123,1.0,0.0,0.0,0.0,0.0,0.0,0.0,\n'
+        'ISIC_0000124,0.0,1.0,0.0,0.0,0.0,0.0,0.0,\n'
+    )
+
+    # If all data rows have trailing delimiters, 'pd.read_csv' can misinterpret the data without
+    # 'index_col=False'
+    prediction_probabilities = load_csv.parse_csv(prediction_file_stream, categories)
+
+    assert prediction_probabilities.equals(
+        pd.DataFrame(
+            [[1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0], [0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0]],
+            index=['ISIC_0000123', 'ISIC_0000124'],
+            columns=categories,
+        )
+    )
+
+
 def test_parse_csv_reordered_columns(categories):
     prediction_file_stream = io.StringIO(
         'NV,BCC,BKL,DF,AKIEC,MEL,VASC,image\n' '0.0,0.0,0.0,0.0,0.0,1.0,0.0,ISIC_0000123\n'
@@ -148,6 +168,17 @@ def test_parse_csv_missing_index(categories):
         load_csv.parse_csv(prediction_file_stream, categories)
 
     assert 'Missing column in CSV: "image".' == str(exc_info.value)
+
+
+def test_parse_csv_invalid_type_index(categories):
+    prediction_file_stream = io.StringIO(
+        'image,MEL,NV,BCC,AKIEC,BKL,DF,VASC\n' '5,1.0,0.0,0.0,0.0,0.0,0.0,0.0\n'
+    )
+
+    prediction_probabilities = load_csv.parse_csv(prediction_file_stream, categories)
+
+    # Apparent numeric 'image' fields should be coerced to string / NumPy 'O'
+    assert prediction_probabilities.index.is_object()
 
 
 def test_parse_csv_missing_values(categories):
@@ -196,6 +227,23 @@ def test_parse_csv_out_of_range_values(categories):
     assert (
         'Values in CSV are outside the interval [0.0, 1.0] for images: '
         '[\'ISIC_0000123\', \'ISIC_0000125\'].' == str(exc_info.value)
+    )
+
+
+def test_parse_csv_duplicate_images(categories):
+    prediction_file_stream = io.StringIO(
+        'image,MEL,NV,BCC,AKIEC,BKL,DF,VASC\n'
+        'ISIC_0000123,1.0,0.0,0.0,0.0,0.0,0.0,0.0\n'
+        'ISIC_0000123,0.0,1.0,0.0,0.0,0.0,0.0,0.0\n'
+        'ISIC_0000124,0.0,0.0,1.0,0.0,0.0,0.0,0.0\n'
+        'ISIC_0000124.jpg,0.0,0.0,1.0,0.0,0.0,0.0,0.0\n'
+    )
+
+    with pytest.raises(ScoreException) as exc_info:
+        load_csv.parse_csv(prediction_file_stream, categories)
+
+    assert 'Duplicate image rows detected in CSV: [\'ISIC_0000123\', \'ISIC_0000124\'].' == str(
+        exc_info.value
     )
 
 

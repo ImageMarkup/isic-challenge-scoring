@@ -29,7 +29,7 @@ def parse_truth_csv(csv_file_stream: TextIO) -> Tuple[pd.DataFrame, pd.DataFrame
 
 def parse_csv(csv_file_stream: TextIO, categories: pd.Index) -> pd.DataFrame:
     try:
-        probabilities = pd.read_csv(csv_file_stream, header=0)
+        probabilities = pd.read_csv(csv_file_stream, header=0, index_col=False)
     except pd.errors.ParserError as e:
         # TODO: Test this case
         raise ScoreException(f'Could not parse CSV: "{str(e)}"')
@@ -37,17 +37,28 @@ def parse_csv(csv_file_stream: TextIO, categories: pd.Index) -> pd.DataFrame:
     if 'image' not in probabilities.columns:
         raise ScoreException('Missing column in CSV: "image".')
 
+    # Pandas represents strings as 'O' (object)
+    if probabilities['image'].dtype != np.dtype('O'):
+        # Coercing to 'U' (unicode) ensures that even NaN values are converted;
+        # however, the resulting type is still 'O'
+        probabilities['image'] = probabilities['image'].astype(np.dtype('U'))
+
     probabilities['image'] = probabilities['image'].str.replace(r'\.jpg$', '', case=False)
 
-    probabilities.set_index('image', drop=True, inplace=True, verify_integrity=True)
+    if not probabilities['image'].is_unique:
+        duplicate_images = probabilities['image'][probabilities['image'].duplicated()].unique()
+        raise ScoreException(f'Duplicate image rows detected in CSV: {duplicate_images.tolist()}.')
+
+    # The duplicate check is the same as performed by 'verify_integrity'
+    probabilities.set_index('image', drop=True, inplace=True, verify_integrity=False)
 
     missing_columns = categories.difference(probabilities.columns)
     if not missing_columns.empty:
-        raise ScoreException(f'Missing columns in CSV: {list(missing_columns)}.')
+        raise ScoreException(f'Missing columns in CSV: {missing_columns.tolist()}.')
 
     extra_columns = probabilities.columns.difference(categories)
     if not extra_columns.empty:
-        raise ScoreException(f'Extra columns in CSV: {list(extra_columns)}.')
+        raise ScoreException(f'Extra columns in CSV: {extra_columns.tolist()}.')
 
     # sort by the order in categories
     probabilities = probabilities.reindex(categories, axis='columns')
