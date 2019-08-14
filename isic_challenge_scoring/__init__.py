@@ -51,15 +51,15 @@ def unzip_all(input_path: pathlib.Path) -> Tuple[pathlib.Path, tempfile.Temporar
     input_dirs = [f for f in input_path.iterdir() if f.is_dir()]
 
     if len(input_files) > 1:
-        raise ScoreException('Multiple files submitted. Exactly one ZIP file should be submitted.')
+        raise Exception('Multiple files submitted. Exactly one ZIP file should be submitted.')
     elif len(input_files) < 1:
-        raise ScoreException('No files submitted. Exactly one ZIP file should be submitted.')
+        raise Exception('No files submitted. Exactly one ZIP file should be submitted.')
 
     input_file = input_files[0]
 
     if input_dirs:
         # Expect only files
-        raise ScoreException('Internal error: unexpected directory found.')
+        raise Exception(f'Unexpected directories found: {sorted(map(str, input_dirs))}')
 
     output_temp_dir = tempfile.TemporaryDirectory()
     output_path = pathlib.Path(output_temp_dir.name)
@@ -85,7 +85,7 @@ def score_all(truth_input_path: pathlib.Path, prediction_input_path: pathlib.Pat
     elif task_num == 3:
         score = task3.score
     else:
-        raise ScoreException(f'Internal error: unknown ground truth phase number: {task_num}.')
+        raise Exception(f'Unknown ground truth phase number: {task_num}.')
     scores: ScoresType = score(truth_path, prediction_path)
 
     # Output in Covalic format

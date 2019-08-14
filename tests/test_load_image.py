@@ -4,7 +4,6 @@ import pathlib
 import pytest
 
 from isic_challenge_scoring import load_image
-from isic_challenge_scoring.types import ScoreException
 
 
 @pytest.mark.parametrize(
@@ -29,5 +28,5 @@ def test_parse_image_id_valid(truth_file, correct_image_id, correct_attribute_id
 def test_parse_image_id_invalid(truth_file):
     image_pair = load_image.ImagePair(truth_file=pathlib.Path(truth_file))
 
-    with pytest.raises(ScoreException):
+    with pytest.raises(Exception):
         image_pair.parse_image_id()
