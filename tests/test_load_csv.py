@@ -236,12 +236,15 @@ def test_parse_csv_duplicate_images(categories):
         'ISIC_0000123,1.0,0.0,0.0,0.0,0.0,0.0,0.0\n'
         'ISIC_0000123,0.0,1.0,0.0,0.0,0.0,0.0,0.0\n'
         'ISIC_0000124,0.0,0.0,1.0,0.0,0.0,0.0,0.0\n'
+        'ISIC_0000124.jpg,0.0,0.0,1.0,0.0,0.0,0.0,0.0\n'
     )
 
     with pytest.raises(ScoreException) as exc_info:
         load_csv.parse_csv(prediction_file_stream, categories)
 
-    assert 'Duplicate image rows detected in CSV: [\'ISIC_0000123\'].' == str(exc_info.value)
+    assert 'Duplicate image rows detected in CSV: [\'ISIC_0000123\', \'ISIC_0000124\'].' == str(
+        exc_info.value
+    )
 
 
 def test_validate_rows_missing_images(categories):
