@@ -48,11 +48,11 @@ def parse_csv(csv_file_stream: TextIO, categories: pd.Index) -> pd.DataFrame:
 
     missing_columns = categories.difference(probabilities.columns)
     if not missing_columns.empty:
-        raise ScoreException(f'Missing columns in CSV: {list(missing_columns)}.')
+        raise ScoreException(f'Missing columns in CSV: {missing_columns.tolist()}.')
 
     extra_columns = probabilities.columns.difference(categories)
     if not extra_columns.empty:
-        raise ScoreException(f'Extra columns in CSV: {list(extra_columns)}.')
+        raise ScoreException(f'Extra columns in CSV: {extra_columns.tolist()}.')
 
     # sort by the order in categories
     probabilities = probabilities.reindex(categories, axis='columns')
