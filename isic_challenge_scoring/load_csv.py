@@ -37,6 +37,12 @@ def parse_csv(csv_file_stream: TextIO, categories: pd.Index) -> pd.DataFrame:
     if 'image' not in probabilities.columns:
         raise ScoreException('Missing column in CSV: "image".')
 
+    # Pandas represents strings as 'O' (object)
+    if probabilities['image'].dtype != np.dtype('O'):
+        # Coercing to 'U' (unicode) ensures that even NaN values are converted;
+        # however, the resulting type is still 'O'
+        probabilities['image'] = probabilities['image'].astype(np.dtype('U'))
+
     probabilities['image'] = probabilities['image'].str.replace(r'\.jpg$', '', case=False)
 
     if not probabilities['image'].is_unique:
