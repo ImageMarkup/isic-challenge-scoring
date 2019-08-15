@@ -9,7 +9,7 @@ import pandas as pd
 from isic_challenge_scoring import metrics
 from isic_challenge_scoring.confusion import create_binary_confusion_matrix
 from isic_challenge_scoring.load_csv import parse_csv, parse_truth_csv, sort_rows, validate_rows
-from isic_challenge_scoring.types import ScoreException, ScoresType
+from isic_challenge_scoring.types import ScoresType
 
 
 def compute_metrics(truth_file_stream, prediction_file_stream) -> ScoresType:
@@ -90,27 +90,10 @@ def compute_metrics(truth_file_stream, prediction_file_stream) -> ScoresType:
     return scores
 
 
-def score(truth_path: pathlib.Path, prediction_path: pathlib.Path) -> ScoresType:
-    for truth_file in truth_path.iterdir():
-        if re.match(r'^ISIC.*GroundTruth\.csv$', truth_file.name):
-            break
-    else:
-        raise Exception('Truth file could not be found.')
-
-    prediction_files = [
-        prediction_file
-        for prediction_file in prediction_path.iterdir()
-        if prediction_file.suffix.lower() == '.csv'
-    ]
-    if len(prediction_files) > 1:
-        raise ScoreException(
-            'Multiple prediction files submitted. Exactly one CSV file should be submitted.'
-        )
-    elif len(prediction_files) < 1:
-        raise ScoreException(
-            'No prediction files submitted. Exactly one CSV file should be submitted.'
-        )
-    prediction_file = prediction_files[0]
+def score(truth_file: pathlib.Path, prediction_file: pathlib.Path) -> ScoresType:
+    if not re.match(r'^ISIC.*GroundTruth\.csv$', truth_file.name):
+        # TODO: Change to warning
+        raise Exception('Invalid truth file name.')
 
     with truth_file.open('rb') as truth_file_stream, prediction_file.open(
         'rb'
