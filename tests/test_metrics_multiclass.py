@@ -81,15 +81,15 @@ def test_label_balanced_multiclass_accuracy(
     [
         # This only checks some edge cases for sanity
         # Perfect predictor, tolerant threshold
-        ([0.0, 0.0, 1.0, 1.0], [0.2, 0.4, 0.6, 0.8], 0.0, 1.0),
+        ([0.0, 0.0, 1.0, 1.0], [0.2, 0.4, 0.6, 0.8], 0.1, 1.0),
         # Perfect predictor, stringent threshold
         ([0.0, 0.0, 1.0, 1.0], [0.2, 0.4, 0.6, 0.8], 1.0, 1.0),
         # 50/50 predictor, tolerant threshold
-        ([0.0, 0.0, 1.0, 1.0], [0.3, 0.7, 0.3, 0.7], 0.0, 0.5),
+        ([0.0, 0.0, 1.0, 1.0], [0.3, 0.7, 0.3, 0.7], 0.1, 0.495),
         # 50/50 predictor, stringent threshold
         ([0.0, 0.0, 1.0, 1.0], [0.3, 0.7, 0.3, 0.7], 1.0, 0.0),
         # Wrong predictor, tolerant threshold
-        ([0.0, 0.0, 1.0, 1.0], [0.8, 0.6, 0.4, 0.2], 0.0, 0.0),
+        ([0.0, 0.0, 1.0, 1.0], [0.8, 0.6, 0.4, 0.2], 0.1, 0.0),
         # Wrong predictor, stringent threshold
         ([0.0, 0.0, 1.0, 1.0], [0.8, 0.6, 0.4, 0.2], 1.0, 0.0),
     ],

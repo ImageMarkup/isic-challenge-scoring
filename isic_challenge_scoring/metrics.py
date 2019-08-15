@@ -45,12 +45,12 @@ def _label_balanced_multiclass_accuracy(
     #     columns=LABELS.map(lambda label: f'predicted_{label}')
     # )
 
-    true_positive_counts = pd.Series(confusion_matrix.diagonal(), index=categories)
+    tp_counts = pd.Series(confusion_matrix.diagonal(), index=categories)
 
     # These are equal to rows of the confusion matrix
     true_label_frequencies = _get_frequencies(truth_labels, weights, categories)
 
-    balanced_accuracy = true_positive_counts.divide(true_label_frequencies).mean()
+    balanced_accuracy = tp_counts.divide(true_label_frequencies).mean()
     return balanced_accuracy
 
 
@@ -150,37 +150,56 @@ def auc_above_sensitivity(
     weights: pd.Series,
     sensitivity_threshold: float,
 ) -> float:
+    if not (0 < sensitivity_threshold <= 1.0):
+        raise Exception(f'Out of bounds sensitivity_threshold: {sensitivity_threshold}.')
+
     # Get the ROC curve points
     # TODO: We must have both some true and false instances in truthProbabilities
-    false_positive_rates, true_positive_rates, thresholds = sklearn.metrics.roc_curve(
-        truth_probabilities, prediction_probabilities, sample_weight=weights
+    fp_rates, tp_rates, thresholds = sklearn.metrics.roc_curve(
+        truth_probabilities,
+        prediction_probabilities,
+        sample_weight=weights,
+        drop_intermediate=False,
     )
 
-    # Search for the index along the curve where sensitivity_threshold occurs
-    # sensitivity == true_positive_rate
-    threshold_index = np.argmax(true_positive_rates >= sensitivity_threshold)
+    # Calling sklearn.metrics.roc_auc_score with max_fpr always applies the McClish correction,
+    # which is a transform to normalize partial AUC values into the range [0.5, 1] (for a given FPR
+    # interval): http://www.ncbi.nlm.nih.gov/pubmed/2668680
+    # McClish-normalized partial AUC values may be a helpful metric to evaluate on their own,
+    # but they are incompatible with the overall AUC, and SciKit learn (unlike R) does not
+    # provide a flag to return the raw partial AUC, so just compute the desired metric directly
 
-    # Get the corresponding FPR value at the threshold, needed for sklearn
-    fpr_threshold = false_positive_rates[threshold_index]
-    # Compute the partial AUC over the range [0, fpr_threshold], which is the complement of what we
-    # want (i.e. [fpr_threshold, 1]), but this is all sklearn can provide
-    if fpr_threshold == 0.0:
-        # roc_auc_score's max_fpr requires a value > 0
-        complementary_auc = 0.0
-    else:
-        complementary_auc = sklearn.metrics.roc_auc_score(
-            truth_probabilities,
-            prediction_probabilities,
-            sample_weight=weights,
-            max_fpr=fpr_threshold,
-        )
+    # Search for the index along the curve where sensitivity_threshold (i.e. tp_rate threshold)
+    # occurs
+    # Since tp_rates is ordered, searchsorted provides better performance than np.argmax
+    # Use side='left' to include any following points with exactly the target value
+    threshold_index = tp_rates.searchsorted(sensitivity_threshold, side='left')
 
-    total_auc = sklearn.metrics.roc_auc_score(
-        truth_probabilities, prediction_probabilities, sample_weight=weights
+    # Take only the segment >= the value at threshold_index
+    tp_rates_segment = tp_rates[threshold_index:]
+    fp_rates_segment = fp_rates[threshold_index:]
+
+    # Create an additional ROC point at exactly the threshold value
+    tp_rate_threshold = sensitivity_threshold
+    # It will be the case that fp_rate_threshold <= tp_rates[threshold_index]
+    # Since tp_rates may have repeated values (which is disallowed by np.interp), use a 2-value
+    # segment directly around the threshold value
+    # If fp_rate_threshold < tp_rates[threshold_index], the 2-value segment needs to start from the
+    # location at threshold_index-1, so that it straddles fp_rate_threshold
+    # Even if fp_rate_threshold == tp_rates[threshold_index], a 2-value segment starting before
+    # threshold_index is guaranteed to have no duplicates, as threshold_index is the left
+    # side of any series of duplicates (since it was found with searchsorted(..., side='left'))
+    fp_rate_threshold = np.interp(
+        tp_rate_threshold,
+        tp_rates[threshold_index - 1 : threshold_index + 1],
+        fp_rates[threshold_index - 1 : threshold_index + 1],
     )
 
-    # complementary_auc is the left / lower area, and we want the right / upper area
-    partial_auc = total_auc - complementary_auc
+    # Prepend the point to the segment
+    tp_rates_segment = np.insert(tp_rates_segment, 0, tp_rate_threshold)
+    fp_rates_segment = np.insert(fp_rates_segment, 0, fp_rate_threshold)
+
+    partial_auc = sklearn.metrics.auc(fp_rates_segment, tp_rates_segment)
     return partial_auc
 
 
