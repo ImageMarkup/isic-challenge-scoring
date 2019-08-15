@@ -22,9 +22,7 @@ class ImagePair:
     def parse_image_id(self):
         image_id_match: Match[str] = re.search(r'ISIC_[0-9]{7}', self.truth_file.stem)
         if not image_id_match:
-            raise ScoreException(
-                f'Internal error: unknown ground truth file: {self.truth_file.name}.'
-            )
+            raise Exception(f'Unknown ground truth file: {self.truth_file.name}.')
         self.image_id = image_id_match.group(0)
 
         attribute_id_match: Match[str] = re.search(r'attribute_([a-z_]+)', self.truth_file.stem)

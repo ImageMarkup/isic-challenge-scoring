@@ -95,7 +95,7 @@ def score(truth_path: pathlib.Path, prediction_path: pathlib.Path) -> ScoresType
         if re.match(r'^ISIC.*GroundTruth\.csv$', truth_file.name):
             break
     else:
-        raise ScoreException('Internal error, truth file could not be found.')
+        raise Exception('Truth file could not be found.')
 
     prediction_files = [
         prediction_file
