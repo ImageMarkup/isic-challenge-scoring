@@ -1,45 +1,33 @@
 # -*- coding: utf-8 -*-
-import pathlib
-import sys
+import json
 
 import click
 import click_pathlib
 
-from isic_challenge_scoring import score_all
+from isic_challenge_scoring import task3
 from isic_challenge_scoring.types import ScoreException
 
 
 DirectoryPath = click_pathlib.Path(exists=True, file_okay=False, dir_okay=True, readable=True)
+FilePath = click_pathlib.Path(exists=True, file_okay=True, dir_okay=False, readable=True)
 
 
-@click.command(name='isic-challenge-scoring', help='ISIC Challenge submission scoring')
-@click.option(
-    'truth_input_path',
-    '--groundtruth',
-    required=True,
-    type=DirectoryPath,
-    help='path to the ground truth directory',
-)
-@click.option(
-    'prediction_input_path',
-    '--submission',
-    required=True,
-    type=DirectoryPath,
-    help='path to the submission directory',
-)
-@click.option(
-    'task_num',
-    '--task',
-    required=True,
-    type=click.IntRange(1, 3),
-    help='challenge task number (1, 2, or 3)',
-)
-def main(truth_input_path: pathlib.Path, prediction_input_path: pathlib.Path, task_num: int):
+@click.group(name='isic-challenge-scoring', help='ISIC Challenge submission scoring')
+def cli():
+    pass
+
+
+@cli.command()
+@click.argument('truth_file', type=FilePath)
+@click.argument('prediction_file', type=FilePath)
+def classification(truth_file, prediction_file):
     try:
-        score_all(truth_input_path, prediction_input_path, task_num)
+        scores = task3.score(truth_file, prediction_file)
     except ScoreException as e:
-        print(f'Failed: {str(e)}', file=sys.stderr)
-        sys.exit(1)
+        raise click.ClickException(str(e))
+    else:
+        click.echo(json.dumps(scores, indent=2))
 
 
-main()
+if __name__ == '__main__':
+    cli()

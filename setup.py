@@ -28,7 +28,7 @@ with (pathlib.Path(__file__).parent / 'README.md').open() as description_stream:
 
 
 setup(
-    name='isic_challenge_scoring',
+    name='isic-challenge-scoring',
     description='Submission scoring for the ISIC Challenge',
     long_description=long_description,
     long_description_content_type='text/markdown',
@@ -48,4 +48,8 @@ setup(
         'scikit-learn',
     ],
     use_scm_version={'local_scheme': prerelease_local_scheme},
+    entry_points='''
+        [console_scripts]
+        isic-challenge-scoring=isic_challenge_scoring.__main__:cli
+    ''',
 )
