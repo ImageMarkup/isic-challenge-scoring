@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 from typing import TextIO, Tuple
 
 import numpy as np

@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 import pytest
 
 from isic_challenge_scoring import task2
