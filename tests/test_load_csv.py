@@ -90,6 +90,19 @@ def test_parse_csv(categories):
     )
 
 
+def test_parse_csv_no_newlines(categories):
+    prediction_file_stream = io.StringIO('image,MEL,NV,BCC,AKIEC,BKL,DF,VASC\n')
+    for i in range(10000):
+        # Simulate many long floats
+        prediction_file_stream.write(f'{i:030f},')
+    prediction_file_stream.seek(0)
+
+    with pytest.raises(ScoreException) as exc_info:
+        load_csv.parse_csv(prediction_file_stream, categories)
+
+    assert 'No newlines detected in CSV.' == str(exc_info.value)
+
+
 def test_parse_csv_missing_columns(categories):
     prediction_file_stream = io.StringIO(
         'image,MEL,BCC,AKIEC,BKL,DF\n' 'ISIC_0000123,1.0,0.0,0.0,0.0,0.0\n'
