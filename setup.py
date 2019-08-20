@@ -48,8 +48,8 @@ setup(
         'scikit-learn',
     ],
     use_scm_version={'local_scheme': prerelease_local_scheme},
-    entry_points='''
+    entry_points="""
         [console_scripts]
         isic-challenge-scoring=isic_challenge_scoring.__main__:cli
-    ''',
+    """,
 )
