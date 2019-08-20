@@ -113,6 +113,15 @@ def test_parse_csv_empty(categories):
     assert 'Could not parse CSV: "No columns to parse from file".' == str(exc_info.value)
 
 
+def test_parse_csv_invalid_unicode(categories):
+    prediction_file_stream = io.TextIOWrapper(io.BytesIO(b'\xef'))
+
+    with pytest.raises(ScoreException) as exc_info:
+        load_csv.parse_csv(prediction_file_stream, categories)
+
+    assert 'Could not parse CSV: could not decode file as UTF-8.' == str(exc_info.value)
+
+
 def test_parse_csv_mismatched_headers(categories):
     prediction_file_stream = io.StringIO(
         'image\n'

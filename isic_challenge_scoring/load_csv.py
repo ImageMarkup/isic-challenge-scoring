@@ -27,19 +27,22 @@ def parse_truth_csv(csv_file_stream: TextIO) -> Tuple[pd.DataFrame, pd.DataFrame
 
 
 def parse_csv(csv_file_stream: TextIO, categories: pd.Index) -> pd.DataFrame:
-    if csv_file_stream.read(2000).count('\n') < 2:
-        # Heuristic: if there aren't 2 newlines in the first 2000 characters, it's probably invalid,
-        # and we don't want to hang or crash the parser
-        raise ScoreException('No newlines detected in CSV.')
-    csv_file_stream.seek(0)
-
     try:
-        probabilities = pd.read_csv(csv_file_stream, header=0, index_col=False)
-    except (pd.errors.ParserError, pd.errors.EmptyDataError) as e:
-        # TODO: Test something that generates a ParserError
-        raise ScoreException(f'Could not parse CSV: "{str(e)}".')
-    except IndexError:
-        raise ScoreException('Could not parse CSV: inconsistent number of header columns.')
+        if csv_file_stream.read(2000).count('\n') < 2:
+            # Heuristic: if there aren't 2 newlines in the first 2000 characters, it's probably
+            # invalid, and we don't want to hang or crash the parser
+            raise ScoreException('No newlines detected in CSV.')
+        csv_file_stream.seek(0)
+
+        try:
+            probabilities = pd.read_csv(csv_file_stream, header=0, index_col=False)
+        except (pd.errors.ParserError, pd.errors.EmptyDataError) as e:
+            # TODO: Test something that generates a ParserError
+            raise ScoreException(f'Could not parse CSV: "{str(e)}".')
+        except IndexError:
+            raise ScoreException('Could not parse CSV: inconsistent number of header columns.')
+    except UnicodeDecodeError:
+        raise ScoreException('Could not parse CSV: could not decode file as UTF-8.')
 
     if 'image' not in probabilities.columns:
         raise ScoreException('Missing column in CSV: "image".')
