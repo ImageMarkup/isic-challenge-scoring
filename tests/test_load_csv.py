@@ -113,6 +113,21 @@ def test_parse_csv_empty(categories):
     assert 'Could not parse CSV: "No columns to parse from file".' == str(exc_info.value)
 
 
+def test_parse_csv_mismatched_headers(categories):
+    prediction_file_stream = io.StringIO(
+        'image\n'
+        'ISIC_0000123,1.0,0.0,0.0,0.0,0.0,0.0,0.0\n'
+        'ISIC_0000124,0.0,1.0,0.0,0.0,0.0,0.0,0.0\n'
+        'ISIC_0000125,0.0,0.0,1.0,0.0,0.0,0.0,0.0\n'
+    )
+
+    # Too few header columns causes Pandas to raise an IndexError when reading
+    with pytest.raises(ScoreException) as exc_info:
+        load_csv.parse_csv(prediction_file_stream, categories)
+
+    assert 'Could not parse CSV: mismatched header row.' == str(exc_info.value)
+
+
 def test_parse_csv_missing_columns(categories):
     prediction_file_stream = io.StringIO(
         'image,MEL,BCC,AKIEC,BKL,DF\n' 'ISIC_0000123,1.0,0.0,0.0,0.0,0.0\n'
