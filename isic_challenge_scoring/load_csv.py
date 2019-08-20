@@ -39,7 +39,7 @@ def parse_csv(csv_file_stream: TextIO, categories: pd.Index) -> pd.DataFrame:
         # TODO: Test something that generates a ParserError
         raise ScoreException(f'Could not parse CSV: "{str(e)}".')
     except IndexError:
-        raise ScoreException('Could not parse CSV: mismatched header row.')
+        raise ScoreException('Could not parse CSV: inconsistent number of header columns.')
 
     if 'image' not in probabilities.columns:
         raise ScoreException('Missing column in CSV: "image".')

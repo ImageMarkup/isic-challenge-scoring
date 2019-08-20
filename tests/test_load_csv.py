@@ -125,7 +125,7 @@ def test_parse_csv_mismatched_headers(categories):
     with pytest.raises(ScoreException) as exc_info:
         load_csv.parse_csv(prediction_file_stream, categories)
 
-    assert 'Could not parse CSV: mismatched header row.' == str(exc_info.value)
+    assert 'Could not parse CSV: inconsistent number of header columns.' == str(exc_info.value)
 
 
 def test_parse_csv_missing_columns(categories):
