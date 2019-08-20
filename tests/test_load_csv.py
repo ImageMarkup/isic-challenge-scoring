@@ -103,6 +103,16 @@ def test_parse_csv_no_newlines(categories):
     assert 'No newlines detected in CSV.' == str(exc_info.value)
 
 
+def test_parse_csv_empty(categories):
+    # Provide just enough to evade the newline check, but raise an EmptyDataError
+    prediction_file_stream = io.StringIO('\n\n')
+
+    with pytest.raises(ScoreException) as exc_info:
+        load_csv.parse_csv(prediction_file_stream, categories)
+
+    assert 'Could not parse CSV: "No columns to parse from file".' == str(exc_info.value)
+
+
 def test_parse_csv_missing_columns(categories):
     prediction_file_stream = io.StringIO(
         'image,MEL,BCC,AKIEC,BKL,DF\n' 'ISIC_0000123,1.0,0.0,0.0,0.0,0.0\n'

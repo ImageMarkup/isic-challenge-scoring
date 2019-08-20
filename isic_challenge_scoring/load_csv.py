@@ -35,9 +35,9 @@ def parse_csv(csv_file_stream: TextIO, categories: pd.Index) -> pd.DataFrame:
 
     try:
         probabilities = pd.read_csv(csv_file_stream, header=0, index_col=False)
-    except pd.errors.ParserError as e:
-        # TODO: Test this case
-        raise ScoreException(f'Could not parse CSV: "{str(e)}"')
+    except (pd.errors.ParserError, pd.errors.EmptyDataError) as e:
+        # TODO: Test something that generates a ParserError
+        raise ScoreException(f'Could not parse CSV: "{str(e)}".')
 
     if 'image' not in probabilities.columns:
         raise ScoreException('Missing column in CSV: "image".')
