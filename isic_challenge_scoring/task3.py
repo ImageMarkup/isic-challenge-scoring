@@ -1,6 +1,6 @@
 import pathlib
 import re
-from typing import KeysView
+from typing import KeysView, TextIO
 
 import numpy as np
 import pandas as pd
@@ -11,7 +11,7 @@ from isic_challenge_scoring.load_csv import parse_csv, parse_truth_csv, sort_row
 from isic_challenge_scoring.types import ScoresType
 
 
-def compute_metrics(truth_file_stream, prediction_file_stream) -> ScoresType:
+def compute_metrics(truth_file_stream: TextIO, prediction_file_stream: TextIO) -> ScoresType:
     truth_probabilities, truth_weights = parse_truth_csv(truth_file_stream)
     categories = truth_probabilities.columns
     prediction_probabilities = parse_csv(prediction_file_stream, categories)
@@ -94,7 +94,7 @@ def score(truth_file: pathlib.Path, prediction_file: pathlib.Path) -> ScoresType
         # TODO: Change to warning
         raise Exception('Invalid truth file name.')
 
-    with truth_file.open('rb') as truth_file_stream, prediction_file.open(
-        'rb'
+    with truth_file.open('r') as truth_file_stream, prediction_file.open(
+        'r'
     ) as prediction_file_stream:
         return compute_metrics(truth_file_stream, prediction_file_stream)

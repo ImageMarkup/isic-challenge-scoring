@@ -90,6 +90,44 @@ def test_parse_csv(categories):
     )
 
 
+def test_parse_csv_no_newlines(categories):
+    prediction_file_stream = io.StringIO('image,MEL,NV,BCC,AKIEC,BKL,DF,VASC\n')
+    for i in range(10000):
+        # Simulate many long floats
+        prediction_file_stream.write(f'{i:030f},')
+    prediction_file_stream.seek(0)
+
+    with pytest.raises(ScoreException) as exc_info:
+        load_csv.parse_csv(prediction_file_stream, categories)
+
+    assert 'No newlines detected in CSV.' == str(exc_info.value)
+
+
+def test_parse_csv_empty(categories):
+    # Provide just enough to evade the newline check, but raise an EmptyDataError
+    prediction_file_stream = io.StringIO('\n\n')
+
+    with pytest.raises(ScoreException) as exc_info:
+        load_csv.parse_csv(prediction_file_stream, categories)
+
+    assert 'Could not parse CSV: "No columns to parse from file".' == str(exc_info.value)
+
+
+def test_parse_csv_mismatched_headers(categories):
+    prediction_file_stream = io.StringIO(
+        'image\n'
+        'ISIC_0000123,1.0,0.0,0.0,0.0,0.0,0.0,0.0\n'
+        'ISIC_0000124,0.0,1.0,0.0,0.0,0.0,0.0,0.0\n'
+        'ISIC_0000125,0.0,0.0,1.0,0.0,0.0,0.0,0.0\n'
+    )
+
+    # Too few header columns causes Pandas to raise an IndexError when reading
+    with pytest.raises(ScoreException) as exc_info:
+        load_csv.parse_csv(prediction_file_stream, categories)
+
+    assert 'Could not parse CSV: inconsistent number of header columns.' == str(exc_info.value)
+
+
 def test_parse_csv_missing_columns(categories):
     prediction_file_stream = io.StringIO(
         'image,MEL,BCC,AKIEC,BKL,DF\n' 'ISIC_0000123,1.0,0.0,0.0,0.0,0.0\n'
