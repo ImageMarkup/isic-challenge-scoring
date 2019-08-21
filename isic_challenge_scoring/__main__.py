@@ -1,4 +1,5 @@
 import json
+import pathlib
 
 import click
 import click_pathlib
@@ -12,14 +13,14 @@ FilePath = click_pathlib.Path(exists=True, file_okay=True, dir_okay=False, reada
 
 
 @click.group(name='isic-challenge-scoring', help='ISIC Challenge submission scoring')
-def cli():
+def cli() -> None:
     pass
 
 
 @cli.command()
 @click.argument('truth_file', type=FilePath)
 @click.argument('prediction_file', type=FilePath)
-def classification(truth_file, prediction_file):
+def classification(truth_file: pathlib.Path, prediction_file: pathlib.Path) -> None:
     try:
         scores = task3.score(truth_file, prediction_file)
     except ScoreException as e:

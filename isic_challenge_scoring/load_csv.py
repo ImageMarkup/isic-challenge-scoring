@@ -100,7 +100,9 @@ def parse_csv(csv_file_stream: TextIO, categories: pd.Index) -> pd.DataFrame:
     return probabilities
 
 
-def validate_rows(truth_probabilities: pd.DataFrame, prediction_probabilities: pd.DataFrame):
+def validate_rows(
+    truth_probabilities: pd.DataFrame, prediction_probabilities: pd.DataFrame
+) -> None:
     """
     Ensure prediction rows correspond to truth rows.
 
@@ -116,6 +118,6 @@ def validate_rows(truth_probabilities: pd.DataFrame, prediction_probabilities: p
         raise ScoreException(f'Extra images in CSV: {extra_images.tolist()}.')
 
 
-def sort_rows(probabilities: pd.DataFrame):
+def sort_rows(probabilities: pd.DataFrame) -> None:
     """Sort rows by labels, in-place."""
     probabilities.sort_index(axis='rows', inplace=True)
