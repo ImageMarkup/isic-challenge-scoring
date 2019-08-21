@@ -18,17 +18,19 @@ class ImagePair:
     image_id: str = field(init=False)
     attribute_id: Optional[str] = field(default=None, init=False)
 
-    def parse_image_id(self):
-        image_id_match: Match[str] = re.search(r'ISIC_[0-9]{7}', self.truth_file.stem)
+    def parse_image_id(self) -> None:
+        image_id_match: Optional[Match[str]] = re.search(r'ISIC_[0-9]{7}', self.truth_file.stem)
         if not image_id_match:
             raise Exception(f'Unknown ground truth file: {self.truth_file.name}.')
         self.image_id = image_id_match.group(0)
 
-        attribute_id_match: Match[str] = re.search(r'attribute_([a-z_]+)', self.truth_file.stem)
+        attribute_id_match: Optional[Match[str]] = re.search(
+            r'attribute_([a-z_]+)', self.truth_file.stem
+        )
         if attribute_id_match:
             self.attribute_id = attribute_id_match.group(1)
 
-    def find_prediction_file(self, prediction_path: pathlib.Path):
+    def find_prediction_file(self, prediction_path: pathlib.Path) -> None:
         image_number: str = self.image_id.split('_')[1]
 
         if not self.attribute_id:
@@ -52,11 +54,11 @@ class ImagePair:
 
         self.prediction_file = prediction_file_candidates[0]
 
-    def load_truth_image(self):
+    def load_truth_image(self) -> None:
         self.truth_image = load_segmentation_image(self.truth_file)
         self.truth_image = assert_binary_image(self.truth_image, self.truth_file)
 
-    def load_prediction_image(self):
+    def load_prediction_image(self) -> None:
         self.prediction_image = load_segmentation_image(self.prediction_file)
         if self.prediction_image.shape[0:2] != self.truth_image.shape[0:2]:
             raise ScoreException(
@@ -85,7 +87,7 @@ def load_segmentation_image(image_path: pathlib.Path) -> np.ndarray:
     return image
 
 
-def assert_binary_image(image: np.ndarray, image_path: pathlib.Path):
+def assert_binary_image(image: np.ndarray, image_path: pathlib.Path) -> np.ndarray:
     """Ensure a NumPy array image is binary, correcting if possible."""
     image_values = set(np.unique(image))
     if image_values <= {0, 255}:

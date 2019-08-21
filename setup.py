@@ -4,7 +4,7 @@ import pathlib
 from setuptools import find_packages, setup
 
 
-def prerelease_local_scheme(version):
+def prerelease_local_scheme(version) -> str:
     """
     Return local scheme version unless building on master in CircleCI.
 

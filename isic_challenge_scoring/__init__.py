@@ -12,7 +12,7 @@ from isic_challenge_scoring import task3
 from isic_challenge_scoring.types import ScoreException, ScoresType
 
 
-def extract_zip(zip_path: pathlib.Path, output_path: pathlib.Path, flatten: bool = True):
+def extract_zip(zip_path: pathlib.Path, output_path: pathlib.Path, flatten: bool = True) -> None:
     """Extract a zip file, optionally flattening it into a single directory."""
     try:
         with zipfile.ZipFile(zip_path) as zf:
@@ -71,7 +71,9 @@ def unzip_all(input_path: pathlib.Path) -> Tuple[pathlib.Path, tempfile.Temporar
     return output_path, output_temp_dir
 
 
-def score_all(truth_input_path: pathlib.Path, prediction_input_path: pathlib.Path, task_num: int):
+def score_all(
+    truth_input_path: pathlib.Path, prediction_input_path: pathlib.Path, task_num: int
+) -> None:
     # Unzip zip files contained in the input folders
     truth_path, truth_temp_dir = unzip_all(truth_input_path)
 
