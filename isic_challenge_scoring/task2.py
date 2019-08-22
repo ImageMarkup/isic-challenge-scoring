@@ -1,4 +1,5 @@
 import pathlib
+from typing import cast, Dict
 
 import pandas as pd
 
@@ -8,16 +9,15 @@ from isic_challenge_scoring.confusion import (
     normalize_confusion_matrix,
 )
 from isic_challenge_scoring.load_image import iter_image_pairs
-from isic_challenge_scoring.types import ScoresType
 
 
-def score(truth_path: pathlib.Path, prediction_path: pathlib.Path) -> ScoresType:
+def score(truth_path: pathlib.Path, prediction_path: pathlib.Path):
     confusion_matrics = pd.DataFrame(
         [
             create_binary_confusion_matrix(
                 truth_binary_values=image_pair.truth_image > 128,
                 prediction_binary_values=image_pair.prediction_image > 128,
-                name=(image_pair.attribute_id, image_pair.image_id),
+                name=(cast(str, image_pair.attribute_id), image_pair.image_id),
             )
             for image_pair in iter_image_pairs(truth_path, prediction_path)
         ]
@@ -31,7 +31,7 @@ def score(truth_path: pathlib.Path, prediction_path: pathlib.Path) -> ScoresType
         normalize_confusion_matrix, axis='columns'
     )
 
-    scores: ScoresType = {}
+    scores: Dict = {}
     for attribute in sorted(confusion_matrics.index.unique('attribute_id')):
         attribute_confusion_matrics = normalized_confusion_matrics.loc(axis=0)[attribute, :]
         sum_attribute_confusion_matrics = attribute_confusion_matrics.sum(axis='index')
@@ -47,6 +47,6 @@ def score(truth_path: pathlib.Path, prediction_path: pathlib.Path) -> ScoresType
         'dice': metrics.binary_dice(sum_confusion_matrix),
     }
 
-    score['overall'] = scores['micro_average']['jaccard']
+    scores['overall'] = scores['micro_average']['jaccard']
 
     return scores

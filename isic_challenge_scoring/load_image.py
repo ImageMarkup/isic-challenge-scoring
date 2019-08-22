@@ -1,7 +1,7 @@
 from dataclasses import dataclass, field
 import pathlib
 import re
-from typing import Iterable, Match, Optional
+from typing import Generator, Match, Optional, Set
 
 import numpy as np
 from PIL import Image
@@ -70,7 +70,7 @@ class ImagePair:
 def load_segmentation_image(image_path: pathlib.Path) -> np.ndarray:
     """Load a segmentation image as a NumPy array, given a file path."""
     try:
-        image = Image.open(str(image_path))
+        image: Image = Image.open(str(image_path))
     except Exception as e:
         raise ScoreException(f'Could not decode image "{image_path.name}" because: "{str(e)}"')
 
@@ -89,7 +89,7 @@ def load_segmentation_image(image_path: pathlib.Path) -> np.ndarray:
 
 def assert_binary_image(image: np.ndarray, image_path: pathlib.Path) -> np.ndarray:
     """Ensure a NumPy array image is binary, correcting if possible."""
-    image_values = set(np.unique(image))
+    image_values: Set[int] = set(np.unique(image))
     if image_values <= {0, 255}:
         # Expected values
         pass
@@ -108,7 +108,7 @@ def assert_binary_image(image: np.ndarray, image_path: pathlib.Path) -> np.ndarr
 
 def iter_image_pairs(
     truth_path: pathlib.Path, prediction_path: pathlib.Path
-) -> Iterable[ImagePair]:
+) -> Generator[ImagePair, None, None]:
     for truth_file in sorted(truth_path.iterdir()):
         if truth_file.name in {'ATTRIBUTION.txt', 'LICENSE.txt'}:
             continue

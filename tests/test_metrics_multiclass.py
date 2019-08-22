@@ -185,4 +185,5 @@ def test_roc(truth_probabilities, prediction_probabilities, correct_roc, test_we
         pd.Series(truth_probabilities), pd.Series(prediction_probabilities), pd.Series(weights)
     )
 
-    assert roc == correct_roc
+    correct_roc = pd.DataFrame(correct_roc).set_index('threshold')
+    assert roc.equals(correct_roc)
