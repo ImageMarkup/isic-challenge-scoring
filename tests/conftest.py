@@ -17,13 +17,13 @@ def categories() -> pd.Index:
 
 
 @pytest.fixture
-def task1_truth_path() -> pathlib.Path:
-    return data_dir / 'task1' / 'groundtruth'
+def segmentation_truth_path() -> pathlib.Path:
+    return data_dir / 'segmentation' / 'groundtruth'
 
 
 @pytest.fixture
-def task1_prediction_path() -> pathlib.Path:
-    return data_dir / 'task1' / 'prediction'
+def segmentation_prediction_path() -> pathlib.Path:
+    return data_dir / 'segmentation' / 'prediction'
 
 
 @pytest.fixture
@@ -37,28 +37,28 @@ def task2_prediction_path() -> pathlib.Path:
 
 
 @pytest.fixture
-def task3_truth_file_path() -> pathlib.Path:
-    return data_dir / 'task3' / 'groundtruth' / 'ISIC2018_Task3_GroundTruth.csv'
+def classification_truth_file_path() -> pathlib.Path:
+    return data_dir / 'classification' / 'groundtruth' / 'ISIC2018_Task3_GroundTruth.csv'
 
 
 @pytest.fixture
-def task3_prediction_file_path() -> pathlib.Path:
-    return data_dir / 'task3' / 'prediction' / 'ISIC2018_Task3_prediction.csv'
+def classification_prediction_file_path() -> pathlib.Path:
+    return data_dir / 'classification' / 'prediction' / 'ISIC2018_Task3_prediction.csv'
 
 
 @pytest.fixture
-def real_truth_binary_values(task1_truth_path) -> np.ndarray:
+def real_truth_binary_values(segmentation_truth_path) -> np.ndarray:
     # TODO: don't hardcode this filename
-    truth_file = task1_truth_path / 'ISIC_0000193_segmentation.png'
+    truth_file = segmentation_truth_path / 'ISIC_0000193_segmentation.png'
     truth_image = load_segmentation_image(truth_file)
     binary_truth_values = (truth_image > 128).ravel()
     return binary_truth_values
 
 
 @pytest.fixture
-def real_prediction_binary_values(task1_prediction_path) -> np.ndarray:
+def real_prediction_binary_values(segmentation_prediction_path) -> np.ndarray:
     # TODO: don't hardcode this filename
-    prediction_file = task1_prediction_path / 'ISIC_0000193_segmentation_prediction.png'
+    prediction_file = segmentation_prediction_path / 'ISIC_0000193_segmentation_prediction.png'
     prediction_image = load_segmentation_image(prediction_file)
     binary_prediction_values = (prediction_image > 128).ravel()
     return binary_prediction_values

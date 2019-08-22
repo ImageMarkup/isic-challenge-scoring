@@ -1,4 +1,4 @@
-from typing import Dict, List
+import warnings
 
 import numpy as np
 import pandas as pd
@@ -205,19 +205,24 @@ def auc_above_sensitivity(
 def average_precision(
     truth_probabilities: pd.Series, prediction_probabilities: pd.Series, weights: pd.Series
 ) -> float:
-    ap = sklearn.metrics.average_precision_score(
-        truth_probabilities, prediction_probabilities, sample_weight=weights
-    )
+    with warnings.catch_warnings():
+        # sklearn.metrics.average_precision_score sometimes causes warnings internally, but they
+        # appear to be harmless
+        warnings.filterwarnings(
+            'ignore', category=RuntimeWarning, message=r'^invalid value encountered in true_divide$'
+        )
+        ap = sklearn.metrics.average_precision_score(
+            truth_probabilities, prediction_probabilities, sample_weight=weights
+        )
     return ap
 
 
 def roc(
     truth_probabilities: pd.Series, prediction_probabilities: pd.Series, weights: pd.Series
-) -> List[Dict[str, float]]:
+) -> pd.DataFrame:
     fprs, tprs, thresholds = sklearn.metrics.roc_curve(
         truth_probabilities, prediction_probabilities, sample_weight=weights
     )
-    roc = list(
-        map(lambda fpr, tpr, t: {'fpr': fpr, 'tpr': tpr, 'threshold': t}, fprs, tprs, thresholds)
-    )
+
+    roc = pd.DataFrame({'fpr': fprs, 'tpr': tprs}, index=thresholds, columns=['fpr', 'tpr'])
     return roc
