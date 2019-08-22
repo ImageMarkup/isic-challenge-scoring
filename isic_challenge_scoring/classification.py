@@ -2,7 +2,6 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 import pathlib
-import re
 from typing import cast, Dict, TextIO
 
 import pandas as pd
@@ -169,10 +168,6 @@ class ClassificationScore(Score):
     def from_file(
         cls, truth_file: pathlib.Path, prediction_file: pathlib.Path
     ) -> ClassificationScore:
-        if not re.match(r'^ISIC.*GroundTruth\.csv$', truth_file.name):
-            # TODO: Change to warning
-            raise Exception('Invalid truth file name.')
-
         with truth_file.open('r') as truth_file_stream, prediction_file.open(
             'r'
         ) as prediction_file_stream:
