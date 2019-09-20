@@ -44,9 +44,9 @@ setup(
         'numpy',
         'pandas',
         'pillow',
+        'rdp',
         'scipy',
         'scikit-learn',
-        'rdp'
     ],
     use_scm_version={'local_scheme': prerelease_local_scheme},
     entry_points="""
