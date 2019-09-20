@@ -46,6 +46,7 @@ setup(
         'pillow',
         'scipy',
         'scikit-learn',
+        'rdp'
     ],
     use_scm_version={'local_scheme': prerelease_local_scheme},
     entry_points="""

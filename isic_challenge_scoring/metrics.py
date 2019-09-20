@@ -2,6 +2,7 @@ import warnings
 
 import numpy as np
 import pandas as pd
+from rdp import rdp
 import sklearn.metrics
 
 
@@ -225,4 +226,11 @@ def roc(
     )
 
     roc = pd.DataFrame({'fpr': fprs, 'tpr': tprs}, index=thresholds, columns=['fpr', 'tpr'])
+
+    if len(fprs) > 100:
+        # simplify line using Ramer-Douglas-Peucker algorithm if more than 100 points
+        points = np.vstack((fprs, tprs)).T
+        mask = rdp(points, return_mask=True)
+        roc = roc[mask]
+
     return roc
