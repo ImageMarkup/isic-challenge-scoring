@@ -15,9 +15,8 @@ def prerelease_local_scheme(version) -> str:
     """
     from setuptools_scm.version import get_local_node_and_date
 
-    gitlab_branch = os.getenv('CI_COMMIT_REF_NAME')
     circleci_branch = os.getenv('CIRCLE_BRANCH')
-    if (gitlab_branch or circleci_branch) == 'master':
+    if circleci_branch == 'master':
         return ''
     else:
         return get_local_node_and_date(version)
