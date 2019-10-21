@@ -21,7 +21,11 @@ workflows:
   version: 2
   build:
     jobs:
-      - test
+      - test:
+          filters:
+            # Tags must be explicitly run, and the "release" job requires this
+            tags:
+              only: /.*/
       - release:
           requires:
             - test
