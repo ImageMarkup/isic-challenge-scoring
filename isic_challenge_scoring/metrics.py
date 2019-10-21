@@ -2,6 +2,7 @@ import warnings
 
 import numpy as np
 import pandas as pd
+from rdp import rdp
 import sklearn.metrics
 
 
@@ -225,4 +226,17 @@ def roc(
     )
 
     roc = pd.DataFrame({'fpr': fprs, 'tpr': tprs}, index=thresholds, columns=['fpr', 'tpr'])
+
+    if len(fprs) > 100:
+        # simplify line using Ramer-Douglas-Peucker algorithm if more than 100 points
+        points = np.vstack((fprs, tprs)).T
+        # a simple test reduced a roc curve of 2161 items to
+        # epsilon 0      ... 660
+        # epsilon 0.0001 ... 573
+        # epsilon 0.0005 ... 344
+        # epsilon 0.001  ... 197
+        # epsilon 0.005  ...  17
+        mask = rdp(points, return_mask=True, epsilon=0.001)
+        roc = roc[mask]
+
     return roc

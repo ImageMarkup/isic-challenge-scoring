@@ -44,6 +44,7 @@ setup(
         'numpy',
         'pandas',
         'pillow',
+        'rdp',
         'scipy',
         'scikit-learn',
     ],
