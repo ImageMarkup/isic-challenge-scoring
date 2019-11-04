@@ -144,7 +144,7 @@ class ClassificationScore(Score):
             output['rocs'] = {
                 category: cast(
                     RocDict,
-                    # orient='list' uses ~68% less space to JSON serialize than orient='records'
+                    # orient='list' uses ~68% as much space to JSON serialize than orient='records'
                     roc.reset_index().rename(columns={'index': 'threshold'}).to_dict(orient='list'),
                 )
                 for category, roc in self.rocs.items()
