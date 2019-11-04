@@ -9,7 +9,7 @@ import pandas as pd
 from isic_challenge_scoring import metrics
 from isic_challenge_scoring.confusion import create_binary_confusion_matrix
 from isic_challenge_scoring.load_csv import parse_csv, parse_truth_csv, sort_rows, validate_rows
-from isic_challenge_scoring.types import DataFrameDict, Score, ScoreDict, SeriesDict
+from isic_challenge_scoring.types import DataFrameDict, RocDict, Score, ScoreDict, SeriesDict
 
 
 @dataclass(init=False)
@@ -142,8 +142,11 @@ class ClassificationScore(Score):
         )
         if rocs:
             output['rocs'] = {
-                # TODO: float keys cannot serialize to JSON
-                category: cast(DataFrameDict, roc.to_dict(orient='index'))
+                category: cast(
+                    RocDict,
+                    # orient='list' uses ~68% less space to JSON serialize than orient='records'
+                    roc.reset_index().rename(columns={'index': 'threshold'}).to_dict(orient='list'),
+                )
                 for category, roc in self.rocs.items()
             }
         return output
