@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from typing import Dict, Union
+from typing import Dict, List, Union
 
 
 class ScoreException(Exception):
@@ -8,7 +8,8 @@ class ScoreException(Exception):
 
 SeriesDict = Dict[str, float]
 DataFrameDict = Dict[str, SeriesDict]
-ScoreDict = Dict[str, Union[float, SeriesDict, DataFrameDict, Dict[str, DataFrameDict]]]
+RocDict = Dict[str, List[float]]
+ScoreDict = Dict[str, Union[float, SeriesDict, DataFrameDict, Dict[str, RocDict]]]
 
 
 @dataclass
