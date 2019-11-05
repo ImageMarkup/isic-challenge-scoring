@@ -41,9 +41,6 @@ def unzip_all(input_file: pathlib.Path) -> Tuple[pathlib.Path, tempfile.Temporar
     output_temp_dir = tempfile.TemporaryDirectory()
     output_path = pathlib.Path(output_temp_dir.name)
 
-    if input_file.suffix.lower() != '.zip':
-        raise Exception(f'ZIP file expected at: "{str(input_file)}".')
-
     extract_zip(input_file, output_path)
 
     return output_path, output_temp_dir
