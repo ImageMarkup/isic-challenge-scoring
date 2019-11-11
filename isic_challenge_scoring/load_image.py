@@ -70,7 +70,9 @@ class ImagePair:
 def load_segmentation_image(image_path: pathlib.Path) -> np.ndarray:
     """Load a segmentation image as a NumPy array, given a file path."""
     try:
-        image: Image = Image.open(str(image_path))
+        image: Image = Image.open(image_path)
+        # Ensure the image is loaded, sometimes NumPy fails to get the "__array_interface__"
+        image.load()
     except Exception as e:
         raise ScoreException(f'Could not decode image "{image_path.name}" because: "{str(e)}"')
 
@@ -82,9 +84,8 @@ def load_segmentation_image(image_path: pathlib.Path) -> np.ndarray:
     if image.mode != 'L':
         raise ScoreException(f'Image {image_path.name} is not single-channel (greyscale).')
 
-    image = np.array(image)
-
-    return image
+    np_image = np.asarray(image)
+    return np_image
 
 
 def assert_binary_image(image: np.ndarray, image_path: pathlib.Path) -> np.ndarray:
