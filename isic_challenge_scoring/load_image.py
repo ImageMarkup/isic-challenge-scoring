@@ -56,7 +56,8 @@ class ImagePair:
 
     def load_truth_image(self) -> None:
         self.truth_image = load_segmentation_image(self.truth_file)
-        self.truth_image = assert_binary_image(self.truth_image, self.truth_file)
+        # TODO: Validate all ground truth as binary before upload
+        # self.truth_image = assert_binary_image(self.truth_image, self.truth_file)
 
     def load_prediction_image(self) -> None:
         self.prediction_image = load_segmentation_image(self.prediction_file)
