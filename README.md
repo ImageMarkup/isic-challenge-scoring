@@ -18,7 +18,12 @@ docker pull isic/isic-challenge-scoring:latest
 
 ## Usage
 ### Python
-#### Segmentation (Task 3)
+#### Segmentation (Task 1)
+```bash
+isic-challenge-scoring segmentation /path/to/ISIC_GroundTruth/ /path/to/ISIC_predictions/
+```
+
+#### Classification (Task 3)
 ```bash
 isic-challenge-scoring classification /path/to/ISIC_GroundTruth.csv /path/to/ISIC_prediction.csv
 ```
