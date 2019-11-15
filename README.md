@@ -8,7 +8,7 @@ Automated scoring code for the [ISIC Challenge](http://challenge.isic-archive.co
 ## Installation
 ### Python
 ```bash
-pip install isic_challenge_scoring
+pip install isic-challenge-scoring
 ```
 
 ### Docker
