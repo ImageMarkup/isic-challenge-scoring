@@ -7,6 +7,7 @@ Automated scoring code for the [ISIC Challenge](http://challenge.isic-archive.co
 
 ## Installation
 ### Python
+Python version >= 3.7 is required.
 ```bash
 pip install isic-challenge-scoring
 ```
