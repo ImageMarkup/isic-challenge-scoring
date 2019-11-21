@@ -29,14 +29,14 @@ isic-challenge-scoring classification /path/to/ISIC_GroundTruth.csv /path/to/ISI
 ```
 
 ### Docker
-Since the application requires read access to files, [Docker must mount](https://docs.docker.com/storage/volumes/#use-a-read-only-volume) them within the container.
+Since the application requires read access to files, [Docker must mount](https://docs.docker.com/storage/bind-mounts/#use-a-read-only-bind-mount) them within the container; these examples use `--mount` to [prevent nonexistent host paths from being accidentally created](https://github.com/moby/moby/issues/13121).
 
 #### Segmentation (Task 1)
 ```bash
 docker run \
   --rm \
-  -v /path/to/ISIC_GroundTruth/:/root/gt/:ro \
-  -v /path/to/ISIC_predictions/:/root/pred/:ro \
+  --mount type=bind,source="/path/to/ISIC_GroundTruth/",destination=/root/gt/,readonly \
+  --mount type=bind,source="/path/to/ISIC_predictions/",destination=/root/pred/,readonly \
   isic/isic-challenge-scoring:latest \
   segmentation \
   /root/gt/ \
@@ -47,8 +47,8 @@ docker run \
 ```bash
 docker run \
   --rm \
-  -v /path/to/ISIC_GroundTruth.csv:/root/gt.csv:ro \
-  -v /path/to/ISIC_prediction.csv:/root/pred.csv:ro \
+  --mount type=bind,source="/path/to/ISIC_GroundTruth.csv",destination=/root/gt.csv,readonly \
+  --mount type=bind,source="/path/to/ISIC_prediction.csv",destination=/root/pred.csv,readonly \
   isic/isic-challenge-scoring:latest \
   classification \
   /root/gt.csv \
