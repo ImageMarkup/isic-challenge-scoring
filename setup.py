@@ -43,7 +43,7 @@ setup(
         'click-pathlib',
         'numpy',
         'pandas',
-        'pillow',
+        'pillow>=7',
         'rdp',
         'scipy',
         'scikit-learn',
