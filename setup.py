@@ -36,6 +36,15 @@ setup(
     license='Apache 2.0',
     maintainer='ISIC Archive',
     maintainer_email='admin@isic-archive.com',
+    classifiers=[
+        'Development Status :: 5 - Production/Stable',
+        'License :: OSI Approved :: Apache Software License',
+        'Operating System :: OS Independent',
+        'Programming Language :: Python',
+        'Programming Language :: Python :: 3',
+        'Programming Language :: Python :: 3.7',
+        'Programming Language :: Python :: 3.8',
+    ],
     packages=find_packages(exclude=['tests']),
     python_requires='>=3.7.0',
     install_requires=[
