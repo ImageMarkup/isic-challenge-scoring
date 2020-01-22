@@ -4,7 +4,7 @@ import re
 from typing import Generator, Match, Optional, Set
 
 import numpy as np
-from PIL import Image
+from PIL import Image, UnidentifiedImageError
 
 from isic_challenge_scoring.types import ScoreException
 
@@ -71,21 +71,23 @@ class ImagePair:
 def load_segmentation_image(image_path: pathlib.Path) -> np.ndarray:
     """Load a segmentation image as a NumPy array, given a file path."""
     try:
-        image: Image = Image.open(image_path)
-        # Ensure the image is loaded, sometimes NumPy fails to get the "__array_interface__"
-        image.load()
-    except Exception as e:
-        raise ScoreException(f'Could not decode image "{image_path.name}" because: "{str(e)}"')
+        with Image.open(image_path) as image:
+            # Ensure the image is loaded, sometimes NumPy fails to get the "__array_interface__"
+            image.load()
 
-    if image.mode == '1':
-        # NumPy crashes if a 1-bit (black and white) image is directly
-        # coerced to an array
-        image = image.convert('L')
+            if image.mode == '1':
+                # NumPy crashes if a 1-bit (black and white) image is directly
+                # coerced to an array
+                image = image.convert('L')
 
-    if image.mode != 'L':
-        raise ScoreException(f'Image {image_path.name} is not single-channel (greyscale).')
+            if image.mode != 'L':
+                raise ScoreException(f'Image {image_path.name} is not single-channel (greyscale).')
 
-    np_image = np.asarray(image)
+            np_image = np.asarray(image)
+
+    except UnidentifiedImageError:
+        raise ScoreException(f'Could not decode image "{image_path.name}"')
+
     return np_image
 
 
