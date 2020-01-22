@@ -32,7 +32,7 @@ def test_parse_image_id_invalid(truth_file):
 
 
 @pytest.mark.parametrize(
-    'test_image_name', ['binary.png', 'monochrome.png', 'monochrome_png', 'monochrome.jpg']
+    'test_image_name', ['binary.png', 'monochrome.png', 'monochrome_png_noext', 'monochrome.jpg']
 )
 def test_load_segmentation_image_valid(test_images_path, test_image_name):
     image_path = test_images_path / test_image_name
