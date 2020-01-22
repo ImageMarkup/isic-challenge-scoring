@@ -2,7 +2,7 @@ import pathlib
 
 import pytest
 
-from isic_challenge_scoring import load_image
+from isic_challenge_scoring import load_image, ScoreException
 
 
 @pytest.mark.parametrize(
@@ -29,3 +29,19 @@ def test_parse_image_id_invalid(truth_file):
 
     with pytest.raises(Exception):
         image_pair.parse_image_id()
+
+
+@pytest.mark.parametrize(
+    'test_image_name', ['binary.png', 'monochrome.png', 'monochrome_png', 'monochrome.jpg']
+)
+def test_load_segmentation_image_valid(test_images_path, test_image_name):
+    image_path = test_images_path / test_image_name
+    np_image = load_image.load_segmentation_image(image_path)
+    assert np_image is not None
+
+
+@pytest.mark.parametrize('test_image_name', ['empty.png', 'random_bytes.png', 'rgb.png'])
+def test_load_segmentation_image_invalid(test_images_path, test_image_name):
+    image_path = test_images_path / test_image_name
+    with pytest.raises(ScoreException):
+        load_image.load_segmentation_image(image_path)

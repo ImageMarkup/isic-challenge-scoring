@@ -12,6 +12,11 @@ data_dir = (pathlib.Path(__file__).parent / 'data').resolve()
 
 
 @pytest.fixture
+def test_images_path():
+    return data_dir / 'images'
+
+
+@pytest.fixture
 def categories() -> pd.Index:
     return pd.Index(['MEL', 'NV', 'BCC', 'AKIEC', 'BKL', 'DF', 'VASC'])
 
