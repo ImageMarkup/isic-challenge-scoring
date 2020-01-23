@@ -7,8 +7,13 @@ jobs:
     steps:
       - checkout
       - run:
-          name: Run tests
-          command: tox
+          name: Run linting tests
+          command: tox -e lint
+      - run:
+          name: Run pytest tests
+          command: tox -e py3 -- --junitxml=./test_results/junit.xml
+      - store_test_results:
+          path: ./test_results
   release:
     docker:
       - image: isic/isic-challenge-scoring-test:latest
