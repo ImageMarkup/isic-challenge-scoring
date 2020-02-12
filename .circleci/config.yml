@@ -19,7 +19,7 @@ jobs:
       - image: isic/isic-challenge-scoring-test:latest
     steps:
       - checkout
-      - run:
+      - deploy:
           name: Publish release
           command: tox -e release
 workflows:
