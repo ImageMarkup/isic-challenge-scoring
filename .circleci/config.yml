@@ -10,8 +10,11 @@ jobs:
           name: Run linting tests
           command: tox -e lint
       - run:
+          name: Run typechecking tests
+          command: tox -e type
+      - run:
           name: Run pytest tests
-          command: tox -e py3 -- --junitxml=./test_results/junit.xml
+          command: tox -e test -- --junitxml=./test_results/junit.xml
       - store_test_results:
           path: ./test_results
   release:
