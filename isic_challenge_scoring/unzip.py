@@ -29,7 +29,7 @@ def extract_zip(zip_path: pathlib.Path, output_path: pathlib.Path, flatten: bool
                     with zf.open(member_info) as input_stream, member_output_path.open(
                         'wb'
                     ) as output_stream:
-                        shutil.copyfileobj(input_stream, output_stream)
+                        shutil.copyfileobj(input_stream, output_stream)  # type: ignore
             else:
                 zf.extractall(output_path)
     except zipfile.BadZipfile as e:
