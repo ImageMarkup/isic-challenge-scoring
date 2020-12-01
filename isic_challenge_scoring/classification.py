@@ -1,8 +1,9 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+import enum
 import pathlib
-from typing import Dict, TextIO, cast
+from typing import Dict, Optional, TextIO, cast
 
 import pandas as pd
 
@@ -10,6 +11,12 @@ from isic_challenge_scoring import metrics
 from isic_challenge_scoring.confusion import create_binary_confusion_matrix
 from isic_challenge_scoring.load_csv import parse_csv, parse_truth_csv, sort_rows, validate_rows
 from isic_challenge_scoring.types import DataFrameDict, RocDict, Score, ScoreDict, SeriesDict
+
+
+class ValidationMetric(enum.Enum):
+    BALANCED_ACCURACY = 'balanced_accuracy'
+    AUC = 'auc'
+    AVERAGE_PRECISION = 'ap'
 
 
 @dataclass(init=False)
@@ -24,6 +31,7 @@ class ClassificationScore(Score):
         truth_probabilities: pd.DataFrame,
         prediction_probabilities: pd.DataFrame,
         truth_weights: pd.DataFrame,
+        validation_metric: Optional[ValidationMetric] = None,
     ) -> None:
         categories = truth_probabilities.columns
 
@@ -61,9 +69,36 @@ class ClassificationScore(Score):
         )
 
         self.overall = self.aggregate.at['balanced_accuracy']
-        self.validation = metrics.balanced_multiclass_accuracy(
-            truth_probabilities, prediction_probabilities, truth_weights.validation_weight
-        )
+
+        if validation_metric:
+            if validation_metric == ValidationMetric.BALANCED_ACCURACY:
+                self.validation = metrics.balanced_multiclass_accuracy(
+                    truth_probabilities, prediction_probabilities, truth_weights.validation_weight
+                )
+            elif validation_metric == ValidationMetric.AVERAGE_PRECISION:
+                per_category_ap = pd.Series(
+                    [
+                        metrics.average_precision(
+                            truth_probabilities[category],
+                            prediction_probabilities[category],
+                            truth_weights.validation_weight,
+                        )
+                        for category in categories
+                    ]
+                )
+                self.validation = per_category_ap.mean()
+            elif validation_metric == ValidationMetric.AUC:
+                per_category_auc = pd.Series(
+                    [
+                        metrics.auc(
+                            truth_probabilities[category],
+                            prediction_probabilities[category],
+                            truth_weights.validation_weight,
+                        )
+                        for category in categories
+                    ]
+                )
+                self.validation = per_category_auc.mean()
 
     @staticmethod
     def _category_score(
@@ -153,7 +188,10 @@ class ClassificationScore(Score):
 
     @classmethod
     def from_stream(
-        cls, truth_file_stream: TextIO, prediction_file_stream: TextIO
+        cls,
+        truth_file_stream: TextIO,
+        prediction_file_stream: TextIO,
+        validation_metric: Optional[ValidationMetric] = None,
     ) -> ClassificationScore:
         truth_probabilities, truth_weights = parse_truth_csv(truth_file_stream)
         categories = truth_probabilities.columns
@@ -164,16 +202,21 @@ class ClassificationScore(Score):
         sort_rows(truth_probabilities)
         sort_rows(prediction_probabilities)
 
-        score = cls(truth_probabilities, prediction_probabilities, truth_weights)
+        score = cls(truth_probabilities, prediction_probabilities, truth_weights, validation_metric)
         return score
 
     @classmethod
     def from_file(
-        cls, truth_file: pathlib.Path, prediction_file: pathlib.Path
+        cls,
+        truth_file: pathlib.Path,
+        prediction_file: pathlib.Path,
+        validation_metric: Optional[ValidationMetric] = None,
     ) -> ClassificationScore:
         with truth_file.open('r') as truth_file_stream, prediction_file.open(
             'r'
         ) as prediction_file_stream:
             return cls.from_stream(
-                cast(TextIO, truth_file_stream), cast(TextIO, prediction_file_stream)
+                cast(TextIO, truth_file_stream),
+                cast(TextIO, prediction_file_stream),
+                validation_metric,
             )
