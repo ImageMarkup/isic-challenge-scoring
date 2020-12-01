@@ -32,7 +32,7 @@ class ClassificationScore(Score):
                 self._category_score(
                     truth_probabilities[category],
                     prediction_probabilities[category],
-                    truth_weights,
+                    truth_weights.score_weight,
                     category,
                 )
                 for category in categories
@@ -69,7 +69,7 @@ class ClassificationScore(Score):
     def _category_score(
         truth_category_probabilities: pd.Series,
         prediction_category_probabilities: pd.Series,
-        truth_weights: pd.DataFrame,
+        truth_score_weights: pd.Series,
         category: str,
     ) -> pd.Series:
         truth_binary_values: pd.Series = truth_category_probabilities.gt(0.5)
@@ -78,7 +78,7 @@ class ClassificationScore(Score):
         category_cm = create_binary_confusion_matrix(
             truth_binary_values=truth_binary_values.to_numpy(),
             prediction_binary_values=prediction_binary_values.to_numpy(),
-            weights=truth_weights.score_weight.to_numpy(),
+            weights=truth_score_weights.to_numpy(),
             name=category,
         )
 
@@ -93,18 +93,18 @@ class ClassificationScore(Score):
                 'auc': metrics.auc(
                     truth_category_probabilities,
                     prediction_category_probabilities,
-                    truth_weights.score_weight,
+                    truth_score_weights,
                 ),
                 'auc_sens_80': metrics.auc_above_sensitivity(
                     truth_category_probabilities,
                     prediction_category_probabilities,
-                    truth_weights.score_weight,
+                    truth_score_weights,
                     0.80,
                 ),
                 'ap': metrics.average_precision(
                     truth_category_probabilities,
                     prediction_category_probabilities,
-                    truth_weights.score_weight,
+                    truth_score_weights,
                 ),
             },
             index=[
