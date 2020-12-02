@@ -3,8 +3,8 @@ import pathlib
 import re
 from typing import Generator, Match, Optional, Set
 
-import numpy as np
 from PIL import Image, UnidentifiedImageError
+import numpy as np
 
 from isic_challenge_scoring.types import ScoreException
 

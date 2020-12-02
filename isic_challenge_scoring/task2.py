@@ -1,5 +1,5 @@
 import pathlib
-from typing import cast, Dict
+from typing import Dict, cast
 
 import pandas as pd
 

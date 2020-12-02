@@ -39,13 +39,11 @@ def parse_csv(csv_file_stream: TextIO, categories: pd.Index) -> pd.DataFrame:
         except (pd.errors.ParserError, pd.errors.EmptyDataError) as e:
             # TODO: Test something that generates a ParserError
             raise ScoreException(f'Could not parse CSV: "{str(e)}".')
-        except IndexError:
-            raise ScoreException('Could not parse CSV: inconsistent number of header columns.')
     except UnicodeDecodeError:
         raise ScoreException('Could not parse CSV: could not decode file as UTF-8.')
 
     if 'image' not in probabilities.columns:
-        raise ScoreException('Missing column in CSV: "image".')
+        raise ScoreException("Missing column in CSV: 'image'.")
 
     # Pandas represents strings as 'O' (object)
     if probabilities['image'].dtype != np.dtype('O'):

@@ -2,7 +2,7 @@ import pathlib
 
 import pytest
 
-from isic_challenge_scoring import load_image, ScoreException
+from isic_challenge_scoring import ScoreException, load_image
 
 
 @pytest.mark.parametrize(

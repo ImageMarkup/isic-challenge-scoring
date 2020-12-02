@@ -9,7 +9,6 @@ from isic_challenge_scoring.classification import ClassificationScore
 from isic_challenge_scoring.segmentation import SegmentationScore
 from isic_challenge_scoring.types import ScoreException
 
-
 DirectoryPath = click_pathlib.Path(exists=True, file_okay=False, dir_okay=True, readable=True)
 FilePath = click_pathlib.Path(exists=True, file_okay=True, dir_okay=False, readable=True)
 

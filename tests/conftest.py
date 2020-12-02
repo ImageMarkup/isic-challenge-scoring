@@ -7,7 +7,6 @@ import pytest
 from isic_challenge_scoring.confusion import create_binary_confusion_matrix
 from isic_challenge_scoring.load_image import load_segmentation_image
 
-
 data_dir = (pathlib.Path(__file__).parent / 'data').resolve()
 
 

@@ -51,7 +51,7 @@ setup(
         'click',
         'click-pathlib',
         'numpy',
-        'pandas',
+        'pandas>=1.1',
         'pillow>=7',
         'rdp',
         'scipy',

@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 import pathlib
-from typing import cast, Iterable
+from typing import Iterable, cast
 
 import pandas as pd
 
