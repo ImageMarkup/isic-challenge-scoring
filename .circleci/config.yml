@@ -3,7 +3,7 @@ version: 2.1
 jobs:
   test:
     docker:
-      - image: circleci/python:3.7
+      - image: circleci/python:3.8
     steps:
       - run:
           name: Install Git LFS
@@ -27,7 +27,7 @@ jobs:
           path: ./test_results
   release:
     docker:
-      - image: circleci/python:3.7
+      - image: circleci/python:3.8
     steps:
       - checkout
       - run:
