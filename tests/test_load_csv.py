@@ -130,11 +130,9 @@ def test_parse_csv_mismatched_headers(categories):
         'ISIC_0000125,0.0,0.0,1.0,0.0,0.0,0.0,0.0\n'
     )
 
-    # Too few header columns causes Pandas to raise an IndexError when reading
-    with pytest.raises(ScoreException) as exc_info:
+    # Pandas should drop extra columns without headers, but this is a common invalid case
+    with pytest.raises(ScoreException, match=r'Missing columns in CSV:'):
         load_csv.parse_csv(prediction_file_stream, categories)
-
-    assert 'Could not parse CSV: inconsistent number of header columns.' == str(exc_info.value)
 
 
 def test_parse_csv_missing_columns(categories):
