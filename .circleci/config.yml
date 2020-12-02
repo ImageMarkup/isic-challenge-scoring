@@ -10,7 +10,7 @@ jobs:
           name: Run linting tests
           command: tox -e lint
       - run:
-          name: Run typechecking tests
+          name: Run type checking tests
           command: tox -e type
       - run:
           name: Run pytest tests
