@@ -3,9 +3,17 @@ version: 2.1
 jobs:
   test:
     docker:
-      - image: isic/isic-challenge-scoring-test:latest
+      - image: circleci/python:3.7
     steps:
+      - run:
+          name: Install Git LFS
+          command: |
+            curl -s https://packagecloud.io/install/repositories/github/git-lfs/script.deb.sh | sudo bash
+            sudo apt-get install git-lfs
       - checkout
+      - run:
+          name: Install tox
+          command: sudo pip install tox
       - run:
           name: Run linting tests
           command: tox -e lint
@@ -19,9 +27,12 @@ jobs:
           path: ./test_results
   release:
     docker:
-      - image: isic/isic-challenge-scoring-test:latest
+      - image: circleci/python:3.7
     steps:
       - checkout
+      - run:
+          name: Install tox
+          command: sudo pip install tox
       - deploy:
           name: Publish release
           command: tox -e release
