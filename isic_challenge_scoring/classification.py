@@ -216,7 +216,7 @@ class ClassificationScore(Score):
             'r'
         ) as prediction_file_stream:
             return cls.from_stream(
-                cast(TextIO, truth_file_stream),
-                cast(TextIO, prediction_file_stream),
+                truth_file_stream,
+                prediction_file_stream,
                 validation_metric,
             )
