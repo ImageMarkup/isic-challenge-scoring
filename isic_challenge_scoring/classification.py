@@ -3,7 +3,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 import enum
 import pathlib
-from typing import Dict, Optional, TextIO, cast
+from typing import Dict, TextIO, cast
 
 import pandas as pd
 
@@ -13,7 +13,7 @@ from isic_challenge_scoring.load_csv import parse_csv, parse_truth_csv, sort_row
 from isic_challenge_scoring.types import DataFrameDict, RocDict, Score, ScoreDict, SeriesDict
 
 
-class ValidationMetric(enum.Enum):
+class ClassificationMetric(enum.Enum):
     BALANCED_ACCURACY = 'balanced_accuracy'
     AUC = 'auc'
     AVERAGE_PRECISION = 'ap'
@@ -31,7 +31,7 @@ class ClassificationScore(Score):
         truth_probabilities: pd.DataFrame,
         prediction_probabilities: pd.DataFrame,
         truth_weights: pd.DataFrame,
-        validation_metric: Optional[ValidationMetric] = None,
+        target_metric: ClassificationMetric,
     ) -> None:
         categories = truth_probabilities.columns
 
@@ -68,37 +68,37 @@ class ClassificationScore(Score):
             name='aggregate',
         )
 
-        self.overall = self.aggregate.at['balanced_accuracy']
-
-        if validation_metric:
-            if validation_metric == ValidationMetric.BALANCED_ACCURACY:
-                self.validation = metrics.balanced_multiclass_accuracy(
-                    truth_probabilities, prediction_probabilities, truth_weights.validation_weight
-                )
-            elif validation_metric == ValidationMetric.AVERAGE_PRECISION:
-                per_category_ap = pd.Series(
-                    [
-                        metrics.average_precision(
-                            truth_probabilities[category],
-                            prediction_probabilities[category],
-                            truth_weights.validation_weight,
-                        )
-                        for category in categories
-                    ]
-                )
-                self.validation = per_category_ap.mean()
-            elif validation_metric == ValidationMetric.AUC:
-                per_category_auc = pd.Series(
-                    [
-                        metrics.auc(
-                            truth_probabilities[category],
-                            prediction_probabilities[category],
-                            truth_weights.validation_weight,
-                        )
-                        for category in categories
-                    ]
-                )
-                self.validation = per_category_auc.mean()
+        if target_metric == ClassificationMetric.BALANCED_ACCURACY:
+            self.overall = self.aggregate.at['balanced_accuracy']
+            self.validation = metrics.balanced_multiclass_accuracy(
+                truth_probabilities, prediction_probabilities, truth_weights.validation_weight
+            )
+        elif target_metric == ClassificationMetric.AVERAGE_PRECISION:
+            self.overall = self.macro_average['ap']
+            per_category_ap = pd.Series(
+                [
+                    metrics.average_precision(
+                        truth_probabilities[category],
+                        prediction_probabilities[category],
+                        truth_weights.validation_weight,
+                    )
+                    for category in categories
+                ]
+            )
+            self.validation = per_category_ap.mean()
+        elif target_metric == ClassificationMetric.AUC:
+            self.overall = self.macro_average['auc']
+            per_category_auc = pd.Series(
+                [
+                    metrics.auc(
+                        truth_probabilities[category],
+                        prediction_probabilities[category],
+                        truth_weights.validation_weight,
+                    )
+                    for category in categories
+                ]
+            )
+            self.validation = per_category_auc.mean()
 
     @staticmethod
     def _category_score(
@@ -191,7 +191,7 @@ class ClassificationScore(Score):
         cls,
         truth_file_stream: TextIO,
         prediction_file_stream: TextIO,
-        validation_metric: Optional[ValidationMetric] = None,
+        target_metric: ClassificationMetric,
     ) -> ClassificationScore:
         truth_probabilities, truth_weights = parse_truth_csv(truth_file_stream)
         categories = truth_probabilities.columns
@@ -202,7 +202,7 @@ class ClassificationScore(Score):
         sort_rows(truth_probabilities)
         sort_rows(prediction_probabilities)
 
-        score = cls(truth_probabilities, prediction_probabilities, truth_weights, validation_metric)
+        score = cls(truth_probabilities, prediction_probabilities, truth_weights, target_metric)
         return score
 
     @classmethod
@@ -210,7 +210,7 @@ class ClassificationScore(Score):
         cls,
         truth_file: pathlib.Path,
         prediction_file: pathlib.Path,
-        validation_metric: Optional[ValidationMetric] = None,
+        target_metric: ClassificationMetric,
     ) -> ClassificationScore:
         with truth_file.open('r') as truth_file_stream, prediction_file.open(
             'r'
@@ -218,5 +218,5 @@ class ClassificationScore(Score):
             return cls.from_stream(
                 truth_file_stream,
                 prediction_file_stream,
-                validation_metric,
+                target_metric,
             )
