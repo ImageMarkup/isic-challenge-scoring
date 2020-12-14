@@ -1,9 +1,7 @@
 # ISIC: Skin Lesion Analysis Towards Melanoma Detection Scoring
 
 [![PyPI](https://img.shields.io/pypi/v/isic-challenge-scoring)](https://pypi.org/project/isic-challenge-scoring/)
-[![PyPI - Python Version](https://img.shields.io/pypi/pyversions/isic-challenge-scoring)](https://pypi.org/project/isic-challenge-scoring/)
 [![Docker Build Status](https://img.shields.io/docker/build/isic/isic-challenge-scoring)](https://hub.docker.com/r/isic/isic-challenge-scoring)
-[![CircleCI](https://img.shields.io/circleci/build/github/ImageMarkup/isic-challenge-scoring/master)](https://circleci.com/gh/ImageMarkup/isic-challenge-scoring)
 
 Automated scoring code for the [ISIC Challenge](http://challenge.isic-archive.com).
 
