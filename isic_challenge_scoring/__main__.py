@@ -5,7 +5,7 @@ from typing import cast
 import click
 import click_pathlib
 
-from isic_challenge_scoring.classification import ClassificationScore
+from isic_challenge_scoring.classification import ClassificationMetric, ClassificationScore
 from isic_challenge_scoring.segmentation import SegmentationScore
 from isic_challenge_scoring.types import ScoreException
 
@@ -40,11 +40,19 @@ def segmentation(ctx: click.Context, truth_dir: pathlib.Path, prediction_dir: pa
 @click.pass_context
 @click.argument('truth_file', type=FilePath)
 @click.argument('prediction_file', type=FilePath)
+@click.option(
+    '-m',
+    '--metric',
+    type=click.Choice([metric.value for metric in ClassificationMetric]),
+    default=ClassificationMetric.BALANCED_ACCURACY.value,
+)
 def classification(
-    ctx: click.Context, truth_file: pathlib.Path, prediction_file: pathlib.Path
+    ctx: click.Context, truth_file: pathlib.Path, prediction_file: pathlib.Path, metric: str
 ) -> None:
     try:
-        score = ClassificationScore.from_file(truth_file, prediction_file)
+        score = ClassificationScore.from_file(
+            truth_file, prediction_file, ClassificationMetric(metric)
+        )
     except ScoreException as e:
         raise click.ClickException(str(e))
 
