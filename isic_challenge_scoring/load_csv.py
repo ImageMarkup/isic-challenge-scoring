@@ -51,7 +51,9 @@ def parse_csv(csv_file_stream: TextIO, categories: pd.Index) -> pd.DataFrame:
         # however, the resulting type is still 'O'
         probabilities['image'] = probabilities['image'].astype(np.dtype('U'))
 
-    probabilities['image'] = probabilities['image'].str.replace(r'\.jpg$', '', case=False)
+    probabilities['image'] = probabilities['image'].str.replace(
+        r'\.jpg$', '', case=False, regex=True
+    )
 
     if not probabilities['image'].is_unique:
         duplicate_images = probabilities['image'][probabilities['image'].duplicated()].unique()
