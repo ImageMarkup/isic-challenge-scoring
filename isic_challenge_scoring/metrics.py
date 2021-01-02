@@ -1,3 +1,4 @@
+from typing import Tuple
 import warnings
 
 import numpy as np
@@ -52,6 +53,32 @@ def _label_balanced_multiclass_accuracy(
 
     balanced_accuracy = tp_counts.divide(true_label_frequencies).mean()
     return balanced_accuracy
+
+
+def _roc_curve(
+    truth_probabilities: pd.Series,
+    prediction_probabilities: pd.Series,
+    weights: pd.Series,
+    drop_intermediate: bool = True,
+) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
+    """Call sklearn.metrics.roc_curve in a more performant way."""
+    # This is much faster to compute if the zero-weighted probabilities are eliminated first
+    nonzero_weights = weights.ne(0.0)
+    truth_probabilities = truth_probabilities[nonzero_weights]
+    prediction_probabilities = prediction_probabilities[nonzero_weights]
+    weights = weights[nonzero_weights]
+
+    # An additional minor optimization
+    if weights.eq(1.0).all():
+        weights = None
+
+    fp_rates, tp_rates, thresholds = sklearn.metrics.roc_curve(
+        truth_probabilities,
+        prediction_probabilities,
+        sample_weight=weights,
+        drop_intermediate=drop_intermediate,
+    )
+    return fp_rates, tp_rates, thresholds
 
 
 def balanced_multiclass_accuracy(
@@ -155,10 +182,10 @@ def auc_above_sensitivity(
 
     # Get the ROC curve points
     # TODO: We must have both some true and false instances in truthProbabilities
-    fp_rates, tp_rates, thresholds = sklearn.metrics.roc_curve(
+    fp_rates, tp_rates, thresholds = _roc_curve(
         truth_probabilities,
         prediction_probabilities,
-        sample_weight=weights,
+        weights,
         drop_intermediate=False,
     )
 
@@ -221,15 +248,15 @@ def average_precision(
 def roc(
     truth_probabilities: pd.Series, prediction_probabilities: pd.Series, weights: pd.Series
 ) -> pd.DataFrame:
-    fprs, tprs, thresholds = sklearn.metrics.roc_curve(
-        truth_probabilities, prediction_probabilities, sample_weight=weights
+    fp_rates, tp_rates, thresholds = _roc_curve(
+        truth_probabilities, prediction_probabilities, weights
     )
 
-    roc = pd.DataFrame({'fpr': fprs, 'tpr': tprs}, index=thresholds, columns=['fpr', 'tpr'])
+    roc = pd.DataFrame({'fpr': fp_rates, 'tpr': tp_rates}, index=thresholds, columns=['fpr', 'tpr'])
 
-    if len(fprs) > 100:
+    if len(fp_rates) > 100:
         # simplify line using Ramer-Douglas-Peucker algorithm if more than 100 points
-        points = np.vstack((fprs, tprs)).T
+        points = np.vstack((fp_rates, tp_rates)).T
         # a simple test reduced a roc curve of 2161 items to
         # epsilon 0      ... 660
         # epsilon 0.0001 ... 573
