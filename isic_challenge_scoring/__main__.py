@@ -6,7 +6,7 @@ import click
 import click_pathlib
 
 from isic_challenge_scoring.classification import ClassificationMetric, ClassificationScore
-from isic_challenge_scoring.segmentation import SegmentationScore
+from isic_challenge_scoring.segmentation import SegmentationMetric, SegmentationScore
 from isic_challenge_scoring.types import ScoreException
 
 DirectoryPath = click_pathlib.Path(exists=True, file_okay=False, dir_okay=True, readable=True)
@@ -23,9 +23,17 @@ def cli(output: str) -> None:
 @click.pass_context
 @click.argument('truth_dir', type=DirectoryPath)
 @click.argument('prediction_dir', type=DirectoryPath)
-def segmentation(ctx: click.Context, truth_dir: pathlib.Path, prediction_dir: pathlib.Path) -> None:
+@click.option(
+    '-m',
+    '--metric',
+    type=click.Choice([metric.value for metric in SegmentationMetric]),
+    default=SegmentationMetric.THRESHOLD_JACCARD.value,
+)
+def segmentation(
+    ctx: click.Context, truth_dir: pathlib.Path, prediction_dir: pathlib.Path, metric: str
+) -> None:
     try:
-        score = SegmentationScore.from_dir(truth_dir, prediction_dir)
+        score = SegmentationScore.from_dir(truth_dir, prediction_dir, SegmentationMetric(str))
     except ScoreException as e:
         raise click.ClickException(str(e))
 

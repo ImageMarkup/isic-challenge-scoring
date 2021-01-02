@@ -74,7 +74,7 @@ class ClassificationScore(Score):
                 truth_probabilities, prediction_probabilities, truth_weights.validation_weight
             )
         elif target_metric == ClassificationMetric.AVERAGE_PRECISION:
-            self.overall = self.macro_average['ap']
+            self.overall = self.macro_average.at['ap']
             per_category_ap = pd.Series(
                 [
                     metrics.average_precision(
@@ -87,7 +87,7 @@ class ClassificationScore(Score):
             )
             self.validation = per_category_ap.mean()
         elif target_metric == ClassificationMetric.AUC:
-            self.overall = self.macro_average['auc']
+            self.overall = self.macro_average.at['auc']
             per_category_auc = pd.Series(
                 [
                     metrics.auc(

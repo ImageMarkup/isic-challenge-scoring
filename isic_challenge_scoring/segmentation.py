@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+import enum
 import pathlib
 from typing import Iterable, cast
 
@@ -13,11 +14,17 @@ from isic_challenge_scoring.types import Score, ScoreDict, SeriesDict
 from isic_challenge_scoring.unzip import unzip_all
 
 
+class SegmentationMetric(enum.Enum):
+    JACCARD = 'jaccard'  # 2016/1  2016/2b  2017/1  2018/2
+    THRESHOLD_JACCARD = 'threshold_jaccard'  # 2018/1
+    AUC = 'auc'  # 2017/2
+
+
 @dataclass(init=False)
 class SegmentationScore(Score):
     macro_average: pd.Series
 
-    def __init__(self, image_pairs: Iterable[ImagePair]) -> None:
+    def __init__(self, image_pairs: Iterable[ImagePair], target_metric: SegmentationMetric) -> None:
         # TODO: Add weighting
         confusion_matrics = pd.DataFrame(
             [
@@ -53,8 +60,14 @@ class SegmentationScore(Score):
 
         self.macro_average = per_image.mean(axis='index').rename('macro_average', inplace=True)
 
-        self.overall = self.macro_average.at['threshold_jaccard']
-        self.validation = self.macro_average.at['threshold_jaccard']
+        if target_metric == SegmentationMetric.JACCARD:
+            self.overall = self.macro_average.at['jaccard']
+            self.validation = self.macro_average.at['jaccard']
+        elif target_metric == SegmentationMetric.THRESHOLD_JACCARD:
+            self.overall = self.macro_average.at['threshold_jaccard']
+            self.validation = self.macro_average.at['threshold_jaccard']
+        elif target_metric == SegmentationMetric.AUC:
+            raise Exception
 
     def to_string(self) -> str:
         output = super().to_string()
@@ -68,13 +81,21 @@ class SegmentationScore(Score):
         return output
 
     @classmethod
-    def from_dir(cls, truth_path: pathlib.Path, prediction_path: pathlib.Path) -> SegmentationScore:
+    def from_dir(
+        cls,
+        truth_path: pathlib.Path,
+        prediction_path: pathlib.Path,
+        target_metric: SegmentationMetric,
+    ) -> SegmentationScore:
         image_pairs = iter_image_pairs(truth_path, prediction_path)
-        return cls(image_pairs)
+        return cls(image_pairs, target_metric)
 
     @classmethod
     def from_zip_file(
-        cls, truth_zip_file: pathlib.Path, prediction_zip_file: pathlib.Path
+        cls,
+        truth_zip_file: pathlib.Path,
+        prediction_zip_file: pathlib.Path,
+        target_metric: SegmentationMetric,
     ) -> SegmentationScore:
         truth_path, truth_temp_dir = unzip_all(truth_zip_file)
         # TODO: If an exception occurs while unzipping prediction_zip_file, truth_temp_dir is not
@@ -82,7 +103,7 @@ class SegmentationScore(Score):
         prediction_path, prediction_temp_dir = unzip_all(prediction_zip_file)
 
         try:
-            score = cls.from_dir(truth_path, prediction_path)
+            score = cls.from_dir(truth_path, prediction_path, target_metric)
         finally:
             truth_temp_dir.cleanup()
             prediction_temp_dir.cleanup()
