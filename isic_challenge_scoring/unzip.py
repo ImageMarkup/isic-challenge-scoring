@@ -3,7 +3,8 @@ import pathlib
 import shutil
 import tempfile
 from typing import Tuple
-import zipfile
+
+import zipfile_deflate64 as zipfile
 
 from isic_challenge_scoring.types import ScoreException
 

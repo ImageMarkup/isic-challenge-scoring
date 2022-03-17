@@ -38,6 +38,7 @@ setup(
         'rdp',
         'scipy',
         'scikit-learn',
+        'zipfile-deflate64',
     ],
     packages=find_packages(),
     entry_points="""
