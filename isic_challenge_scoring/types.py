@@ -2,7 +2,7 @@ from dataclasses import dataclass
 from typing import Dict, List, Optional, Union
 
 
-class ScoreException(Exception):
+class ScoreException(Exception):  # noqa: N818
     pass
 
 
