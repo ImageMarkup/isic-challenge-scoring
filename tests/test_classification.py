@@ -17,4 +17,5 @@ def test_score(classification_truth_file_path, classification_prediction_file_pa
         classification_prediction_file_path,
         target_metric,
     )
+    assert isinstance(score.overall, float)
     assert isinstance(score.validation, float)
