@@ -6,7 +6,7 @@ from typing import Generator, Match, Optional, Set
 from PIL import Image, UnidentifiedImageError
 import numpy as np
 
-from isic_challenge_scoring.types import ScoreException
+from isic_challenge_scoring.types import ScoreError
 
 
 @dataclass
@@ -48,9 +48,9 @@ class ImagePair:
             ]
 
         if not prediction_file_candidates:
-            raise ScoreException(f'No matching submission for: {self.truth_file.name}')
+            raise ScoreError(f'No matching submission for: {self.truth_file.name}')
         elif len(prediction_file_candidates) > 1:
-            raise ScoreException(f'Multiple matching submissions for: {self.truth_file.name}')
+            raise ScoreError(f'Multiple matching submissions for: {self.truth_file.name}')
 
         self.prediction_file = prediction_file_candidates[0]
 
@@ -62,7 +62,7 @@ class ImagePair:
     def load_prediction_image(self) -> None:
         self.prediction_image = load_segmentation_image(self.prediction_file)
         if self.prediction_image.shape[0:2] != self.truth_image.shape[0:2]:
-            raise ScoreException(
+            raise ScoreError(
                 f'Image {self.prediction_file.name} has dimensions '
                 f'{self.prediction_image.shape[0:2]}; expected {self.truth_image.shape[0:2]}.'
             )
@@ -81,12 +81,12 @@ def load_segmentation_image(image_path: pathlib.Path) -> np.ndarray:
                 image = image.convert('L')
 
             if image.mode != 'L':
-                raise ScoreException(f'Image {image_path.name} is not single-channel (greyscale).')
+                raise ScoreError(f'Image {image_path.name} is not single-channel (greyscale).')
 
             np_image = np.asarray(image)
 
     except UnidentifiedImageError:
-        raise ScoreException(f'Could not decode image "{image_path.name}"')
+        raise ScoreError(f'Could not decode image "{image_path.name}"')
 
     return np_image
 
@@ -103,9 +103,9 @@ def assert_binary_image(image: np.ndarray, image_path: pathlib.Path) -> np.ndarr
         image /= high_value
         image *= 255
         if set(np.unique(image)) > {0, 255}:
-            raise ScoreException(f'Image {image_path.name} contains values other than 0 and 255.')
+            raise ScoreError(f'Image {image_path.name} contains values other than 0 and 255.')
     else:
-        raise ScoreException(f'Image {image_path.name} contains values other than 0 and 255.')
+        raise ScoreError(f'Image {image_path.name} contains values other than 0 and 255.')
 
     return image
 

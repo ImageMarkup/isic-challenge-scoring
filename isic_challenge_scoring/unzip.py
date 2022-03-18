@@ -6,7 +6,7 @@ from typing import Tuple
 
 import zipfile_deflate64 as zipfile
 
-from isic_challenge_scoring.types import ScoreException
+from isic_challenge_scoring.types import ScoreError
 
 
 def extract_zip(zip_path: pathlib.Path, output_path: pathlib.Path, flatten: bool = True) -> None:
@@ -34,7 +34,7 @@ def extract_zip(zip_path: pathlib.Path, output_path: pathlib.Path, flatten: bool
             else:
                 zf.extractall(output_path)
     except zipfile.BadZipfile as e:
-        raise ScoreException(f'Could not read ZIP file "{zip_path.name}": {str(e)}.')
+        raise ScoreError(f'Could not read ZIP file "{zip_path.name}": {str(e)}.')
 
 
 def unzip_all(input_file: pathlib.Path) -> Tuple[pathlib.Path, tempfile.TemporaryDirectory]:

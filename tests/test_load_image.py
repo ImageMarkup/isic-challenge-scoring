@@ -2,7 +2,7 @@ import pathlib
 
 import pytest
 
-from isic_challenge_scoring import ScoreException, load_image
+from isic_challenge_scoring import ScoreError, load_image
 
 
 @pytest.mark.parametrize(
@@ -43,5 +43,5 @@ def test_load_segmentation_image_valid(test_images_path, test_image_name):
 @pytest.mark.parametrize('test_image_name', ['empty.png', 'random_bytes.png', 'rgb.png'])
 def test_load_segmentation_image_invalid(test_images_path, test_image_name):
     image_path = test_images_path / test_image_name
-    with pytest.raises(ScoreException):
+    with pytest.raises(ScoreError):
         load_image.load_segmentation_image(image_path)

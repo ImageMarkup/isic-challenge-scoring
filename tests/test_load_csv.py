@@ -4,7 +4,7 @@ import pandas as pd
 import pytest
 
 from isic_challenge_scoring import load_csv
-from isic_challenge_scoring.types import ScoreException
+from isic_challenge_scoring.types import ScoreError
 
 
 def test_parse_truth_csv(categories):
@@ -97,7 +97,7 @@ def test_parse_csv_no_newlines(categories):
         prediction_file_stream.write(f'{i:030f},')
     prediction_file_stream.seek(0)
 
-    with pytest.raises(ScoreException, match=r'^No newlines detected in CSV\.$'):
+    with pytest.raises(ScoreError, match=r'^No newlines detected in CSV\.$'):
         load_csv.parse_csv(prediction_file_stream, categories)
 
 
@@ -106,7 +106,7 @@ def test_parse_csv_empty(categories):
     prediction_file_stream = io.StringIO('\n\n')
 
     with pytest.raises(
-        ScoreException, match=r'^Could not parse CSV: "No columns to parse from file"\.$'
+        ScoreError, match=r'^Could not parse CSV: "No columns to parse from file"\.$'
     ):
         load_csv.parse_csv(prediction_file_stream, categories)
 
@@ -115,7 +115,7 @@ def test_parse_csv_invalid_unicode(categories):
     prediction_file_stream = io.TextIOWrapper(io.BytesIO(b'\xef'))
 
     with pytest.raises(
-        ScoreException, match=r'^Could not parse CSV: could not decode file as UTF-8\.$'
+        ScoreError, match=r'^Could not parse CSV: could not decode file as UTF-8\.$'
     ):
         load_csv.parse_csv(prediction_file_stream, categories)
 
@@ -129,7 +129,7 @@ def test_parse_csv_mismatched_headers(categories):
     )
 
     # Pandas should drop extra columns without headers, but this is a common invalid case
-    with pytest.raises(ScoreException, match=r'^Missing columns in CSV:'):
+    with pytest.raises(ScoreError, match=r'^Missing columns in CSV:'):
         load_csv.parse_csv(prediction_file_stream, categories)
 
 
@@ -138,7 +138,7 @@ def test_parse_csv_missing_columns(categories):
         'image,MEL,BCC,AKIEC,BKL,DF\n' 'ISIC_0000123,1.0,0.0,0.0,0.0,0.0\n'
     )
 
-    with pytest.raises(ScoreException, match=r"^Missing columns in CSV: \['NV', 'VASC'\]\.$"):
+    with pytest.raises(ScoreError, match=r"^Missing columns in CSV: \['NV', 'VASC'\]\.$"):
         load_csv.parse_csv(prediction_file_stream, categories)
 
 
@@ -148,7 +148,7 @@ def test_parse_csv_extra_columns(categories):
         'ISIC_0000123,1.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0\n'
     )
 
-    with pytest.raises(ScoreException, match=r"^Extra columns in CSV: \['BAZ', 'FOO'\]\.$"):
+    with pytest.raises(ScoreError, match=r"^Extra columns in CSV: \['BAZ', 'FOO'\]\.$"):
         load_csv.parse_csv(prediction_file_stream, categories)
 
 
@@ -157,7 +157,7 @@ def test_parse_csv_misnamed_columns(categories):
         'image,MEL,FOO,BCC,AKIEC,BKL,BAZ,VASC\n' 'ISIC_0000123,1.0,0.0,0.0,0.0,0.0,0.0,0.0\n'
     )
 
-    with pytest.raises(ScoreException, match=r"^Missing columns in CSV: \['DF', 'NV'\]\.$"):
+    with pytest.raises(ScoreError, match=r"^Missing columns in CSV: \['DF', 'NV'\]\.$"):
         load_csv.parse_csv(prediction_file_stream, categories)
 
 
@@ -200,7 +200,7 @@ def test_parse_csv_missing_index(categories):
         'MEL,NV,BCC,AKIEC,BKL,DF,VASC\n' '1.0,0.0,0.0,0.0,0.0,0.0,0.0\n'
     )
 
-    with pytest.raises(ScoreException, match=r"^Missing column in CSV: 'image'\.$"):
+    with pytest.raises(ScoreError, match=r"^Missing column in CSV: 'image'\.$"):
         load_csv.parse_csv(prediction_file_stream, categories)
 
 
@@ -224,7 +224,7 @@ def test_parse_csv_missing_values(categories):
     )
 
     with pytest.raises(
-        ScoreException,
+        ScoreError,
         match=r"^Missing value\(s\) in CSV for images: \['ISIC_0000124', 'ISIC_0000125'\]\.$",
     ):
         load_csv.parse_csv(prediction_file_stream, categories)
@@ -239,7 +239,7 @@ def test_parse_csv_non_float_columns(categories):
     )
 
     with pytest.raises(
-        ScoreException,
+        ScoreError,
         match=r"^CSV contains non-floating-point value\(s\) in columns: \['BCC', 'VASC'\]\.$",
     ):
         load_csv.parse_csv(prediction_file_stream, categories)
@@ -254,7 +254,7 @@ def test_parse_csv_out_of_range_values(categories):
     )
 
     with pytest.raises(
-        ScoreException,
+        ScoreError,
         match=r'^Values in CSV are outside the interval \[0\.0, 1\.0\] for images: '
         r"\['ISIC_0000123', 'ISIC_0000125'\]\.$",
     ):
@@ -271,7 +271,7 @@ def test_parse_csv_duplicate_images(categories):
     )
 
     with pytest.raises(
-        ScoreException,
+        ScoreError,
         match=r"^Duplicate image rows detected in CSV: \['ISIC_0000123', 'ISIC_0000124'\]\.$",
     ):
         load_csv.parse_csv(prediction_file_stream, categories)
@@ -298,7 +298,7 @@ def test_validate_rows_missing_images(categories):
     prediction_probabilities = pd.DataFrame(
         [[1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]], index=['ISIC_0000123'], columns=categories
     )
-    with pytest.raises(ScoreException, match=r"^Missing images in CSV: \['ISIC_0000124'\]\.$"):
+    with pytest.raises(ScoreError, match=r"^Missing images in CSV: \['ISIC_0000124'\]\.$"):
         load_csv.validate_rows(truth_probabilities, prediction_probabilities)
 
     truth_probabilities = pd.DataFrame(
@@ -310,7 +310,7 @@ def test_validate_rows_missing_images(categories):
         [[1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]], index=['ISIC_0000120'], columns=categories
     )
     with pytest.raises(
-        ScoreException, match=r"^Missing images in CSV: \['ISIC_0000123', 'ISIC_0000124'\]\.$"
+        ScoreError, match=r"^Missing images in CSV: \['ISIC_0000123', 'ISIC_0000124'\]\.$"
     ):
         load_csv.validate_rows(truth_probabilities, prediction_probabilities)
 
@@ -324,7 +324,7 @@ def test_validate_rows_missing_images(categories):
         index=['ISIC_0000123', 'ISIC_0000125'],
         columns=categories,
     )
-    with pytest.raises(ScoreException, match=r"^Missing images in CSV: \['ISIC_0000124'\]\.$"):
+    with pytest.raises(ScoreError, match=r"^Missing images in CSV: \['ISIC_0000124'\]\.$"):
         load_csv.validate_rows(truth_probabilities, prediction_probabilities)
 
 
@@ -342,7 +342,7 @@ def test_validate_rows_extra_images(categories):
         columns=categories,
     )
     with pytest.raises(
-        ScoreException, match=r"^Extra images in CSV: \['ISIC_0000126', 'ISIC_0000127'\]\.$"
+        ScoreError, match=r"^Extra images in CSV: \['ISIC_0000126', 'ISIC_0000127'\]\.$"
     ):
         load_csv.validate_rows(truth_probabilities, prediction_probabilities)
 
