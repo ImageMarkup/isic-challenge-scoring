@@ -3,7 +3,7 @@ from typing import TextIO, Tuple
 import numpy as np
 import pandas as pd
 
-from isic_challenge_scoring.types import ScoreException
+from isic_challenge_scoring.types import ScoreError
 
 
 def parse_truth_csv(csv_file_stream: TextIO) -> Tuple[pd.DataFrame, pd.DataFrame]:
@@ -31,19 +31,19 @@ def parse_csv(csv_file_stream: TextIO, categories: pd.Index) -> pd.DataFrame:
         if csv_file_stream.read(2000).count('\n') < 2:
             # Heuristic: if there aren't 2 newlines in the first 2000 characters, it's probably
             # invalid, and we don't want to hang or crash the parser
-            raise ScoreException('No newlines detected in CSV.')
+            raise ScoreError('No newlines detected in CSV.')
         csv_file_stream.seek(0)
 
         try:
             probabilities = pd.read_csv(csv_file_stream, header=0, index_col=False)
         except (pd.errors.ParserError, pd.errors.EmptyDataError) as e:
             # TODO: Test something that generates a ParserError
-            raise ScoreException(f'Could not parse CSV: "{str(e)}".')
+            raise ScoreError(f'Could not parse CSV: "{str(e)}".')
     except UnicodeDecodeError:
-        raise ScoreException('Could not parse CSV: could not decode file as UTF-8.')
+        raise ScoreError('Could not parse CSV: could not decode file as UTF-8.')
 
     if 'image' not in probabilities.columns:
-        raise ScoreException("Missing column in CSV: 'image'.")
+        raise ScoreError("Missing column in CSV: 'image'.")
 
     # Pandas represents strings as 'O' (object)
     if probabilities['image'].dtype != np.dtype('O'):
@@ -57,31 +57,31 @@ def parse_csv(csv_file_stream: TextIO, categories: pd.Index) -> pd.DataFrame:
 
     if not probabilities['image'].is_unique:
         duplicate_images = probabilities['image'][probabilities['image'].duplicated()].unique()
-        raise ScoreException(f'Duplicate image rows detected in CSV: {duplicate_images.tolist()}.')
+        raise ScoreError(f'Duplicate image rows detected in CSV: {duplicate_images.tolist()}.')
 
     # The duplicate check is the same as performed by 'verify_integrity'
     probabilities.set_index('image', drop=True, inplace=True, verify_integrity=False)
 
     missing_columns = categories.difference(probabilities.columns)
     if not missing_columns.empty:
-        raise ScoreException(f'Missing columns in CSV: {missing_columns.tolist()}.')
+        raise ScoreError(f'Missing columns in CSV: {missing_columns.tolist()}.')
 
     extra_columns = probabilities.columns.difference(categories)
     if not extra_columns.empty:
-        raise ScoreException(f'Extra columns in CSV: {extra_columns.tolist()}.')
+        raise ScoreError(f'Extra columns in CSV: {extra_columns.tolist()}.')
 
     # sort by the order in categories
     probabilities = probabilities.reindex(categories, axis='columns')
 
     missing_rows = probabilities[probabilities.isnull().any(axis='columns')].index
     if not missing_rows.empty:
-        raise ScoreException(f'Missing value(s) in CSV for images: {missing_rows.tolist()}.')
+        raise ScoreError(f'Missing value(s) in CSV for images: {missing_rows.tolist()}.')
 
     non_float_columns = probabilities.dtypes[
         probabilities.dtypes.apply(lambda x: x != np.float64)
     ].index
     if not non_float_columns.empty:
-        raise ScoreException(
+        raise ScoreError(
             f'CSV contains non-floating-point value(s) in columns: {non_float_columns.tolist()}.'
         )
     # TODO: identify specific failed rows
@@ -90,7 +90,7 @@ def parse_csv(csv_file_stream: TextIO, categories: pd.Index) -> pd.DataFrame:
         probabilities.applymap(lambda x: x < 0.0 or x > 1.0).any(axis='columns')
     ].index
     if not out_of_range_rows.empty:
-        raise ScoreException(
+        raise ScoreError(
             f'Values in CSV are outside the interval [0.0, 1.0] for images: '
             f'{out_of_range_rows.tolist()}.'
         )
@@ -111,11 +111,11 @@ def validate_rows(
     """
     missing_images = truth_probabilities.index.difference(prediction_probabilities.index)
     if not missing_images.empty:
-        raise ScoreException(f'Missing images in CSV: {missing_images.tolist()}.')
+        raise ScoreError(f'Missing images in CSV: {missing_images.tolist()}.')
 
     extra_images = prediction_probabilities.index.difference(truth_probabilities.index)
     if not extra_images.empty:
-        raise ScoreException(f'Extra images in CSV: {extra_images.tolist()}.')
+        raise ScoreError(f'Extra images in CSV: {extra_images.tolist()}.')
 
 
 def sort_rows(probabilities: pd.DataFrame) -> None:

@@ -7,7 +7,7 @@ import click_pathlib
 
 from isic_challenge_scoring.classification import ClassificationMetric, ClassificationScore
 from isic_challenge_scoring.segmentation import SegmentationScore
-from isic_challenge_scoring.types import ScoreException
+from isic_challenge_scoring.types import ScoreError
 
 DirectoryPath = click_pathlib.Path(exists=True, file_okay=False, dir_okay=True, readable=True)
 FilePath = click_pathlib.Path(exists=True, file_okay=True, dir_okay=False, readable=True)
@@ -26,7 +26,7 @@ def cli(output: str) -> None:
 def segmentation(ctx: click.Context, truth_dir: pathlib.Path, prediction_dir: pathlib.Path) -> None:
     try:
         score = SegmentationScore.from_dir(truth_dir, prediction_dir)
-    except ScoreException as e:
+    except ScoreError as e:
         raise click.ClickException(str(e))
 
     output: str = cast(click.Context, ctx.parent).params['output']
@@ -53,7 +53,7 @@ def classification(
         score = ClassificationScore.from_file(
             truth_file, prediction_file, ClassificationMetric(metric)
         )
-    except ScoreException as e:
+    except ScoreError as e:
         raise click.ClickException(str(e))
 
     output: str = cast(click.Context, ctx.parent).params['output']
