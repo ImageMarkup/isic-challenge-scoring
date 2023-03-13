@@ -19,12 +19,12 @@ docker pull isic/isic-challenge-scoring:latest
 
 ## Usage
 ### Python
-#### Segmentation (Task 1)
+#### Segmentation (2016 Tasks 1 & 2B, 2017 Task 1, 2018 Tasks 1 & 2)
 ```bash
 isic-challenge-scoring segmentation /path/to/ISIC_GroundTruth/ /path/to/ISIC_predictions/
 ```
 
-#### Classification (Task 3)
+#### Classification (2016 Tasks 3 & 3B, 2017 Task 3, 2018 Task 3, 2019 Tasks 1 & 2)
 ```bash
 isic-challenge-scoring classification /path/to/ISIC_GroundTruth.csv /path/to/ISIC_prediction.csv
 ```
@@ -32,7 +32,7 @@ isic-challenge-scoring classification /path/to/ISIC_GroundTruth.csv /path/to/ISI
 ### Docker
 Since the application requires read access to files, [Docker must mount](https://docs.docker.com/storage/bind-mounts/#use-a-read-only-bind-mount) them within the container; these examples use `--mount` to [prevent nonexistent host paths from being accidentally created](https://github.com/moby/moby/issues/13121).
 
-#### Segmentation (Task 1)
+#### Segmentation (2016 Tasks 1 & 2B, 2017 Task 1, 2018 Tasks 1 & 2)
 ```bash
 docker run \
   --rm \
@@ -44,7 +44,7 @@ docker run \
   /root/pred/
 ```
 
-#### Classification (Task 3)
+#### Classification (2016 Tasks 3 & 3B, 2017 Task 3, 2018 Task 3, 2019 Tasks 1 & 2)
 ```bash
 docker run \
   --rm \
