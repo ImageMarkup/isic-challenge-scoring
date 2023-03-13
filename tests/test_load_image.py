@@ -27,7 +27,7 @@ def test_parse_image_id_valid(truth_file, correct_image_id, correct_attribute_id
 def test_parse_image_id_invalid(truth_file):
     image_pair = load_image.ImagePair(truth_file=pathlib.Path(truth_file))
 
-    with pytest.raises(Exception):
+    with pytest.raises(Exception, match='^Unknown ground truth file'):
         image_pair.parse_image_id()
 
 
