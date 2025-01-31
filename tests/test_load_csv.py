@@ -120,6 +120,10 @@ def test_parse_csv_invalid_unicode(categories):
         load_csv.parse_csv(prediction_file_stream, categories)
 
 
+@pytest.mark.filterwarnings(
+    'ignore:Length of header or names does not match length of data:pandas.errors.ParserWarning'
+)
+@pytest.mark.filterwarnings('error')
 def test_parse_csv_mismatched_headers(categories):
     prediction_file_stream = io.StringIO(
         'image\n'
