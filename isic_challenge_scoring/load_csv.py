@@ -87,7 +87,7 @@ def parse_csv(csv_file_stream: TextIO, categories: pd.Index) -> pd.DataFrame:
     # TODO: identify specific failed rows
 
     out_of_range_rows = probabilities[
-        probabilities.applymap(lambda x: x < 0.0 or x > 1.0).any(axis='columns')
+        probabilities.map(lambda x: x < 0.0 or x > 1.0).any(axis='columns')
     ].index
     if not out_of_range_rows.empty:
         raise ScoreError(
