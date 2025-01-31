@@ -128,7 +128,7 @@ def test_auc_above_sensitivity(
             [0.0, 0.0, 1.0, 1.0],
             [0.1, 0.4, 0.35, 0.8],
             [
-                {'fpr': 0.0, 'tpr': 0.0, 'threshold': 1.8},
+                {'fpr': 0.0, 'tpr': 0.0, 'threshold': 1.0},
                 {'fpr': 0.0, 'tpr': 0.5, 'threshold': 0.8},
                 {'fpr': 0.5, 'tpr': 0.5, 'threshold': 0.4},
                 {'fpr': 0.5, 'tpr': 1.0, 'threshold': 0.35},
@@ -140,7 +140,7 @@ def test_auc_above_sensitivity(
             [0.0, 0.0, 1.0, 1.0],
             [0.2, 0.4, 0.6, 0.8],
             [
-                {'fpr': 0.0, 'tpr': 0.0, 'threshold': 1.8},
+                {'fpr': 0.0, 'tpr': 0.0, 'threshold': 1.0},
                 {'fpr': 0.0, 'tpr': 0.5, 'threshold': 0.8},
                 {'fpr': 0.0, 'tpr': 1.0, 'threshold': 0.6},
                 {'fpr': 1.0, 'tpr': 1.0, 'threshold': 0.2},
@@ -151,7 +151,7 @@ def test_auc_above_sensitivity(
             [0.0, 0.0, 1.0, 1.0],
             [0.3, 0.7, 0.3, 0.7],
             [
-                {'fpr': 0.0, 'tpr': 0.0, 'threshold': 1.7},
+                {'fpr': 0.0, 'tpr': 0.0, 'threshold': 1.0},
                 {'fpr': 0.5, 'tpr': 0.5, 'threshold': 0.7},
                 {'fpr': 1.0, 'tpr': 1.0, 'threshold': 0.3},
             ],
@@ -161,7 +161,7 @@ def test_auc_above_sensitivity(
             [0.0, 0.0, 1.0, 1.0],
             [0.8, 0.6, 0.4, 0.2],
             [
-                {'fpr': 0.0, 'tpr': 0.0, 'threshold': 1.8},
+                {'fpr': 0.0, 'tpr': 0.0, 'threshold': 1.0},
                 {'fpr': 0.5, 'tpr': 0.0, 'threshold': 0.8},
                 {'fpr': 1.0, 'tpr': 0.0, 'threshold': 0.6},
                 {'fpr': 1.0, 'tpr': 1.0, 'threshold': 0.2},

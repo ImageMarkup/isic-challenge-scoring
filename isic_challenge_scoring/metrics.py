@@ -78,6 +78,10 @@ def _roc_curve(
         sample_weight=weights,
         drop_intermediate=drop_intermediate,
     )
+    # This can contain infinity values so replace them with 1.0.
+    # https://github.com/scikit-learn/scikit-learn/pull/26194
+    thresholds = np.nan_to_num(thresholds, posinf=1.0)
+
     return fp_rates, tp_rates, thresholds
 
 
