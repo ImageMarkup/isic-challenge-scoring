@@ -27,9 +27,10 @@ def extract_zip(zip_path: pathlib.Path, output_path: pathlib.Path, flatten: bool
 
                     member_output_path = output_path / member_base_name
 
-                    with zf.open(member_info) as input_stream, member_output_path.open(
-                        'wb'
-                    ) as output_stream:
+                    with (
+                        zf.open(member_info) as input_stream,
+                        member_output_path.open('wb') as output_stream,
+                    ):
                         shutil.copyfileobj(input_stream, output_stream)
             else:
                 zf.extractall(output_path)

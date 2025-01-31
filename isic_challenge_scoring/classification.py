@@ -212,9 +212,10 @@ class ClassificationScore(Score):
         prediction_file: pathlib.Path,
         target_metric: ClassificationMetric,
     ) -> ClassificationScore:
-        with truth_file.open('r') as truth_file_stream, prediction_file.open(
-            'r'
-        ) as prediction_file_stream:
+        with (
+            truth_file.open('r') as truth_file_stream,
+            prediction_file.open('r') as prediction_file_stream,
+        ):
             return cls.from_stream(
                 truth_file_stream,
                 prediction_file_stream,
