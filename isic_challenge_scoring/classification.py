@@ -3,7 +3,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 import enum
 import pathlib
-from typing import Dict, TextIO, cast
+from typing import TextIO, cast
 
 import pandas as pd
 
@@ -23,7 +23,7 @@ class ClassificationMetric(enum.Enum):
 class ClassificationScore(Score):
     per_category: pd.DataFrame
     macro_average: pd.Series
-    rocs: Dict[str, pd.DataFrame]
+    rocs: dict[str, pd.DataFrame]
     aggregate: pd.Series
 
     def __init__(

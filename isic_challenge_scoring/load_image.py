@@ -1,7 +1,8 @@
+from collections.abc import Generator
 from dataclasses import dataclass, field
 import pathlib
 import re
-from typing import Generator, Match, Optional, Set
+from re import Match
 
 from PIL import Image, UnidentifiedImageError
 import numpy as np
@@ -16,15 +17,15 @@ class ImagePair:
     prediction_file: pathlib.Path = field(init=False)
     prediction_image: np.ndarray = field(init=False)
     image_id: str = field(init=False)
-    attribute_id: Optional[str] = field(default=None, init=False)
+    attribute_id: str | None = field(default=None, init=False)
 
     def parse_image_id(self) -> None:
-        image_id_match: Optional[Match[str]] = re.search(r'ISIC_[0-9]{7}', self.truth_file.stem)
+        image_id_match: Match[str] | None = re.search(r'ISIC_[0-9]{7}', self.truth_file.stem)
         if not image_id_match:
             raise Exception(f'Unknown ground truth file: {self.truth_file.name}.')
         self.image_id = image_id_match.group(0)
 
-        attribute_id_match: Optional[Match[str]] = re.search(
+        attribute_id_match: Match[str] | None = re.search(
             r'attribute_([a-z_]+)', self.truth_file.stem
         )
         if attribute_id_match:
@@ -93,7 +94,7 @@ def load_segmentation_image(image_path: pathlib.Path) -> np.ndarray:
 
 def assert_binary_image(image: np.ndarray, image_path: pathlib.Path) -> np.ndarray:
     """Ensure a NumPy array image is binary, correcting if possible."""
-    image_values: Set[int] = set(np.unique(image))
+    image_values: set[int] = set(np.unique(image))
     if image_values <= {0, 255}:
         # Expected values
         pass
@@ -112,7 +113,7 @@ def assert_binary_image(image: np.ndarray, image_path: pathlib.Path) -> np.ndarr
 
 def iter_image_pairs(
     truth_path: pathlib.Path, prediction_path: pathlib.Path
-) -> Generator[ImagePair, None, None]:
+) -> Generator[ImagePair]:
     for truth_file in sorted(truth_path.iterdir()):
         if truth_file.name in {'ATTRIBUTION.txt', 'LICENSE.txt'}:
             continue

@@ -1,4 +1,4 @@
-from typing import TextIO, Tuple
+from typing import TextIO
 
 import numpy as np
 import pandas as pd
@@ -6,7 +6,7 @@ import pandas as pd
 from isic_challenge_scoring.types import ScoreError
 
 
-def parse_truth_csv(csv_file_stream: TextIO) -> Tuple[pd.DataFrame, pd.DataFrame]:
+def parse_truth_csv(csv_file_stream: TextIO) -> tuple[pd.DataFrame, pd.DataFrame]:
     table = pd.read_csv(csv_file_stream, header=0)
 
     table.set_index('image', drop=True, inplace=True, verify_integrity=False)

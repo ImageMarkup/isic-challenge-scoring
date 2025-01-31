@@ -1,4 +1,3 @@
-from typing import Tuple
 import warnings
 
 import numpy as np
@@ -60,7 +59,7 @@ def _roc_curve(
     prediction_probabilities: pd.Series,
     weights: pd.Series,
     drop_intermediate: bool = True,
-) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
+) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
     """Call sklearn.metrics.roc_curve in a more performant way."""
     # This is much faster to compute if the zero-weighted probabilities are eliminated first
     nonzero_weights = weights.ne(0.0)

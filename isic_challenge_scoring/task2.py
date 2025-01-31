@@ -1,5 +1,5 @@
 import pathlib
-from typing import Dict, cast
+from typing import cast
 
 import pandas as pd
 
@@ -31,7 +31,7 @@ def score(truth_path: pathlib.Path, prediction_path: pathlib.Path):
         normalize_confusion_matrix, axis='columns'
     )
 
-    scores: Dict = {}
+    scores: dict = {}
     for attribute in sorted(confusion_matrics.index.unique('attribute_id')):
         attribute_confusion_matrics = normalized_confusion_matrics.loc(axis=0)[attribute, :]
         sum_attribute_confusion_matrics = attribute_confusion_matrics.sum(axis='index')

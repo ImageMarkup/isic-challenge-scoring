@@ -2,7 +2,6 @@ import os
 import pathlib
 import shutil
 import tempfile
-from typing import Tuple
 
 import zipfile_deflate64 as zipfile
 
@@ -38,7 +37,7 @@ def extract_zip(zip_path: pathlib.Path, output_path: pathlib.Path, flatten: bool
         raise ScoreError(f'Could not read ZIP file "{zip_path.name}": {str(e)}.')
 
 
-def unzip_all(input_file: pathlib.Path) -> Tuple[pathlib.Path, tempfile.TemporaryDirectory]:
+def unzip_all(input_file: pathlib.Path) -> tuple[pathlib.Path, tempfile.TemporaryDirectory]:
     """Extract a ZIP file to a temporary directory."""
     output_temp_dir = tempfile.TemporaryDirectory()
     output_path = pathlib.Path(output_temp_dir.name)

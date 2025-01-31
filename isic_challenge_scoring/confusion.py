@@ -1,5 +1,3 @@
-from typing import Optional, Tuple, Union
-
 import numpy as np
 import pandas as pd
 
@@ -7,8 +5,8 @@ import pandas as pd
 def create_binary_confusion_matrix(
     truth_binary_values: np.ndarray,
     prediction_binary_values: np.ndarray,
-    weights: Optional[np.ndarray] = None,
-    name: Optional[Union[str, Tuple[str, ...]]] = None,
+    weights: np.ndarray | None = None,
+    name: str | tuple[str, ...] | None = None,
 ) -> pd.Series:
     # This implementation is:
     # ~30x faster than sklearn.metrics.confusion_matrix

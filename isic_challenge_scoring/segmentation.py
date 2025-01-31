@@ -1,8 +1,9 @@
 from __future__ import annotations
 
+from collections.abc import Iterable
 from dataclasses import dataclass
 import pathlib
-from typing import Iterable, cast
+from typing import cast
 
 import pandas as pd
 
