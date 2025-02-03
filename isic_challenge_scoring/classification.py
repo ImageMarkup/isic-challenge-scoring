@@ -40,7 +40,7 @@ class ClassificationScore(Score):
                 self._category_score(
                     truth_probabilities[category],
                     prediction_probabilities[category],
-                    truth_weights.score_weight,
+                    truth_weights['score_weight'],
                     category,
                 )
                 for category in categories
@@ -53,7 +53,7 @@ class ClassificationScore(Score):
             category: metrics.roc(
                 truth_probabilities[category],
                 prediction_probabilities[category],
-                truth_weights.score_weight,
+                truth_weights['score_weight'],
             )
             for category in categories
         }
@@ -61,7 +61,7 @@ class ClassificationScore(Score):
         self.aggregate = pd.Series(
             {
                 'balanced_accuracy': metrics.balanced_multiclass_accuracy(
-                    truth_probabilities, prediction_probabilities, truth_weights.score_weight
+                    truth_probabilities, prediction_probabilities, truth_weights['score_weight']
                 )
             },
             index=['balanced_accuracy'],
@@ -71,29 +71,29 @@ class ClassificationScore(Score):
         if target_metric == ClassificationMetric.BALANCED_ACCURACY:
             self.overall = self.aggregate.at['balanced_accuracy']
             self.validation = metrics.balanced_multiclass_accuracy(
-                truth_probabilities, prediction_probabilities, truth_weights.validation_weight
+                truth_probabilities, prediction_probabilities, truth_weights['validation_weight']
             )
         elif target_metric == ClassificationMetric.AVERAGE_PRECISION:
-            self.overall = self.macro_average['ap']
+            self.overall = self.macro_average.at['ap']
             per_category_ap = pd.Series(
                 [
                     metrics.average_precision(
                         truth_probabilities[category],
                         prediction_probabilities[category],
-                        truth_weights.validation_weight,
+                        truth_weights['validation_weight'],
                     )
                     for category in categories
                 ]
             )
             self.validation = per_category_ap.mean()
         elif target_metric == ClassificationMetric.AUC:
-            self.overall = self.macro_average['auc']
+            self.overall = self.macro_average.at['auc']
             per_category_auc = pd.Series(
                 [
                     metrics.auc(
                         truth_probabilities[category],
                         prediction_probabilities[category],
-                        truth_weights.validation_weight,
+                        truth_weights['validation_weight'],
                     )
                     for category in categories
                 ]

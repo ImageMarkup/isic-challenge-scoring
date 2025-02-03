@@ -59,6 +59,8 @@ format = [
 ]
 type = [
   "mypy",
+  "pandas-stubs",
+  "microsoft-python-type-stubs @ git+https://github.com/microsoft/python-type-stubs.git",
   {include-group = "test"},
 ]
 test = [
@@ -89,8 +91,15 @@ combine_as_imports = true
 [tool.mypy]
 files = [
   "isic_challenge_scoring",
+  "tests",
 ]
 show_error_codes = true
+
+[[tool.mypy.overrides]]
+module = [
+  "rdp",
+  "zipfile_deflate64",
+]
 ignore_missing_imports = true
 
 [tool.pytest.ini_options]

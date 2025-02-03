@@ -37,7 +37,7 @@ def extract_zip(zip_path: pathlib.Path, output_path: pathlib.Path, flatten: bool
         raise ScoreError(f'Could not read ZIP file "{zip_path.name}": {str(e)}.')
 
 
-def unzip_all(input_file: pathlib.Path) -> tuple[pathlib.Path, tempfile.TemporaryDirectory]:
+def unzip_all(input_file: pathlib.Path) -> tuple[pathlib.Path, tempfile.TemporaryDirectory[str]]:
     """Extract a ZIP file to a temporary directory."""
     output_temp_dir = tempfile.TemporaryDirectory()
     output_path = pathlib.Path(output_temp_dir.name)

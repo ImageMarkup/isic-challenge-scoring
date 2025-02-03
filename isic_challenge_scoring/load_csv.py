@@ -120,4 +120,4 @@ def validate_rows(
 
 def sort_rows(probabilities: pd.DataFrame) -> None:
     """Sort rows by labels, in-place."""
-    probabilities.sort_index(axis='rows', inplace=True)
+    probabilities.sort_index(axis='index', inplace=True)

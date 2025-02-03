@@ -11,7 +11,7 @@ def _to_labels(probabilities: pd.DataFrame) -> pd.Series:
 
     # Find places where there are multiple maximum values
     max_probabilities = probabilities.max(axis='columns')
-    is_max: pd.DataFrame = probabilities.eq(max_probabilities, axis='rows')
+    is_max: pd.DataFrame = probabilities.eq(max_probabilities, axis='index')
     number_of_max: pd.Series = is_max.sum(axis='columns')
     multiple_max: pd.Series = number_of_max.gt(1)
     # Set those locations as an 'undecided' label
@@ -68,13 +68,12 @@ def _roc_curve(
     weights = weights[nonzero_weights]
 
     # An additional minor optimization
-    if weights.eq(1.0).all():
-        weights = None
+    sample_weight = None if weights.eq(1.0).all() else weights
 
     fp_rates, tp_rates, thresholds = sklearn.metrics.roc_curve(
         truth_probabilities,
         prediction_probabilities,
-        sample_weight=weights,
+        sample_weight=sample_weight,
         drop_intermediate=drop_intermediate,
     )
     # This can contain infinity values so replace them with 1.0.
@@ -168,7 +167,7 @@ def auc(
     auc = sklearn.metrics.roc_auc_score(
         truth_probabilities, prediction_probabilities, sample_weight=weights
     )
-    return auc
+    return float(auc)
 
 
 def auc_above_sensitivity(
@@ -227,7 +226,7 @@ def auc_above_sensitivity(
     fp_rates_segment = np.insert(fp_rates_segment, 0, fp_rate_threshold)
 
     partial_auc = sklearn.metrics.auc(fp_rates_segment, tp_rates_segment)
-    return partial_auc
+    return float(partial_auc)
 
 
 def average_precision(
@@ -242,7 +241,7 @@ def average_precision(
         ap = sklearn.metrics.average_precision_score(
             truth_probabilities, prediction_probabilities, sample_weight=weights
         )
-    return ap
+    return float(ap)
 
 
 def roc(
