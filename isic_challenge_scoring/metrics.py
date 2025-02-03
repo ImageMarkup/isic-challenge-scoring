@@ -134,8 +134,8 @@ def binary_threshold_jaccard(cm: pd.Series, threshold: float = 0.65) -> float:
 
 def binary_dice(cm: pd.Series) -> float:
     if cm.at['TP'] + cm.at['FP'] + cm.at['FN'] == 0:
-        # Dice is ill-defined if all are negative and the prediction is perfect, but we'll
-        # just score that as a perfect answer
+        # Dice / F1 is ill-defined if all are negative and the prediction is perfect.
+        # See the rationale in "binary_ppv", which also applies here.
         return 1.0
     else:
         return (2 * cm.at['TP']) / ((2 * cm.at['TP']) + cm.at['FP'] + cm.at['FN'])
@@ -155,11 +155,8 @@ def binary_ppv(cm: pd.Series) -> float:
 
 def binary_npv(cm: pd.Series) -> float:
     if cm.at['TN'] + cm.at['FN'] == 0:
-        # NPV is ill-defined if all predictions are positive; we'll score it as perfect, which
-        # doesn't penalize the case where all are truly positive (a good predictor), and is sane
-        # for the case where some are truly negative (a limitation of this metric)
-        # Note, some other implementations would score the latter case as 0:
-        # https://github.com/dice-group/gerbil/wiki/Precision,-Recall-and-F1-measure
+        # NPV is ill-defined if all predictions are positive.
+        # See the rationale in "binary_ppv", which also applies here.
         return 1.0
     else:
         return cm.at['TN'] / (cm.at['TN'] + cm.at['FN'])
