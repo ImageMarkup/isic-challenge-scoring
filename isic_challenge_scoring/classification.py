@@ -17,6 +17,7 @@ class ClassificationMetric(enum.Enum):
     BALANCED_ACCURACY = 'balanced_accuracy'
     AUC = 'auc'
     AVERAGE_PRECISION = 'ap'
+    DICE = 'dice'
 
 
 @dataclass(init=False)
@@ -100,6 +101,24 @@ class ClassificationScore(Score):
                 ]
             )
             self.validation = per_category_auc.mean()
+        elif target_metric == ClassificationMetric.DICE:
+            self.overall = self.macro_average.at['dice']
+            per_category_dice = pd.Series(
+                [
+                    metrics.binary_dice(
+                        create_binary_confusion_matrix(
+                            truth_binary_values=truth_probabilities[category].gt(0.5).to_numpy(),
+                            prediction_binary_values=prediction_probabilities[category]
+                            .gt(0.5)
+                            .to_numpy(),
+                            weights=truth_weights['validation_weight'].to_numpy(),
+                            name=category,
+                        )
+                    )
+                    for category in categories
+                ]
+            )
+            self.validation = per_category_dice.mean()
 
     @staticmethod
     def _category_score(

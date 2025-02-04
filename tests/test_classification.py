@@ -9,6 +9,7 @@ from isic_challenge_scoring.classification import ClassificationMetric, Classifi
         ClassificationMetric.AUC,
         ClassificationMetric.BALANCED_ACCURACY,
         ClassificationMetric.AVERAGE_PRECISION,
+        ClassificationMetric.DICE,
     ],
 )
 def test_score(classification_truth_file_path, classification_prediction_file_path, target_metric):
