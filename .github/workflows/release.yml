@@ -3,7 +3,7 @@ on:
   release:
     types: [published]
 jobs:
-  publish:
+  publish-pypi:
     runs-on: ubuntu-latest
     environment: release
     permissions:

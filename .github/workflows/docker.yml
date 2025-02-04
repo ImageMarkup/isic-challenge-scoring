@@ -1,0 +1,54 @@
+name: docker
+on:
+  push:
+jobs:
+  publish-docker:
+    runs-on: ubuntu-latest
+    environment: release
+    permissions:
+      packages: write
+#    env:
+#      REGISTRY: ghcr.io
+#      IMAGE_NAME: ${{ github.repository }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          # Tags are needed to compute the current version number
+          fetch-depth: 0
+
+      - name: Login to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+#      - name: Extract metadata (tags, labels) for Docker
+#        id: meta
+#        uses: docker/metadata-action@v5
+#        with:
+#          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+
+      - name: Build and push Docker image
+        id: push
+        uses: docker/build-push-action@v6
+        with:
+          # Use local context to get the full Git history
+          context: .
+          # The ".git" directory is needed to compute the current version number
+#          build-args: |
+#            BUILDKIT_CONTEXT_KEEP_GIT_DIR=1
+          push: false  # TODO: change
+          tags: |
+            ImageMarkup/isic-challenge-scoring:latest
+#          labels:
+#            - ${{ steps.meta.outputs.labels }}
+
+#      - name: Generate artifact attestation
+#        uses: actions/attest-build-provenance@v2
+#        with:
+#          subject-name: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME}}
+#          subject-digest: ${{ steps.push.outputs.digest }}
+#          push-to-registry: true
