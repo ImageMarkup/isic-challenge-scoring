@@ -1,21 +1,20 @@
 from dataclasses import dataclass
-from typing import Dict, List, Optional, Union
 
 
 class ScoreError(Exception):
     pass
 
 
-SeriesDict = Dict[str, float]
-DataFrameDict = Dict[str, SeriesDict]
-RocDict = Dict[str, List[float]]
-ScoreDict = Dict[str, Union[float, Optional[float], SeriesDict, DataFrameDict, Dict[str, RocDict]]]
+SeriesDict = dict[str, float]
+DataFrameDict = dict[str, SeriesDict]
+RocDict = dict[str, list[float]]
+ScoreDict = dict[str, float | None | SeriesDict | DataFrameDict | dict[str, RocDict]]
 
 
 @dataclass
 class Score:
     overall: float
-    validation: Optional[float]
+    validation: float | None
 
     def to_string(self) -> str:
         output = f'Overall: {self.overall}\n'

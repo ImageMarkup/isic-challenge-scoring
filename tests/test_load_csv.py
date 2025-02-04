@@ -120,6 +120,10 @@ def test_parse_csv_invalid_unicode(categories):
         load_csv.parse_csv(prediction_file_stream, categories)
 
 
+@pytest.mark.filterwarnings(
+    'ignore:Length of header or names does not match length of data:pandas.errors.ParserWarning'
+)
+@pytest.mark.filterwarnings('error')
 def test_parse_csv_mismatched_headers(categories):
     prediction_file_stream = io.StringIO(
         'image\n'
@@ -212,7 +216,7 @@ def test_parse_csv_invalid_type_index(categories):
     prediction_probabilities = load_csv.parse_csv(prediction_file_stream, categories)
 
     # Apparent numeric 'image' fields should be coerced to string / NumPy 'O'
-    assert prediction_probabilities.index.is_object()
+    assert pd.api.types.is_object_dtype(prediction_probabilities.index)
 
 
 def test_parse_csv_missing_values(categories):

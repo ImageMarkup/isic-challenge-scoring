@@ -3,7 +3,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 import enum
 import pathlib
-from typing import Dict, TextIO, cast
+from typing import TextIO, cast
 
 import pandas as pd
 
@@ -23,7 +23,7 @@ class ClassificationMetric(enum.Enum):
 class ClassificationScore(Score):
     per_category: pd.DataFrame
     macro_average: pd.Series
-    rocs: Dict[str, pd.DataFrame]
+    rocs: dict[str, pd.DataFrame]
     aggregate: pd.Series
 
     def __init__(
@@ -40,20 +40,21 @@ class ClassificationScore(Score):
                 self._category_score(
                     truth_probabilities[category],
                     prediction_probabilities[category],
-                    truth_weights.score_weight,
+                    truth_weights['score_weight'],
                     category,
                 )
                 for category in categories
             ]
         )
-        self.macro_average = self.per_category.mean(axis='index').rename(
-            'macro_average', inplace=True
-        )
+        # TODO: Fixed by https://github.com/pandas-dev/pandas-stubs/pull/1105
+        self.macro_average = self.per_category.mean(  # type: ignore[assignment]
+            axis='index'
+        ).rename('macro_average', inplace=True)
         self.rocs = {
             category: metrics.roc(
                 truth_probabilities[category],
                 prediction_probabilities[category],
-                truth_weights.score_weight,
+                truth_weights['score_weight'],
             )
             for category in categories
         }
@@ -61,7 +62,7 @@ class ClassificationScore(Score):
         self.aggregate = pd.Series(
             {
                 'balanced_accuracy': metrics.balanced_multiclass_accuracy(
-                    truth_probabilities, prediction_probabilities, truth_weights.score_weight
+                    truth_probabilities, prediction_probabilities, truth_weights['score_weight']
                 )
             },
             index=['balanced_accuracy'],
@@ -71,29 +72,29 @@ class ClassificationScore(Score):
         if target_metric == ClassificationMetric.BALANCED_ACCURACY:
             self.overall = self.aggregate.at['balanced_accuracy']
             self.validation = metrics.balanced_multiclass_accuracy(
-                truth_probabilities, prediction_probabilities, truth_weights.validation_weight
+                truth_probabilities, prediction_probabilities, truth_weights['validation_weight']
             )
         elif target_metric == ClassificationMetric.AVERAGE_PRECISION:
-            self.overall = self.macro_average['ap']
+            self.overall = self.macro_average.at['ap']
             per_category_ap = pd.Series(
                 [
                     metrics.average_precision(
                         truth_probabilities[category],
                         prediction_probabilities[category],
-                        truth_weights.validation_weight,
+                        truth_weights['validation_weight'],
                     )
                     for category in categories
                 ]
             )
             self.validation = per_category_ap.mean()
         elif target_metric == ClassificationMetric.AUC:
-            self.overall = self.macro_average['auc']
+            self.overall = self.macro_average.at['auc']
             per_category_auc = pd.Series(
                 [
                     metrics.auc(
                         truth_probabilities[category],
                         prediction_probabilities[category],
-                        truth_weights.validation_weight,
+                        truth_weights['validation_weight'],
                     )
                     for category in categories
                 ]
@@ -212,9 +213,10 @@ class ClassificationScore(Score):
         prediction_file: pathlib.Path,
         target_metric: ClassificationMetric,
     ) -> ClassificationScore:
-        with truth_file.open('r') as truth_file_stream, prediction_file.open(
-            'r'
-        ) as prediction_file_stream:
+        with (
+            truth_file.open('r') as truth_file_stream,
+            prediction_file.open('r') as prediction_file_stream,
+        ):
             return cls.from_stream(
                 truth_file_stream,
                 prediction_file_stream,

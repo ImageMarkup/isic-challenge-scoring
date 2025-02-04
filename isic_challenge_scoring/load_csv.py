@@ -1,4 +1,4 @@
-from typing import TextIO, Tuple
+from typing import TextIO
 
 import numpy as np
 import pandas as pd
@@ -6,7 +6,7 @@ import pandas as pd
 from isic_challenge_scoring.types import ScoreError
 
 
-def parse_truth_csv(csv_file_stream: TextIO) -> Tuple[pd.DataFrame, pd.DataFrame]:
+def parse_truth_csv(csv_file_stream: TextIO) -> tuple[pd.DataFrame, pd.DataFrame]:
     table = pd.read_csv(csv_file_stream, header=0)
 
     table.set_index('image', drop=True, inplace=True, verify_integrity=False)
@@ -87,7 +87,7 @@ def parse_csv(csv_file_stream: TextIO, categories: pd.Index) -> pd.DataFrame:
     # TODO: identify specific failed rows
 
     out_of_range_rows = probabilities[
-        probabilities.applymap(lambda x: x < 0.0 or x > 1.0).any(axis='columns')
+        probabilities.map(lambda x: x < 0.0 or x > 1.0).any(axis='columns')
     ].index
     if not out_of_range_rows.empty:
         raise ScoreError(
@@ -120,4 +120,4 @@ def validate_rows(
 
 def sort_rows(probabilities: pd.DataFrame) -> None:
     """Sort rows by labels, in-place."""
-    probabilities.sort_index(axis='rows', inplace=True)
+    probabilities.sort_index(axis='index', inplace=True)
