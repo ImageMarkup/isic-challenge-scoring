@@ -52,7 +52,10 @@ class SegmentationScore(Score):
             ],
         )
 
-        self.macro_average = per_image.mean(axis='index').rename('macro_average', inplace=True)
+        # TODO: Fixed by https://github.com/pandas-dev/pandas-stubs/pull/1105
+        self.macro_average = per_image.mean(axis='index').rename(  # type: ignore[assignment]
+            'macro_average', inplace=True
+        )
 
         self.overall = self.macro_average.at['threshold_jaccard']
         self.validation = self.macro_average.at['threshold_jaccard']
