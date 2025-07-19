@@ -81,17 +81,6 @@ line-length = 100
 skip-string-normalization = true
 target-version = ["py313"]
 
-[tool.coverage.run]
-source_pkgs = [
-  "isic_challenge_scoring",
-]
-
-[tool.coverage.paths]
-source = [
-  "isic_challenge_scoring/",
-  ".tox/**/site-packages/isic_challenge_scoring/",
-]
-
 [tool.isort]
 profile = "black"
 line_length = 100
@@ -105,7 +94,12 @@ files = [
   "isic_challenge_scoring",
   "tests",
 ]
+check_untyped_defs = true
+ignore_missing_imports = true
 show_error_codes = true
+warn_redundant_casts = true
+warn_unused_configs = true
+warn_unused_ignores = true
 
 [[tool.mypy.overrides]]
 module = [
@@ -133,3 +127,17 @@ filterwarnings = [
 testpaths = [
   "tests",
 ]
+
+[tool.coverage.run]
+source_pkgs = [
+  "isic_challenge_scoring",
+]
+
+[tool.coverage.paths]
+source = [
+  "isic_challenge_scoring/",
+  ".tox/**/site-packages/isic_challenge_scoring/",
+]
+
+[tool.coverage.report]
+skip_empty = true
