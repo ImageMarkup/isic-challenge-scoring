@@ -7,9 +7,16 @@ from isic_challenge_scoring import load_csv
 from isic_challenge_scoring.types import ScoreError
 
 
-def test_parse_truth_csv(categories):
+@pytest.mark.parametrize(
+    'index_column',
+    [
+        'image',
+        'lesion_id',
+    ],
+)
+def test_parse_truth_csv(categories, index_column):
     truth_file_stream = io.StringIO(
-        'image,MEL,NV,BCC,AKIEC,BKL,DF,VASC,score_weight,validation_weight\n'
+        f'{index_column},MEL,NV,BCC,AKIEC,BKL,DF,VASC,score_weight,validation_weight\n'
         'ISIC_0000123,1.0,0.0,0.0,0.0,0.0,0.0,0.0,1.0,0.0\n'
         'ISIC_0000124,0.0,1.0,0.0,0.0,0.0,0.0,0.0,0.0,1.0\n'
         'ISIC_0000125,0.0,0.0,1.0,0.0,0.0,0.0,0.0,0.0,0.0\n'
@@ -67,9 +74,16 @@ def test_parse_truth_csv_legacy(categories):
     )
 
 
-def test_parse_csv(categories):
+@pytest.mark.parametrize(
+    'index_column',
+    [
+        'image',
+        'lesion_id',
+    ],
+)
+def test_parse_csv(categories, index_column):
     prediction_file_stream = io.StringIO(
-        'image,MEL,NV,BCC,AKIEC,BKL,DF,VASC\n'
+        f'{index_column},MEL,NV,BCC,AKIEC,BKL,DF,VASC\n'
         'ISIC_0000123,1.0,0.0,0.0,0.0,0.0,0.0,0.0\n'
         'ISIC_0000124.jpg,0.0,1.0,0.0,0.0,0.0,0.0,0.0\n'
         'ISIC_0000125.JPG,0.0,0.0,1.0,0.0,0.0,0.0,0.0\n'
@@ -204,7 +218,7 @@ def test_parse_csv_missing_index(categories):
         'MEL,NV,BCC,AKIEC,BKL,DF,VASC\n' '1.0,0.0,0.0,0.0,0.0,0.0,0.0\n'
     )
 
-    with pytest.raises(ScoreError, match=r"^Missing column in CSV: 'image'\.$"):
+    with pytest.raises(ScoreError, match=r'^Missing column in CSV: "image" or "lesion_id"\.$'):
         load_csv.parse_csv(prediction_file_stream, categories)
 
 
