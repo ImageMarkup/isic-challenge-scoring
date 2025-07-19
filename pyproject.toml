@@ -44,6 +44,10 @@ Repository = "https://github.com/ImageMarkup/isic-challenge-scoring"
 isic-challenge-scoring = "isic_challenge_scoring.__main__:cli"
 
 [dependency-groups]
+dev = [
+  "tox",
+  "tox-uv",
+]
 lint = [
   "flake8",
   "flake8-black",
@@ -60,8 +64,7 @@ format = [
 type = [
   "mypy",
   "pandas-stubs",
-  "microsoft-python-type-stubs @ git+https://github.com/microsoft/python-type-stubs.git",
-  {include-group = "test"},
+  "microsoft-python-type-stubs",
 ]
 test = [
   "pytest",
@@ -75,6 +78,9 @@ packages = [
 
 [tool.hatch.version]
 source = "vcs"
+
+[tool.uv.sources]
+microsoft-python-type-stubs = { git = "https://github.com/microsoft/python-type-stubs.git" }
 
 [tool.black]
 line-length = 100
