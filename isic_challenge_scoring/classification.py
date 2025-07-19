@@ -47,10 +47,7 @@ class ClassificationScore(Score):
                 for category in categories
             ]
         )
-        # TODO: Fixed by https://github.com/pandas-dev/pandas-stubs/pull/1105
-        self.macro_average = self.per_category.mean(  # type: ignore[assignment]
-            axis='index'
-        ).rename('macro_average', inplace=True)
+        self.macro_average = self.per_category.mean(axis='index').rename('macro_average')
         self.rocs = {
             category: metrics.roc(
                 truth_probabilities[category],
