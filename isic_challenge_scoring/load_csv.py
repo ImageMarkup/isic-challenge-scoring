@@ -7,9 +7,16 @@ from isic_challenge_scoring.types import ScoreError
 
 
 def parse_truth_csv(csv_file_stream: TextIO) -> tuple[pd.DataFrame, pd.DataFrame]:
-    table = pd.read_csv(csv_file_stream, header=0)
+    table = pd.read_csv(csv_file_stream, header=0, index_col=False)
 
-    table.set_index('image', drop=True, inplace=True, verify_integrity=False)
+    if 'image' in table.columns:
+        index_name = 'image'
+    elif 'lesion_id' in table.columns:
+        index_name = 'lesion_id'
+    else:
+        raise KeyError('Missing column in CSV: "image" or "lesion_id".')
+
+    table.set_index(index_name, drop=True, inplace=True, verify_integrity=False)
 
     # Support legacy truth files
     if 'score_weight' not in table.columns:
@@ -42,25 +49,31 @@ def parse_csv(csv_file_stream: TextIO, categories: pd.Index) -> pd.DataFrame:
     except UnicodeDecodeError:
         raise ScoreError('Could not parse CSV: could not decode file as UTF-8.')
 
-    if 'image' not in probabilities.columns:
-        raise ScoreError("Missing column in CSV: 'image'.")
+    if 'image' in probabilities.columns:
+        index_name = 'image'
+    elif 'lesion_id' in probabilities.columns:
+        index_name = 'lesion_id'
+    else:
+        raise ScoreError('Missing column in CSV: "image" or "lesion_id".')
 
     # Pandas represents strings as 'O' (object)
-    if probabilities['image'].dtype != np.dtype('O'):
+    if probabilities[index_name].dtype != np.dtype('O'):
         # Coercing to 'U' (unicode) ensures that even NaN values are converted;
         # however, the resulting type is still 'O'
-        probabilities['image'] = probabilities['image'].astype(np.dtype('U'))
+        probabilities[index_name] = probabilities[index_name].astype(np.dtype('U'))
 
-    probabilities['image'] = probabilities['image'].str.replace(
+    probabilities[index_name] = probabilities[index_name].str.replace(
         r'\.jpg$', '', case=False, regex=True
     )
 
-    if not probabilities['image'].is_unique:
-        duplicate_images = probabilities['image'][probabilities['image'].duplicated()].unique()
+    if not probabilities[index_name].is_unique:
+        duplicate_images = probabilities[index_name][
+            probabilities[index_name].duplicated()
+        ].unique()
         raise ScoreError(f'Duplicate image rows detected in CSV: {duplicate_images.tolist()}.')
 
     # The duplicate check is the same as performed by 'verify_integrity'
-    probabilities.set_index('image', drop=True, inplace=True, verify_integrity=False)
+    probabilities.set_index(index_name, drop=True, inplace=True, verify_integrity=False)
 
     missing_columns = categories.difference(probabilities.columns)
     if not missing_columns.empty:
